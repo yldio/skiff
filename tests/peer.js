@@ -7,6 +7,7 @@ var it = lab.it;
 var assert = Lab.assert;
 var Peer = require('../lib/peer');
 var transport = require('./_transport');
+var sinon = require('sinon');
 
 describe('peer', function() {
 
@@ -14,6 +15,15 @@ describe('peer', function() {
     var options = {what: 'evs'};
     var peer = Peer(options, {transport: transport});
     assert.equal(peer.options, options);
+    done();
+  });
+
+  it('connects', function(done) {
+    var options = {what: 'evs'};
+    var peer = Peer(options, {transport: transport});
+    var spy = sinon.spy(transport, 'connect');
+    peer.connect();
+    assert.ok(spy.withArgs(options).calledOnce);
     done();
   });
 
