@@ -6,6 +6,7 @@ var describe = lab.describe;
 var it = lab.it;
 var assert = Lab.assert;
 var Node = require('../');
+var Peer = require('../lib/peer');
 
 describe('node', function() {
 
@@ -27,6 +28,23 @@ describe('node', function() {
     var node = Node();
     assert.isArray(node.peers);
     assert.equal(node.peers.length, 0);
+    done();
+  });
+
+  it('can join a peer', function(done) {
+    var node = Node();
+    var peer = Peer();
+    node.join(peer);
+    assert.equal(node.peers.length, 1);
+    assert.equal(node.peers[0], peer);
+    done();
+  });
+
+  it('can join a peer by desc', function(done) {
+    var node = Node();
+    node.join({'hostname': 'somehostname', port: 'someport'});
+    assert.equal(node.peers.length, 1);
+    assert.instanceOf(node.peers[0], Peer);
     done();
   });
 

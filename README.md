@@ -34,6 +34,23 @@ var node = Node(options);
 * `cluster`: the id of the cluster this node will be a part of
 * `uuid`: function that generates a UUID. Defaults to using the [`cuid`](https://github.com/ericelliott/cuid) module.
 
+### Node API
+
+#### .join()
+
+Joins a peer.
+
+```javascript
+node.join(peer);
+```
+
+The peer is an object describing the peer. The description depends on the transport you're using.
+
+#### .peers
+
+An array containing all the known peers.
+
+
 ## License
 
 ISC
