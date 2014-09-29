@@ -27,4 +27,24 @@ describe('peer', function() {
     done();
   });
 
+  it('cannot send messages before connected', function(done) {
+    var options = {what: 'evs'};
+    var peer = Peer(options, {transport: transport});
+    peer.invoke('type', 'args', function(err) {
+      assert.instanceOf(err, Error);
+      done();
+    });
+  });
+
+  it('can send messages', function(done) {
+    var options = {what: 'evs'};
+    var peer = Peer(options, {transport: transport});
+    var conn = peer.connect();
+    var spy = sinon.spy(conn, 'invoke');
+    var cb = function() {};
+    peer.invoke('type', 'args', cb);
+    assert.ok(spy.withArgs('type', 'args', cb).calledOnce);
+    done();
+  });
+
 });
