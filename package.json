@@ -28,6 +28,7 @@
     "sinon": "^1.10.3"
   },
   "dependencies": {
+    "async": "^0.9.0",
     "cuid": "^1.2.4",
     "xtend": "^4.0.0"
   }
