@@ -79,4 +79,33 @@ describe('peer', function() {
     }
   });
 
+  it('replies to remote calls', function(done) {
+    var id = uuid();
+    var peer = Peer(id, {transport: transport});
+    transport.listen(id, listen);
+    var conn = peer.connect();
+
+    var replies = [
+      [new Error('some error')],
+      [null, 1],
+      [null, 1, 2, 3]
+    ];
+
+    var c = 0;
+    var active = true;
+
+    for (var i = 0 ; i < replies.length ; i ++) {
+      (function(i) {
+        peer.invoke('type', 'args', function() {
+          assert.deepEqual(Array.prototype.slice.call(arguments), replies[i]);
+          if (i == replies.length - 1) done();
+        });
+      })(i);
+    }
+
+    function listen(type, args, cb) {
+      cb.apply(null, replies[c ++]);
+    }
+  });
+
 });
