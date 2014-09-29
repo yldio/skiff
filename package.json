@@ -1,0 +1,33 @@
+{
+  "name": "node-raft",
+  "version": "0.0.1",
+  "description": "Raft for Node.js",
+  "scripts": {
+    "test": "node_modules/.bin/lab -c -C tests/*.js",
+    "jshint": "node_modules/.bin/jshint -c .jshintrc --exclude-path .gitignore ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pgte/node-raft.git"
+  },
+  "keywords": [
+    "raft",
+    "consensus",
+    "election",
+    "vote"
+  ],
+  "author": "pgte",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pgte/node-raft/issues"
+  },
+  "homepage": "https://github.com/pgte/node-raft",
+  "devDependencies": {
+    "jshint": "^2.5.6",
+    "lab": "^4.5.1"
+  },
+  "dependencies": {
+    "cuid": "^1.2.4",
+    "xtend": "^4.0.0"
+  }
+}
