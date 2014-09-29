@@ -7,6 +7,7 @@ var it = lab.it;
 var assert = Lab.assert;
 var Node = require('../');
 var Peer = require('../lib/peer');
+var transport = require('./_transport');
 
 describe('node', function() {
 
@@ -31,9 +32,17 @@ describe('node', function() {
     done();
   });
 
+  it('cannot join a peer without transport', function(done) {
+    var node = Node();
+    assert.throws(function() {
+      node.join({'hostname': 'somehostname', port: 'someport'});
+    }, 'No transport defined');
+    done();
+  });
+
   it('can join a peer', function(done) {
     var node = Node();
-    var peer = Peer();
+    var peer = Peer(undefined, {transport: transport});
     node.join(peer);
     assert.equal(node.peers.length, 1);
     assert.equal(node.peers[0], peer);
@@ -41,7 +50,7 @@ describe('node', function() {
   });
 
   it('can join a peer by desc', function(done) {
-    var node = Node();
+    var node = Node({transport: transport});
     node.join({'hostname': 'somehostname', port: 'someport'});
     assert.equal(node.peers.length, 1);
     assert.instanceOf(node.peers[0], Peer);
