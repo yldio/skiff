@@ -25,6 +25,26 @@ describe('node', function() {
     done();
 	});
 
+  it('cannot create node with maxElectionTimeout < minElectionTimeout', function(done) {
+
+    assert.throws(function() {
+      var node = Node({
+        minElectionTimeout: 2,
+        maxElectionTimeout: 1
+      });
+    });
+
+    done();
+  });
+
+  it('cannot travel to unknown state', function(done) {
+    var node = Node();
+    assert.throws(function() {
+      node.toState('someonemistypedthestate');
+    }, 'Unknown state: someonemistypedthestate');
+    done();
+  });
+
   it('starts with an empty list of peers', function(done) {
     var node = Node();
     assert.isArray(node.peers);
@@ -54,6 +74,13 @@ describe('node', function() {
     node.join({'hostname': 'somehostname', port: 'someport'});
     assert.equal(node.peers.length, 1);
     assert.instanceOf(node.peers[0], Peer);
+    done();
+  });
+
+  it('has state', function(done) {
+    var node = Node({transport: transport});
+    assert.typeOf(node.state, 'object');
+    assert.typeOf(node.common, 'object');
     done();
   });
 
