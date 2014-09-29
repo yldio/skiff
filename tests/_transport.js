@@ -1,5 +1,5 @@
 exports.connect = connect;
 
-function connect(options) {
+function connect() {
 
-};
+}
