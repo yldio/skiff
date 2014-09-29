@@ -110,4 +110,18 @@ describe('peer', function() {
     }
   });
 
+  it('does not call callbacks twice', function(done) {
+    var id = uuid();
+    var peer = Peer(id, {transport: transport});
+    transport.listen(id, listen);
+    peer.connect();
+
+    peer.invoke('type', 'args', done);
+
+    function listen(type, args, cb) {
+      cb();
+      cb();
+    }
+  });
+
 });
