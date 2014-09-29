@@ -19,6 +19,7 @@ describe('node', function() {
     var node = Node();
     assert.instanceOf(node, Node);
     assert.typeOf(node.options, 'object');
+    assert.typeOf(node.cluster, 'object');
     done();
 	});
 });
