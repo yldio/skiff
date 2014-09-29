@@ -75,6 +75,8 @@ describe('peer', function() {
     });
 
     function listen(type, args, cb) {
+      assert.equal(type, 'type');
+      assert.equal(args, 'args');
       setTimeout(cb, timeouts.shift());
     }
   });
