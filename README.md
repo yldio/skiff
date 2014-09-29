@@ -1,6 +1,6 @@
 # Raft
 
-Node.js implementation of the Raft Consensus Protocol.
+Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.github.io/).
 
 ## Install
 

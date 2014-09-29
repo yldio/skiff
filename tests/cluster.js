@@ -9,8 +9,6 @@ var Node = require('../');
 
 describe('cluster', function() {
 
-  var cluster;
-
   lab.before(function(done) {
     done();
   });

@@ -15,11 +15,19 @@ describe('node', function() {
     done();
   });
 
-	it('can create node without new and with no options', function(done) {
+  it('can create node without new and with no options', function(done) {
     var node = Node();
     assert.instanceOf(node, Node);
     assert.typeOf(node.options, 'object');
     assert.typeOf(node.cluster, 'object');
     done();
 	});
+
+  it('starts with an empty list of peers', function(done) {
+    var node = Node();
+    assert.isArray(node.peers);
+    assert.equal(node.peers.length, 0);
+    done();
+  });
+
 });
