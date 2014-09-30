@@ -11,11 +11,10 @@ var C = Connection.prototype;
 
 C.invoke = function invoke(type, args, cb) {
   var fn = this.hub[this.id];
-  if (! fn) {
-    cb(new Error('no listener for id ' + this.id));
-   } else {
-     fn.call(null, type, args, cb);
-   }
+  if (fn)
+    fn.call(null, type, args, cb);
+  else
+    cb.call(new Error('cannot connect to ' + this.id));
 };
 
 C.listen = function listen() {

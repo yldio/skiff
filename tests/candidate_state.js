@@ -18,7 +18,7 @@ describe('candidate state', function() {
     var states = ['follower', 'candidate', 'leader'];
 
     node.on('state', function(state) {
-      assert.equal(state, states.shift());
+      if (states.length) assert.equal(state, states.shift());
       if (! states.length) {
         assert.equal(node.commonState.persisted.currentTerm, 1);
         done();
@@ -39,10 +39,13 @@ describe('candidate state', function() {
     var states = ['follower', 'candidate', 'candidate', 'candidate'];
 
     node.on('state', function(state) {
-      assert.equal(state, states.shift());
-      if (! states.length) {
-        assert.equal(node.commonState.persisted.currentTerm, 2);
-        done();
+      if (states.length) {
+        assert.equal(state, states.shift());
+
+        if (! states.length) {
+          assert.equal(node.commonState.persisted.currentTerm, 2);
+          done();
+        }
       }
     });
   });
@@ -58,10 +61,13 @@ describe('candidate state', function() {
     var states = ['follower', 'candidate', 'leader'];
 
     node.on('state', function(state) {
-      assert.equal(state, states.shift());
-      if (! states.length) {
-        assert.equal(node.commonState.persisted.currentTerm, 1);
-        done();
+      if (states.length) {
+        assert.equal(state, states.shift());
+
+        if (! states.length) {
+          assert.equal(node.commonState.persisted.currentTerm, 1);
+          done();
+        }
       }
     });
 
@@ -73,6 +79,45 @@ describe('candidate state', function() {
       assert.equal(args.lastLogIndex, 1);
       assert((++ voteRequests) <= remotes.length);
       cb(null, {voteGranted: true});
+    }
+  });
+
+  it('reaches leader if can get majority of votes', function(done) {
+    var node = Node();
+    var remotes = [uuid(), uuid()];
+
+    remotes.forEach(function(id, index) {
+      transport.listen(remotes[0], listen(index));
+    });
+
+
+    var states = ['follower', 'candidate', 'leader'];
+
+    node.on('state', function(state) {
+      if (states.length) {
+        assert.equal(state, states.shift());
+
+        if (! states.length) {
+          assert.equal(node.commonState.persisted.currentTerm, 1);
+          done();
+        }
+      }
+    });
+
+    var voteRequests = 0;
+
+    function listen(index) {
+      return function(type, args, cb) {
+        assert.equal(type, 'RequestVote');
+        assert.equal(args.term, 1);
+        assert.equal(args.lastLogIndex, 1);
+        assert.equal((++ voteRequests), 1);
+
+        var reply = {
+          voteGranted: index == 0
+        };
+        cb(null, reply);
+      }
     }
   });
 
