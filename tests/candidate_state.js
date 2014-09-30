@@ -10,16 +10,17 @@ var Node = require('./_node');
 
 describe('candidate state', function() {
 
-  it('increments term', function(done) {
+  it('reaches leader state if alone', function(done) {
     var node = Node();
 
     var states = ['follower', 'candidate', 'leader'];
 
-    assert.equal(node.state.name, states.shift());
-
     node.on('state', function(state) {
       assert.equal(state, states.shift());
-      if (! states.length) done();
+      if (! states.length) {
+        assert.equal(node.commonState.persisted.currentTerm, 1);
+        done();
+      }
     });
   });
 });

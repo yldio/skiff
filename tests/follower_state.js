@@ -12,16 +12,20 @@ describe('follower state', function() {
 
   it('is the default state', function(done) {
     var node = Node();
-    assert.equal(node.state.name, 'follower');
-    done();
+    node.once('state', function(state) {
+      assert.equal(state, 'follower');
+      done();
+    });
   });
 
   it('election timeout transforms into candidate', function(done) {
     var node = Node();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
     node.once('election timeout', function() {
-      assert.equal(node.state.name, 'candidate');
-      done();
+      node.once('state', function(state) {
+        assert.equal(state, 'candidate');
+        done();
+      });
     });
   });
 });

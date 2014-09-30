@@ -12,15 +12,20 @@ var transport = require('./_transport');
 
 describe('node', function() {
 
-  it('error ir maxElectionTimeout < minElectionTimeout', function(done) {
-    assert.throws(function() {
-      Node({
-        minElectionTimeout: 2,
-        maxElectionTimeout: 1
-      });
-    }, 'maxElectionTimeout is greater than minElectionTimeout');
+  it('errors if maxElectionTimeout < minElectionTimeout', function(done) {
+    var node = Node({
+      minElectionTimeout: 2,
+      maxElectionTimeout: 1
+    });
 
-    done();
+    var replied = false;
+    node.on('error', function(err) {
+      if (! replied) {
+        replied = true;
+        assert.equal(err.message, 'maxElectionTimeout is greater than minElectionTimeout');
+        done();
+      }
+    })
   });
 
   it('cannot travel to unknown state', function(done) {
@@ -60,13 +65,6 @@ describe('node', function() {
     node.join({'hostname': 'somehostname', port: 'someport'});
     assert.equal(node.peers.length, 1);
     assert.instanceOf(node.peers[0], Peer);
-    done();
-  });
-
-  it('has state', function(done) {
-    var node = Node();
-    assert.typeOf(node.state, 'object');
-    assert.typeOf(node.commonState, 'object');
     done();
   });
 
