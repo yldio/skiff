@@ -42,7 +42,6 @@ describe('peer', function() {
     var peer = Peer(options, {transport: transport});
     var conn = peer.connect();
     var spy = sinon.spy(conn, 'invoke');
-    var cb = function() {};
     peer.invoke('type', 'args', invoked);
 
     function invoked() {
@@ -58,7 +57,7 @@ describe('peer', function() {
     var id = uuid();
     var peer = Peer(id, {transport: transport});
     transport.listen(id, listen);
-    var conn = peer.connect();
+    peer.connect();
 
     var active = true;
     var timeouts = [100, 0];
@@ -85,7 +84,7 @@ describe('peer', function() {
     var id = uuid();
     var peer = Peer(id, {transport: transport});
     transport.listen(id, listen);
-    var conn = peer.connect();
+    peer.connect();
 
     var replies = [
       [new Error('some error')],
@@ -94,7 +93,6 @@ describe('peer', function() {
     ];
 
     var c = 0;
-    var active = true;
 
     for (var i = 0 ; i < replies.length ; i ++) {
       (function(i) {

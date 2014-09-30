@@ -5,13 +5,9 @@ var lab = exports.lab = Lab.script();
 var describe = lab.describe;
 var it = lab.it;
 var assert = Lab.assert;
-var Node = require('../');
+var Node = require('./_node');
 
 describe('cluster', function() {
-
-  lab.before(function(done) {
-    done();
-  });
 
   it('cluster has id if you provide it with one', function(done) {
     var node = Node({cluster: 'SOMECLUSTERID'});

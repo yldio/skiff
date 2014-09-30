@@ -2,37 +2,23 @@
 
 var Lab = require('lab');
 var lab = exports.lab = Lab.script();
-var describe = lab.describe;
 var it = lab.it;
 var assert = Lab.assert;
-var Node = require('../');
+var describe = lab.describe;
+
 var Peer = require('../lib/peer');
+var Node = require('./_node');
 var transport = require('./_transport');
 
 describe('node', function() {
 
-  it('can create node with new and without options', function(done) {
-    var node = Node();
-    assert.instanceOf(node, Node);
-    done();
-  });
-
-  it('can create node without new and with no options', function(done) {
-    var node = Node();
-    assert.instanceOf(node, Node);
-    assert.typeOf(node.options, 'object');
-    assert.typeOf(node.cluster, 'object');
-    done();
-	});
-
-  it('cannot create node with maxElectionTimeout < minElectionTimeout', function(done) {
-
+  it('error ir maxElectionTimeout < minElectionTimeout', function(done) {
     assert.throws(function() {
-      var node = Node({
+      Node({
         minElectionTimeout: 2,
         maxElectionTimeout: 1
       });
-    });
+    }, 'maxElectionTimeout is greater than minElectionTimeout');
 
     done();
   });
@@ -53,7 +39,7 @@ describe('node', function() {
   });
 
   it('cannot join a peer without transport', function(done) {
-    var node = Node();
+    var node = Node({transport: null});
     assert.throws(function() {
       node.join({'hostname': 'somehostname', port: 'someport'});
     }, 'No transport defined');
@@ -70,7 +56,7 @@ describe('node', function() {
   });
 
   it('can join a peer by desc', function(done) {
-    var node = Node({transport: transport});
+    var node = Node();
     node.join({'hostname': 'somehostname', port: 'someport'});
     assert.equal(node.peers.length, 1);
     assert.instanceOf(node.peers[0], Peer);
@@ -78,9 +64,9 @@ describe('node', function() {
   });
 
   it('has state', function(done) {
-    var node = Node({transport: transport});
+    var node = Node();
     assert.typeOf(node.state, 'object');
-    assert.typeOf(node.common, 'object');
+    assert.typeOf(node.commonState, 'object');
     done();
   });
 

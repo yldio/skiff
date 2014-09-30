@@ -1,4 +1,5 @@
-var uuid = require('cuid');
+'use strict';
+
 var Connection = require('./_connection');
 
 var hub = exports.hub = {};
