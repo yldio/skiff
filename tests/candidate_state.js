@@ -8,7 +8,6 @@ var assert = Lab.assert;
 
 var uuid = require('cuid');
 var Node = require('./_node');
-var transport = require('./_transport');
 
 describe('candidate state', function() {
 

@@ -22,10 +22,11 @@ describe('node', function() {
     node.on('error', function(err) {
       if (! replied) {
         replied = true;
-        assert.equal(err.message, 'maxElectionTimeout is greater than minElectionTimeout');
+        assert.equal(err.message,
+          'maxElectionTimeout is greater than minElectionTimeout');
         done();
       }
-    })
+    });
   });
 
   it('cannot travel to unknown state', function(done) {
