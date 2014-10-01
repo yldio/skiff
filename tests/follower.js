@@ -165,6 +165,40 @@ describe('follower', function() {
     function replied(err, args) {
       assert.ok(args.success);
       assert.equal(node.currentTerm(), 2);
+      assert.equal(node.commonState.persisted.log.length, 3);
+      assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
+      entries.forEach(function(entry, index) {
+        assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
+      });
+      done();
+    }
+  });
+
+  it('applies entries if there is conflict', function(done) {
+    var node = Node();
+
+    node.commonState.persisted.log.push({term: 1}, {term: 2});
+
+    var peer = uuid();
+    node.join(peer);
+
+    var entries = [
+      {term: 2},
+      {term: 2}
+    ];
+
+    var args = {
+      term: 2,
+      prevLogIndex: 1,
+      prevLogTerm: 1,
+      entries: entries
+    };
+    transport.invoke(peer, 'AppendEntries', args, replied);
+
+    function replied(err, args) {
+      assert.ok(args.success);
+      assert.equal(node.currentTerm(), 2);
+      assert.equal(node.commonState.persisted.log.length, 3);
       assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
       entries.forEach(function(entry, index) {
         assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
