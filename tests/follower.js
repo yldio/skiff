@@ -88,4 +88,27 @@ describe('follower', function() {
       done();
     }
   });
+
+  it('replies to heartbeat', function(done) {
+    var node = Node();
+
+    node.commonState.persisted.currentTerm = 1;
+
+    var peer = uuid();
+    node.join(peer);
+
+    var args = {
+      term: 1,
+      prevLogIndex: null,
+      prevLogTerm: null,
+      entries: []
+    };
+    transport.invoke(peer, 'AppendEntries', args, replied);
+
+    function replied(err, args) {
+      assert.ok(args.success);
+      assert.equal(args.term, node.currentTerm());
+      done();
+    }
+  });
 });
