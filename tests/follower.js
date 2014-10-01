@@ -54,10 +54,10 @@ describe('follower', function() {
     }
   });
 
-  it('replies true to append entries if term < current term', function(done) {
+  it('replies true to append entries if term = current term', function(done) {
     var node = Node();
 
-    node.commonState.persisted.currentTerm = 2;
+    node.commonState.persisted.currentTerm = 1;
 
     var peer = uuid();
     node.join(peer);
@@ -66,7 +66,7 @@ describe('follower', function() {
 
     function replied(err, args) {
       if (err) throw err;
-      assert.notOk(args.success);
+      assert.ok(args.success);
       done();
     }
   });
