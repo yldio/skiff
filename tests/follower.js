@@ -71,7 +71,7 @@ describe('follower', function() {
     }
   });
 
-  it('replies true to append entries and stores it if term > current term', function(done) {
+  it('applies append entries if term > current term', function(done) {
     var node = Node();
 
     node.commonState.persisted.currentTerm = 1;
