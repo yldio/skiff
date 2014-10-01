@@ -155,7 +155,7 @@ describe('candidate state', function() {
     }
   });
 
-  it('reaches leader if candidate sends same term', function(done) {
+  it('reaches leader if other sends same term', function(done) {
     var node = Node();
     var remotes = [uuid(), uuid()];
 
