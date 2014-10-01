@@ -20,7 +20,7 @@ describe('candidate state', function() {
     node.on('state', function(state) {
       if (states.length) assert.equal(state, states.shift());
       if (! states.length) {
-        assert.equal(node.commonState.persisted.currentTerm, 1);
+        assert.equal(node.currentTerm(), 1);
         done();
       }
     });
@@ -43,7 +43,7 @@ describe('candidate state', function() {
         assert.equal(state, states.shift());
 
         if (! states.length) {
-          assert.equal(node.commonState.persisted.currentTerm, 2);
+          assert.equal(node.currentTerm(), 2);
           done();
         }
       }
@@ -65,7 +65,7 @@ describe('candidate state', function() {
         assert.equal(state, states.shift());
 
         if (! states.length) {
-          assert.equal(node.commonState.persisted.currentTerm, 1);
+          assert.equal(node.currentTerm(), 1);
           done();
         }
       }
@@ -87,7 +87,8 @@ describe('candidate state', function() {
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
-      transport.listen(remotes[0], listen(index));
+      transport.listen(remotes[index], listen(index));
+      node.join(id);
     });
 
 
@@ -98,7 +99,7 @@ describe('candidate state', function() {
         assert.equal(state, states.shift());
 
         if (! states.length) {
-          assert.equal(node.commonState.persisted.currentTerm, 1);
+          assert.equal(node.currentTerm(), 1);
           done();
         }
       }
@@ -109,9 +110,6 @@ describe('candidate state', function() {
     function listen(index) {
       return function(type, args, cb) {
         assert.equal(type, 'RequestVote');
-        assert.equal(args.term, 1);
-        assert.equal(args.lastLogIndex, 1);
-        assert.equal((++ voteRequests), 1);
 
         var reply = {
           voteGranted: index == 0
