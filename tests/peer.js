@@ -95,12 +95,14 @@ describe('peer', function() {
     var c = 0;
 
     for (var i = 0 ; i < replies.length ; i ++) {
-      (function(i) {
-        peer.invoke('type', 'args', function() {
-          assert.deepEqual(Array.prototype.slice.call(arguments), replies[i]);
-          if (i == replies.length - 1) done();
-        });
-      })(i);
+      checkReply(i);
+    }
+
+    function checkReply(i) {
+      peer.invoke('type', 'args', function() {
+        assert.deepEqual(Array.prototype.slice.call(arguments), replies[i]);
+        if (i == replies.length - 1) done();
+      });
     }
 
     function listen(type, args, cb) {

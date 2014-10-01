@@ -103,17 +103,15 @@ describe('candidate state', function() {
       }
     });
 
-    var voteRequests = 0;
-
     function listen(index) {
       return function(type, args, cb) {
         assert.equal(type, 'RequestVote');
 
         var reply = {
-          voteGranted: index == 0
+          voteGranted: (index === 0)
         };
         cb(null, reply);
-      }
+      };
     }
   });
 
@@ -140,8 +138,6 @@ describe('candidate state', function() {
       }
     });
 
-    var voteRequests = 0;
-
     function listen(id, index) {
       return function(type, args, cb) {
         if (index >= 1) {
@@ -149,9 +145,10 @@ describe('candidate state', function() {
             cb(null, {voteGranted: true});
           }, 100);
         } else {
-          transport.invoke(id, 'AppendEntries', {term: node.currentTerm() + 1}, function() {});
+          transport.invoke(id, 'AppendEntries', {term: node.currentTerm() + 1},
+            function() {});
         }
-      }
+      };
     }
   });
 
@@ -178,8 +175,6 @@ describe('candidate state', function() {
       }
     });
 
-    var voteRequests = 0;
-
     function listen(id, index) {
       return function(type, args, cb) {
         if (index >= 1) {
@@ -187,9 +182,10 @@ describe('candidate state', function() {
             cb(null, {voteGranted: true});
           }, 100);
         } else {
-          transport.invoke(id, 'AppendEntries', {term: node.currentTerm()}, function() {});
+          transport.invoke(id, 'AppendEntries', {term: node.currentTerm()},
+            function() {});
         }
-      }
+      };
     }
   });
 
