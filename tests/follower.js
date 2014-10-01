@@ -70,4 +70,22 @@ describe('follower', function() {
       done();
     }
   });
+
+  it('replies true to append entries and stores it if term > current term', function(done) {
+    var node = Node();
+
+    node.commonState.persisted.currentTerm = 1;
+
+    var peer = uuid();
+    node.join(peer);
+
+    transport.invoke(peer, 'AppendEntries', {term: 2}, replied);
+
+    function replied(err, args) {
+      if (err) throw err;
+      assert.ok(args.success);
+      assert.equal(node.currentTerm(), 2);
+      done();
+    }
+  });
 });
