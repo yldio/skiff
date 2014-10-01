@@ -111,4 +111,34 @@ describe('follower', function() {
       done();
     }
   });
+
+  it('applies entries if log is empty', function(done) {
+    var node = Node();
+
+    var peer = uuid();
+    node.join(peer);
+
+    var entries = [
+      {term: 2},
+      {term: 2}
+    ];
+
+    var args = {
+      term: 2,
+      prevLogIndex: null,
+      prevLogTerm: null,
+      entries: entries
+    };
+    transport.invoke(peer, 'AppendEntries', args, replied);
+
+    function replied(err, args) {
+      assert.ok(args.success);
+      assert.equal(node.currentTerm(), 2);
+      entries.forEach(function(entry, index) {
+        assert.deepEqual(node.commonState.persisted.log[index], entry);
+      });
+      done();
+    }
+  });
+
 });
