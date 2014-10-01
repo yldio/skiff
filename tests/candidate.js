@@ -10,7 +10,7 @@ var uuid = require('cuid');
 var Node = require('./_node');
 var transport = require('./_transport');
 
-describe('candidate state', function() {
+describe('candidate', function() {
 
   it('reaches leader state if alone', function(done) {
     var node = Node();
@@ -34,14 +34,14 @@ describe('candidate state', function() {
       node.join(id);
     });
 
-    var states = ['follower', 'candidate', 'candidate', 'candidate'];
+    var states = ['follower', 'candidate', 'candidate'];
 
     node.on('state', function(state) {
       if (states.length) {
         assert.equal(state, states.shift());
 
         if (! states.length) {
-          assert.equal(node.currentTerm(), 2);
+          assert.equal(node.currentTerm(), 1);
           done();
         }
       }
@@ -74,7 +74,7 @@ describe('candidate state', function() {
     function listen(type, args, cb) {
       assert.equal(type, 'RequestVote');
       assert.equal(args.term, 1);
-      assert.equal(args.lastLogIndex, 1);
+      assert.equal(args.lastLogIndex, 0);
       assert((++ voteRequests) <= remotes.length);
       cb(null, {voteGranted: true});
     }
