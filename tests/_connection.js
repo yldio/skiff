@@ -10,13 +10,13 @@ function Connection(id, hub) {
 var C = Connection.prototype;
 
 C.invoke = function invoke(type, args, cb) {
-  var fn = this.hub[this.id];
+  var fn = this.hub.out[this.id];
   if (fn)
     fn.call(null, type, args, cb);
   else
     cb.call(new Error('cannot connect to ' + this.id));
 };
 
-C.listen = function listen() {
-
+C.listen = function listen(cb) {
+  this.hub.in[this.id] = cb;
 };
