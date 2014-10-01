@@ -191,6 +191,7 @@ describe('follower', function() {
       term: 2,
       prevLogIndex: 1,
       prevLogTerm: 1,
+      leaderCommit: 2,
       entries: entries
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
@@ -203,6 +204,7 @@ describe('follower', function() {
       entries.forEach(function(entry, index) {
         assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
       });
+      assert.equal(node.commonState.volatile.commitIndex, 2);
       done();
     }
   });
