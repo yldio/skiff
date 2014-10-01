@@ -21,14 +21,19 @@ describe('follower', function() {
   });
 
   it('transforms into candidate when election timeout', function(done) {
+    var lastState;
+
     var node = Node();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
     node.once('election timeout', function() {
-      node.once('state', function(state) {
-        assert.equal(state, 'candidate');
-        done();
-      });
+      assert.equal(lastState, 'candidate');
+      done();
     });
+
+    node.on('state', function(state) {
+      lastState = state;
+    });
+
   });
 
   it('replies false to append entries if term < current term', function(done) {
@@ -49,22 +54,4 @@ describe('follower', function() {
     }
   });
 
-  return;
-
-  it('replies true to append entries if term < current term', function(done) {
-    var node = Node();
-
-    node.commonState.persisted.currentTerm = 2;
-
-    var peer = uuid();
-    node.join(peer);
-
-    transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
-
-    function replied(err, args) {
-      if (err) throw err;
-      assert.notOk(args.success);
-      done();
-    }
-  });
 });
