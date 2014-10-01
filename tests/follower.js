@@ -31,7 +31,27 @@ describe('follower', function() {
     });
   });
 
-  it('replied false to append entries if term < current term', function(done) {
+  it('replies false to append entries if term < current term', function(done) {
+    var node = Node();
+
+    node.commonState.persisted.currentTerm = 2;
+
+    var peer = uuid();
+    node.join(peer);
+
+    transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
+
+    function replied(err, args) {
+      if (err) throw err;
+      assert.notOk(args.success);
+      assert.equal(args.term, 2);
+      done();
+    }
+  });
+
+  return;
+
+  it('replies true to append entries if term < current term', function(done) {
     var node = Node();
 
     node.commonState.persisted.currentTerm = 2;
