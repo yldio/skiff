@@ -54,9 +54,9 @@ The peer is an object describing the peer. The description depends on the transp
 An array containing all the known peers.
 
 
-### Transport API
+### Transport provider API
 
-The node transport option accepts an object that implements the following interface:
+The node `transport` option accepts a provider object that implements the following interface:
 
 * `connect(options)` — for connecting to the peer. returns a connection object
 
@@ -69,9 +69,9 @@ The connection API implements the following interface:
 * `close(callback)` — for closing the connection. The `callback` argument is a function with the signature `function (err)`.
 
 
-### Persistence API
+### Persistence provider API
 
-The node persistence option accepts an object that implements the following interface:
+The node `persistence` option accepts a provider object that implements the following interface:
 
 * `saveMeta(nodeId, state, callback)` — saves the raft engine metadata. `nodeId` is a string that represents the current node. `state` is an arbitrary object (hash map) and `callback` is a function with the signature `function callback(err)`;
 * `loadMeta(nodeId, callback)` — loads the engine metadata state. `callback` is a function with the signature `function callback(err, state)`;
