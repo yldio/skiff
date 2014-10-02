@@ -53,6 +53,16 @@ The peer is an object describing the peer. The description depends on the transp
 
 An array containing all the known peers.
 
+#### Events
+
+A node emits the following events that may or not be interesting to you:
+
+* `error(error)` - when an unexpected error occurs.
+* `state(stateName)` - when a new state transition occurs. Possible values for `stateName` are: `idle`, `follower`, `candidate`, `leader`.
+* `loaded()` - when a node has loaded configuration from persistence provider.
+* `election timeout()` - when an election timeout occurs.
+* `applied log(logIndex)` - when a node applies a log entry to the state machine
+
 
 ### Transport provider API
 
@@ -75,7 +85,7 @@ The node `persistence` option accepts a provider object that implements the foll
 
 * `saveMeta(nodeId, state, callback)` — saves the raft engine metadata. `nodeId` is a string that represents the current node. `state` is an arbitrary object (hash map) and `callback` is a function with the signature `function callback(err)`;
 * `loadMeta(nodeId, callback)` — loads the engine metadata state. `callback` is a function with the signature `function callback(err, state)`;
-* `applyLog(nodeId, commitIndex, log, callback)` - applies a log entry to the node state machine.
+* `applyLog(nodeId, commitIndex, logEntry, callback)` - applies a log entry to the node state machine.
   * Persistence layer should save the commitIndex if it wants to make sure that log entries are not repeated.
   * Saving this should be atomic: the `commitIndex` and the log application to the state machine should be successful or fail entirely.
   * If the commitIndex has already been applied in the past, just callback with success.

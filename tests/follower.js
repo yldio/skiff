@@ -191,7 +191,7 @@ describe('follower', function() {
       term: 2,
       prevLogIndex: 1,
       prevLogTerm: 1,
-      leaderCommit: 2,
+      leaderCommit: 0,
       entries: entries
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
@@ -204,8 +204,47 @@ describe('follower', function() {
       entries.forEach(function(entry, index) {
         assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
       });
-      assert.equal(node.commonState.volatile.commitIndex, 2);
       done();
+    }
+  });
+
+  it('eventually persists new log entries', function(done) {
+    var node = Node();
+
+    node.commonState.persisted.log.push({term: 1}, {term: 2});
+
+    assert.equal(node.commonState.volatile.commitIndex, 0);
+    assert.equal(node.commonState.volatile.lastApplied, 0);
+
+    var peer = uuid();
+    node.join(peer);
+
+    var entries = [
+      {term: 2, command: 'COMMAND 1'},
+      {term: 2, command: 'COMMAND 2'}
+    ];
+
+    var args = {
+      term: 2,
+      prevLogIndex: 1,
+      prevLogTerm: 1,
+      leaderCommit: 2,
+      entries: entries
+    };
+    transport.invoke(peer, 'AppendEntries', args, replied);
+
+    var applied = 0;
+    function replied(err, args) {
+      if (err) throw err;
+      assert.equal(node.commonState.volatile.commitIndex, 2);
+      node.on('applied log', function(logIndex) {
+        applied ++;
+        assert.equal(logIndex, applied);
+        if (applied == entries.length) {
+          assert.equal(node.commonState.volatile.lastApplied, 2);
+          done();
+         }
+      });
     }
   });
 
