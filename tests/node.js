@@ -18,10 +18,10 @@ describe('node', function() {
       maxElectionTimeout: 1
     });
 
-    var replied = false;
+    var isDone = false;
     node.on('error', function(err) {
-      if (! replied) {
-        replied = true;
+      if (! isDone) {
+        isDone = true;
         assert.equal(err.message,
           'maxElectionTimeout is greater than minElectionTimeout');
         done();

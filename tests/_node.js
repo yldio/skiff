@@ -5,7 +5,7 @@ var extend = require('xtend');
 
 var NNode = require('../');
 var transport = require('./_transport');
-var Persistence = require('./_persistence');
+var persistence = require('./_persistence');
 
 module.exports = Node;
 
@@ -14,7 +14,7 @@ function Node(options) {
   options = extend({}, {
     id:          id,
     transport:   transport,
-    persistence: new Persistence(id)
+    persistence: persistence
   }, options);
 
   return NNode(options);
