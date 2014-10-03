@@ -46,16 +46,29 @@ describe('follower', function() {
 
     transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      if (err) throw err;
-      assert.notOk(args.success);
-      assert.equal(args.term, 2);
-      done();
+      if (! isDone) {
+        isDone = true;
+        if (err) throw err;
+        assert.notOk(args.success);
+        assert.equal(args.term, 2);
+        done();
+      }
     }
   });
 
   it('replies true to append entries if term = current term', function(done) {
     var node = Node();
+
+    // node.on('outgoing call', function(peer, type, message) {
+    //   console.log('outgoing call:', peer.id, type, message);
+    // });
+
+    // node.on('response', function(peer, err, args) {
+    //   console.log('response:', peer.id, err, args);
+    // });
 
     node.commonState.persisted.currentTerm = 1;
 
@@ -64,10 +77,15 @@ describe('follower', function() {
 
     transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      if (err) throw err;
-      assert.ok(args.success);
-      done();
+      if (! isDone) {
+        isDone = true;
+        if (err) throw err;
+        assert.ok(args.success);
+        done();
+      }
     }
   });
 
@@ -81,11 +99,16 @@ describe('follower', function() {
 
     transport.invoke(peer, 'AppendEntries', {term: 2}, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      if (err) throw err;
-      assert.ok(args.success);
-      assert.equal(node.currentTerm(), 2);
-      done();
+      if (! isDone) {
+        isDone = true;
+        if (err) throw err;
+        assert.ok(args.success);
+        assert.equal(node.currentTerm(), 2);
+        done();
+      }
     }
   });
 
@@ -105,10 +128,15 @@ describe('follower', function() {
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      assert.ok(args.success);
-      assert.equal(args.term, node.currentTerm());
-      done();
+      if (! isDone) {
+        isDone = true;
+        assert.ok(args.success);
+        assert.equal(args.term, node.currentTerm());
+        done();
+      }
     }
   });
 
@@ -131,13 +159,18 @@ describe('follower', function() {
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      assert.ok(args.success);
-      assert.equal(node.currentTerm(), 2);
-      entries.forEach(function(entry, index) {
-        assert.deepEqual(node.commonState.persisted.log[index], entry);
-      });
-      done();
+      if (! isDone) {
+        isDone = true;
+        assert.ok(args.success);
+        assert.equal(node.currentTerm(), 2);
+        entries.forEach(function(entry, index) {
+          assert.deepEqual(node.commonState.persisted.log[index], entry);
+        });
+        done();
+      }
     }
   });
 
@@ -162,15 +195,20 @@ describe('follower', function() {
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      assert.ok(args.success);
-      assert.equal(node.currentTerm(), 2);
-      assert.equal(node.commonState.persisted.log.length, 3);
-      assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
-      entries.forEach(function(entry, index) {
-        assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
-      });
-      done();
+      if (! isDone) {
+        isDone = true;
+        assert.ok(args.success);
+        assert.equal(node.currentTerm(), 2);
+        assert.equal(node.commonState.persisted.log.length, 3);
+        assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
+        entries.forEach(function(entry, index) {
+          assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
+        });
+        done();
+      }
     }
   });
 
@@ -196,15 +234,20 @@ describe('follower', function() {
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
 
+    var isDone = false;
+
     function replied(err, args) {
-      assert.ok(args.success);
-      assert.equal(node.currentTerm(), 2);
-      assert.equal(node.commonState.persisted.log.length, 3);
-      assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
-      entries.forEach(function(entry, index) {
-        assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
-      });
-      done();
+      if (! isDone) {
+        isDone = true;
+        assert.ok(args.success);
+        assert.equal(node.currentTerm(), 2);
+        assert.equal(node.commonState.persisted.log.length, 3);
+        assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
+        entries.forEach(function(entry, index) {
+          assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
+        });
+        done();
+      }
     }
   });
 
@@ -233,18 +276,23 @@ describe('follower', function() {
     };
     transport.invoke(peer, 'AppendEntries', args, replied);
 
+    var isDone = false;
+
     var applied = 0;
     function replied(err, args) {
-      if (err) throw err;
-      assert.equal(node.commonState.volatile.commitIndex, 2);
-      node.on('applied log', function(logIndex) {
-        applied ++;
-        assert.equal(logIndex, applied);
-        if (applied == entries.length) {
-          assert.equal(node.commonState.volatile.lastApplied, 2);
-          done();
-         }
-      });
+      if (! isDone) {
+        if (err) throw err;
+        assert.equal(node.commonState.volatile.commitIndex, 2);
+        node.on('applied log', function(logIndex) {
+          applied ++;
+          assert.equal(logIndex, applied);
+          if (applied == entries.length) {
+            assert.equal(node.commonState.volatile.lastApplied, 2);
+            isDone = true;
+            done();
+           }
+        });
+      }
     }
   });
 

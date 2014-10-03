@@ -72,11 +72,12 @@ describe('candidate', function() {
     var voteRequests = 0;
 
     function listen(type, args, cb) {
-      assert.equal(type, 'RequestVote');
-      assert.equal(args.term, 1);
-      assert.equal(args.lastLogIndex, 0);
-      assert((++ voteRequests) <= remotes.length);
-      cb(null, {voteGranted: true});
+      if (type == 'RequestVote') {
+        assert.equal(args.term, 1);
+        assert.equal(args.lastLogIndex, 0);
+        assert((++ voteRequests) <= remotes.length);
+        cb(null, {voteGranted: true});
+      }
     }
   });
 
@@ -105,12 +106,12 @@ describe('candidate', function() {
 
     function listen(index) {
       return function(type, args, cb) {
-        assert.equal(type, 'RequestVote');
-
-        var reply = {
-          voteGranted: (index === 0)
-        };
-        cb(null, reply);
+        if (type == 'RequestVote') {
+          var reply = {
+            voteGranted: (index === 0)
+          };
+          cb(null, reply);
+        }
       };
     }
   });

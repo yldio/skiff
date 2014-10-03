@@ -15,7 +15,7 @@ describe('peer', function() {
   it('can create a peer and retains options', function(done) {
     var options = uuid();
     var peer = Peer(options, {transport: transport});
-    assert.equal(peer.options, options);
+    assert.equal(peer.id, options);
     done();
   });
 
