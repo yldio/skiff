@@ -57,6 +57,24 @@ The peer is an object describing the peer. The description depends on the transp
 
 An array containing all the known peers.
 
+
+#### .command(command, callback)
+
+Appends a command to the leader log. If node is not the leader, callback gets invoked with an error. Example:
+
+```javascript
+node.command('some command', function(err) {
+  if (err) {
+    if (err.code == 'ENOTLEADER') {
+       // redirect client to err.leader
+    }
+  } else {
+    console.log('cluster agreed on this command');
+  }
+});
+```
+
+
 #### Events
 
 A node emits the following events that may or not be interesting to you:
