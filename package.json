@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "Raft for Node.js",
   "scripts": {
-    "test": "node_modules/.bin/lab -c -C tests/*.js",
-    "jshint": "node_modules/.bin/jshint -c .jshintrc --exclude-path .gitignore ."
+    "test": "lab -c -C tests/*.js",
+    "jshint": "jshint -c .jshintrc --exclude-path .gitignore ."
   },
   "repository": {
     "type": "git",
