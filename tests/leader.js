@@ -46,7 +46,7 @@ describe('leader', function() {
       cb();
 
       heartbeats ++;
-      if (heartbeats == peers.length) done();
+      if (heartbeats == peers.length * 10) done();
     }
   });
 
