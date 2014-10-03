@@ -50,25 +50,42 @@ describe('leader', function() {
     }
   });
 
-  it('accepts new entries from the client and broadcasts it', function(done) {
+  it('handles peer append entries failures by backing off next index', function(done) {
     var node = Node();
 
+    // node.on('outgoing call', function(peer, type, message) {
+    //   console.log('outgoing call:', peer.id, type, message);
+    // });
+
+    // node.on('response', function(peer, err, args) {
+    //   console.log('response:', peer.id, err, args);
+    // });
+
+    node.commonState.persisted.log.push({term: 1, command: 'COMMAND 1'});
+    node.commonState.persisted.log.push({term: 1, command: 'COMMAND 2'});
+
     var peers = [uuid(), uuid()];
-    peers.forEach(function(peer) {
+    peers.forEach(function(peer, index) {
       node.join(peer);
-      transport.listen(peer, peerListen(peer));
+      transport.listen(peer, peerListen(peer, index));
     });
 
+    var expectedIndexes = [3, 2, 1, 0, 1, 2];
     var expectedEntries = [
       [],
-      [{term: 1, command: 'COMMAND 1'}]
+      [{term: 1, command: 'COMMAND 3'}],
+      [{term: 1, command: 'COMMAND 2'}],
+      [{term: 1, command: 'COMMAND 1'}],
+      [{term: 1, command: 'COMMAND 2'}],
+      [{term: 1, command: 'COMMAND 3'}]
     ];
     var nodeAppendEntriesCount = {};
     peers.forEach(function(peer) {
       nodeAppendEntriesCount[peer] = 0;
     });
 
-    function peerListen(id) {
+    function peerListen(id, index) {
+      var lastIndex = 0;
       return function (type, args, cb) {
         switch(type) {
           case 'RequestVote':
@@ -78,15 +95,21 @@ describe('leader', function() {
             handleAppendEntries(args, cb);
             break;
         }
-       }
+      }
 
-       function handleAppendEntries(args, cb) {
-         var idx = (++ nodeAppendEntriesCount[id]) - 1;
-         var entries = expectedEntries[idx];
-         if (args.entries || !args.entries.length)
-           // assert.deepEqual(args.entries, entries);
-         cb(null, {success: true});
-       }
+      function handleAppendEntries(args, cb) {
+        if (nodeAppendEntriesCount[id] < expectedIndexes.length) {
+          nodeAppendEntriesCount[id] ++;
+          assert.equal(args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
+          assert.deepEqual(args.entries, expectedEntries[nodeAppendEntriesCount[id] - 1]);
+        }
+
+        if (args.prevLogIndex <= lastIndex) {
+          lastIndex = args.prevLogIndex + args.entries.length;
+          cb(null, {success: true});
+        }
+        else cb(null, {success: false});
+      }
     }
 
     function handleRequestVote(args, cb) {
@@ -94,80 +117,11 @@ describe('leader', function() {
     }
 
     node.once('leader', function() {
-      node.command('COMMAND 1', function(err) {
+      node.command('COMMAND 3', function(err) {
         if (err) throw err;
-        assert.equal(nodeAppendEntriesCount[peers[0]], 2);
+        assert.equal(nodeAppendEntriesCount[peers[0]], expectedIndexes.length);
         done();
       });
     });
   });
-
-  // it('handles peer append entries failures by backing off next index', function(done) {
-  //   var node = Node();
-
-  // node.on('outgoing call', function(peer, type, message) {
-  //   console.log('outgoing call:', peer.id, type, message);
-  // });
-
-  // node.on('response', function(peer, err, args) {
-  //   console.log('response:', peer.id, err, args);
-  // });
-
-  //   node.commonState.persisted.log.push({term: 1, command: 'COMMAND 1'});
-  //   node.commonState.persisted.log.push({term: 1, command: 'COMMAND 2'});
-
-  //   var peers = [uuid(), uuid()];
-  //   peers.forEach(function(peer, index) {
-  //     node.join(peer);
-  //     transport.listen(peer, peerListen(peer, index));
-  //   });
-
-  //   var expectedIndexes = [undefined, 2, 1, 0, 1, 2];
-  //   var nodeAppendEntriesCount = {};
-  //   peers.forEach(function(peer) {
-  //     nodeAppendEntriesCount[peer] = 0;
-  //   });
-
-  //   function peerListen(id, index) {
-  //     var lastIndex = 0;
-  //     return function (type, args, cb) {
-  //       switch(type) {
-  //         case 'RequestVote':
-  //           handleRequestVote(args, cb);
-  //           break;
-  //         case 'AppendEntries':
-  //           handleAppendEntries(args, cb);
-  //           break;
-  //       }
-  //     }
-
-  //     function handleAppendEntries(args, cb) {
-  //       if (index == 0) console.log('handleAppendEntries', id, args);
-  //       nodeAppendEntriesCount[id] ++;
-  //       if (nodeAppendEntriesCount[id] < expectedIndexes.length) {
-  //         assert.equal(args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
-  //         if (lastIndex < args.prevLogIndex)
-  //           cb(null, {success: false});
-  //         else {
-  //           lastIndex += args.entries.length;
-  //           cb(null, {success: true});
-  //         }
-  //       }
-  //       else cb(null, {success: true});
-  //     }
-  //   }
-
-  //   function handleRequestVote(args, cb) {
-  //     cb(null, {voteGranted: true});
-  //   }
-
-  //   node.once('leader', function() {
-  //     node.command('COMMAND 3', function(err) {
-  //       console.log('REPLIED');
-  //       if (err) throw err;
-  //       assert.equal(nodeAppendEntriesCount[peers[0]], 4);
-  //       done();
-  //     });
-  //   });
-  // });
 });
