@@ -1,0 +1,36 @@
+'use strict';
+
+module.exports = debug;
+
+function debug(node) {
+  node.on('state', function(state) {
+    log('state:', state);
+  });
+  node.on('AppendEntries', function(args) {
+    log('-> AppendEntries:', args);
+  });
+  node.on('RequestVote', function(args) {
+    log('-> RequestVote:', args);
+  });
+  node.on('vote granted', function(node) {
+    log('vote granted to', node);
+  });
+  node.on('outgoing call', function(peer, type, message) {
+    log('<- outgoing call:', peer.id, type, message);
+  });
+  node.on('response', function(peer, err, args) {
+    log('<- response:', peer.id, err, args);
+  });
+  node.on('election timeout', function() {
+    log('election timeout');
+  });
+  node.on('reply', function() {
+    log('-> reply', arguments);
+  });
+  node.on('heartbeat', function() {
+    log('heartbeat');
+  });
+  node.on('reset election timeout', function() {
+    log('reset election timeout');
+  });
+}
