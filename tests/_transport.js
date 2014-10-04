@@ -22,10 +22,12 @@ function listen(id, fn) {
 exports.invoke = invoke;
 
 function invoke(id) {
-  var fn = hub.in[id];
-  if (fn) {
-    var args = Array.prototype.slice.call(arguments);
-    args.shift();
-    fn.apply(null, args);
-  }
+  var args = Array.prototype.slice.call(arguments);
+  process.nextTick(function() {
+    var fn = hub.in[id];
+    if (fn) {
+      args.shift();
+      fn.apply(null, args);
+    }
+  });
 }
