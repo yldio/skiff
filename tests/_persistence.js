@@ -2,8 +2,11 @@
 
 var store = {
   meta: {},
-  state: {}
+  state: {},
+  commands: {}
 };
+
+exports.store = store;
 
 exports.saveMeta = saveMeta;
 
@@ -26,6 +29,8 @@ exports.applyLog = applyLog;
 
 function applyLog(nodeId, commitIndex, log, callback) {
   setImmediate(function() {
+    if (! store.commands[nodeId]) store.commands[nodeId] = [];
+    store.commands[nodeId].push(log.command);
     store.state[nodeId] = commitIndex;
     callback();
   });
