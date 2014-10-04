@@ -50,7 +50,7 @@ describe('cluster', function() {
   });
 
   it('commands work and get persisted', {timeout: 10e3}, function(done) {
-    var MAX_COMMANDS = 20;
+    var MAX_COMMANDS = 10;
     var nodes = [];
     var leader;
 
