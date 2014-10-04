@@ -12,6 +12,7 @@
   },
   "keywords": [
     "raft",
+    "distributed",
     "consensus",
     "election",
     "vote"
