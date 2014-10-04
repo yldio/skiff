@@ -50,7 +50,7 @@ describe('leader', function() {
     }
   });
 
-  it('handles peer append entries failures by backing off next index', function(done) {
+  it('handles peer append entries failures by backing off', function(done) {
     var node = Node();
 
     // node.on('outgoing call', function(peer, type, message) {
@@ -84,7 +84,7 @@ describe('leader', function() {
       nodeAppendEntriesCount[peer] = 0;
     });
 
-    function peerListen(id, index) {
+    function peerListen(id) {
       var lastIndex = 0;
       return function (type, args, cb) {
         switch(type) {
@@ -95,13 +95,15 @@ describe('leader', function() {
             handleAppendEntries(args, cb);
             break;
         }
-      }
+      };
 
       function handleAppendEntries(args, cb) {
         if (nodeAppendEntriesCount[id] < expectedIndexes.length) {
           nodeAppendEntriesCount[id] ++;
-          assert.equal(args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
-          assert.deepEqual(args.entries, expectedEntries[nodeAppendEntriesCount[id] - 1]);
+          assert.equal(
+            args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
+          assert.deepEqual(
+            args.entries, expectedEntries[nodeAppendEntriesCount[id] - 1]);
         }
 
         if (args.prevLogIndex <= lastIndex) {
@@ -120,7 +122,7 @@ describe('leader', function() {
       node.command('COMMAND 3', function(err) {
         if (err) throw err;
         assert.equal(nodeAppendEntriesCount[peers[0]], expectedIndexes.length);
-        node.stop(done)
+        node.stop(done);
       });
     });
   });

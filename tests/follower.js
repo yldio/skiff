@@ -279,7 +279,7 @@ describe('follower', function() {
     var isDone = false;
 
     var applied = 0;
-    function replied(err, args) {
+    function replied(err) {
       if (! isDone) {
         if (err) throw err;
         assert.equal(node.commonState.volatile.commitIndex, 2);
