@@ -51,7 +51,7 @@ Joins a peer.
 node.join(peer);
 ```
 
-The peer is an object describing the peer. The description depends on the transport you're using.
+The peer is a string describing the peer. The description depends on the transport you're using.
 
 #### .peers
 

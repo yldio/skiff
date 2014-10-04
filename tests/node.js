@@ -47,14 +47,14 @@ describe('node', function() {
   it('cannot join a peer without transport', function(done) {
     var node = Node({transport: null});
     assert.throws(function() {
-      node.join({'hostname': 'somehostname', port: 'someport'});
+      node.join('hostname:port');
     }, 'No transport defined');
     done();
   });
 
   it('can join a peer', function(done) {
     var node = Node();
-    var peer = Peer(undefined, {transport: transport});
+    var peer = Peer('someid', {transport: transport});
     node.join(peer);
     assert.equal(node.peers.length, 1);
     assert.equal(node.peers[0], peer);
@@ -63,7 +63,7 @@ describe('node', function() {
 
   it('can join a peer by desc', function(done) {
     var node = Node();
-    node.join({'hostname': 'somehostname', port: 'someport'});
+    node.join('hostname:port');
     assert.equal(node.peers.length, 1);
     assert.instanceOf(node.peers[0], Peer);
     done();
