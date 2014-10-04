@@ -35,7 +35,7 @@ var node = Node(options);
 * `cluster`: the id of the cluster this node will be a part of
 * `transport`: the transport to communicate with peers. See the [transport API](#transport)
 * `persistence`: the node persistence layer. See the [persistence API](#persistence)
-* `uuid`: function that generates a UUID. Defaults to using the [`cuid`](https://github.com/ericelliott/cuid) module.
+* `uuid`: function that generates a UUID. Defaults to using the [`cuid`](https://github.com/ericelliott/cuid) package.
 * `heartbeatInterval`: the interval between heartbeats sent from leader. defaults to 50 ms.
 * `minElectionTimeout`: the minimum election timeout. defaults to 150 ms.
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
