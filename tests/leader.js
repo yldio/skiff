@@ -120,7 +120,7 @@ describe('leader', function() {
       node.command('COMMAND 3', function(err) {
         if (err) throw err;
         assert.equal(nodeAppendEntriesCount[peers[0]], expectedIndexes.length);
-        done();
+        node.stop(done)
       });
     });
   });
