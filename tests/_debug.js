@@ -1,5 +1,12 @@
 'use strict';
 
+function log() {
+  var s = arguments[0] || '';
+  s = '[' + Date.now() + '] ' + s;
+  arguments[0] = s;
+  console.log.apply(console, arguments);
+}
+
 module.exports = debug;
 
 function debug(node) {

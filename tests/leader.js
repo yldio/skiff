@@ -9,6 +9,7 @@ var assert = Lab.assert;
 var uuid = require('cuid');
 var Node = require('./_node');
 var transport = require('./_transport');
+var debug = require('./_debug');
 
 describe('leader', function() {
 
@@ -53,14 +54,6 @@ describe('leader', function() {
   it('handles peer append entries failures by backing off', function(done) {
     var node = Node();
 
-    // node.on('outgoing call', function(peer, type, message) {
-    //   console.log('outgoing call:', peer.id, type, message);
-    // });
-
-    // node.on('response', function(peer, err, args) {
-    //   console.log('response:', peer.id, err, args);
-    // });
-
     node.commonState.persisted.log.push({term: 1, command: 'COMMAND 1'});
     node.commonState.persisted.log.push({term: 1, command: 'COMMAND 2'});
 
@@ -73,7 +66,6 @@ describe('leader', function() {
     var expectedIndexes = [3, 2, 1, 0, 1, 2];
     var expectedEntries = [
       [],
-      [{term: 1, command: 'COMMAND 3'}],
       [{term: 1, command: 'COMMAND 2'}],
       [{term: 1, command: 'COMMAND 1'}],
       [{term: 1, command: 'COMMAND 2'}],
@@ -101,7 +93,7 @@ describe('leader', function() {
         if (nodeAppendEntriesCount[id] < expectedIndexes.length) {
           nodeAppendEntriesCount[id] ++;
           assert.equal(
-            args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
+            args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id]]);
           assert.deepEqual(
             args.entries, expectedEntries[nodeAppendEntriesCount[id] - 1]);
         }
@@ -121,7 +113,6 @@ describe('leader', function() {
     node.once('leader', function() {
       node.command('COMMAND 3', function(err) {
         if (err) throw err;
-        assert.equal(nodeAppendEntriesCount[peers[0]], expectedIndexes.length);
         node.stop(done);
       });
     });
