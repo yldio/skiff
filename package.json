@@ -37,8 +37,8 @@
     "xtend": "^4.0.0"
   },
   "pre-commit": [
-    "jshint",
     "codestyle",
+    "jshint",
     "test"
   ]
 }
