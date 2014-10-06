@@ -1,4 +1,4 @@
-# Raft
+# Skiff
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/pgte/skiff?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.github.io/).
