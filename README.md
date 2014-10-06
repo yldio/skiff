@@ -11,7 +11,7 @@ $ node install node-raft --save
 ## Require
 
 ```javascript
-var Node = require('node-raft');
+var Node = require('skiff');
 ```
 
 ## Create a node

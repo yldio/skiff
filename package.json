@@ -1,14 +1,14 @@
 {
-  "name": "node-raft",
-  "version": "0.0.2",
-  "description": "Raft for Node.js",
+  "name": "skiff",
+  "version": "0.0.3",
+  "description": "Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
     "test": "lab -c -C tests/*.js",
     "jshint": "jshint -c .jshintrc --exclude-path .gitignore ."
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pgte/node-raft.git"
+    "url": "https://github.com/pgte/skiff.git"
   },
   "keywords": [
     "raft",
@@ -20,9 +20,9 @@
   "author": "pgte",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/pgte/node-raft/issues"
+    "url": "https://github.com/pgte/skiff/issues"
   },
-  "homepage": "https://github.com/pgte/node-raft",
+  "homepage": "https://github.com/pgte/skiff",
   "devDependencies": {
     "jshint": "^2.5.6",
     "lab": "^4.5.1",
