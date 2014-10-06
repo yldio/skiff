@@ -3,7 +3,7 @@
   "version": "0.0.4",
   "description": "Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
-    "test": "lab -c -C tests/*.js",
+    "test": "lab -t 100 -C tests/*.js",
     "jshint": "jshint -c .jshintrc --exclude-path .gitignore .",
     "codestyle": "jscs -p google lib/ index.js tests/"
   },

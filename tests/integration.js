@@ -10,7 +10,6 @@ var NodeC = require('./_node2');
 //var debug = require('./_debug');
 var persistence = require('./_persistence');
 
-
 describe('cluster', function() {
 
   it('elects one leader', function(done) {

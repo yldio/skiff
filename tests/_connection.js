@@ -1,4 +1,4 @@
-w'use strict';
+'use strict';
 
 module.exports = Connection;
 
