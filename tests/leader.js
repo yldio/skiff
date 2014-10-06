@@ -7,14 +7,13 @@ var it = lab.it;
 var assert = Lab.assert;
 
 var uuid = require('cuid');
-var Node = require('./_node');
+var NodeC = require('./_node');
 var transport = require('./_transport');
-var debug = require('./_debug');
 
 describe('leader', function() {
 
   it('sends heartbeat immediately after becoming leader', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     var peers = [uuid(), uuid()];
     peers.forEach(function(peer) {
@@ -25,7 +24,7 @@ describe('leader', function() {
     var heartbeats = 0;
 
     function peerListen(type, args, cb) {
-      switch(type) {
+      switch (type) {
         case 'RequestVote':
           handleRequestVote(args, cb);
           break;
@@ -47,12 +46,14 @@ describe('leader', function() {
       cb(null, {success: true});
 
       heartbeats ++;
-      if (heartbeats == peers.length * 10) done();
+      if (heartbeats == peers.length * 10) {
+        done();
+      }
     }
   });
 
   it('handles peer append entries failures by backing off', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.log.push({term: 1, command: 'COMMAND 1'});
     node.commonState.persisted.log.push({term: 1, command: 'COMMAND 2'});
@@ -78,8 +79,8 @@ describe('leader', function() {
 
     function peerListen(id) {
       var lastIndex = 0;
-      return function (type, args, cb) {
-        switch(type) {
+      return function(type, args, cb) {
+        switch (type) {
           case 'RequestVote':
             handleRequestVote(args, cb);
             break;
@@ -102,7 +103,9 @@ describe('leader', function() {
           lastIndex = args.prevLogIndex + args.entries.length;
           cb(null, {success: true});
         }
-        else cb(null, {success: false});
+        else {
+          cb(null, {success: false});
+        }
       }
     }
 
@@ -112,7 +115,9 @@ describe('leader', function() {
 
     node.once('leader', function() {
       node.command('COMMAND 3', function(err) {
-        if (err) throw err;
+        if (err) {
+          throw err;
+        }
         node.stop(done);
       });
     });

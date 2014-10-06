@@ -1,4 +1,4 @@
-'use strict';
+w'use strict';
 
 module.exports = Connection;
 
@@ -14,10 +14,12 @@ C.invoke = function invoke(type, args, cb) {
 
   process.nextTick(function() {
     var fn = self.hub.out[self.id];
-    if (fn)
+    if (fn) {
       fn.call(null, type, args, cb);
-    else
+    }
+    else {
       cb.call(null, new Error('cannot connect to ' + self.id));
+    }
   });
 };
 

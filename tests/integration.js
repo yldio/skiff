@@ -6,16 +6,10 @@ var it = lab.it;
 var assert = Lab.assert;
 var describe = lab.describe;
 
-var Node = require('./_node2');
-var debug = require('./_debug');
+var NodeC = require('./_node2');
+//var debug = require('./_debug');
 var persistence = require('./_persistence');
 
-function log() {
-  var s = arguments[0] || '';
-  s = '[' + Date.now() + '] ' + s;
-  arguments[0] = s;
-  console.log.apply(console, arguments);
-}
 
 describe('cluster', function() {
 
@@ -23,13 +17,15 @@ describe('cluster', function() {
     var nodes = [];
     var leader;
 
-    for(var i = 0 ; i < 5 ; i ++) {
-      nodes.push(Node());
+    for (var i = 0 ; i < 5 ; i ++) {
+      nodes.push(NodeC());
     }
 
-    nodes.forEach(function(node, index) {
-      nodes.forEach(function(node2, index) {
-        if (node != node2) node.join(node2.id);
+    nodes.forEach(function(node) {
+      nodes.forEach(function(node2) {
+        if (node != node2) {
+          node.join(node2.id);
+        }
       });
       node.once('leader', function() {
         leader = node.id;
@@ -40,7 +36,8 @@ describe('cluster', function() {
       var states = nodes.map(function(node) {
         return node.state.name;
       });
-      assert.deepEqual(states.sort(), ['follower', 'follower', 'follower', 'follower', 'leader']);
+      assert.deepEqual(states.sort(),
+        ['follower', 'follower', 'follower', 'follower', 'leader']);
       nodes.forEach(function(node) {
         assert.equal(node.currentTerm(), 1);
         assert.equal(node.commonState.volatile.leaderId, leader);
@@ -53,15 +50,16 @@ describe('cluster', function() {
   it('commands work and get persisted', {timeout: 20e3}, function(done) {
     var MAX_COMMANDS = 50;
     var nodes = [];
-    var leader;
 
-    for(var i = 0 ; i < 5 ; i ++) {
-      nodes.push(Node());
+    for (var i = 0 ; i < 5 ; i ++) {
+      nodes.push(NodeC());
     }
 
-    nodes.forEach(function(node, index) {
-      nodes.forEach(function(node2, index) {
-        if (node != node2) node.join(node2.id);
+    nodes.forEach(function(node) {
+      nodes.forEach(function(node2) {
+        if (node != node2) {
+          node.join(node2.id);
+        }
       });
       node.once('leader', onLeader);
     });
@@ -74,20 +72,28 @@ describe('cluster', function() {
       pushCommand();
 
       function pushCommand() {
-        var cmd = ++ index;
+        var cmd = ++index;
         commands.push(cmd);
         leader.command(cmd, commanded);
       }
 
       function commanded(err) {
-        if (err) throw err;
-        if (index < MAX_COMMANDS) pushCommand();
+        if (err) {
+          throw err;
+        }
+        if (index < MAX_COMMANDS) {
+          pushCommand();
+        }
         else {
           setTimeout(function() {
             nodes.forEach(function(node) {
               assert.deepEqual(persistence.store.commands[node.id], commands);
-              if (node == leader) assert.equal(node.state.name, 'leader');
-              else assert.equal(node.state.name, 'follower');
+              if (node == leader) {
+                assert.equal(node.state.name, 'leader');
+              }
+              else {
+                assert.equal(node.state.name, 'follower');
+              }
             });
             done();
           }, 1e3);

@@ -7,13 +7,13 @@ var it = lab.it;
 var assert = Lab.assert;
 
 var uuid = require('cuid');
-var Node = require('./_node');
+var NodeC = require('./_node');
 var transport = require('./_transport');
 
 describe('follower', function() {
 
   it('is the default state', function(done) {
-    var node = Node();
+    var node = NodeC();
     node.once('state', function(state) {
       assert.equal(state, 'follower');
       done();
@@ -23,7 +23,7 @@ describe('follower', function() {
   it('transforms into candidate when election timeout', function(done) {
     var lastState;
 
-    var node = Node();
+    var node = NodeC();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
     node.once('election timeout', function() {
       assert.equal(lastState, 'candidate');
@@ -37,7 +37,7 @@ describe('follower', function() {
   });
 
   it('replies false to append entries if term < current term', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.currentTerm = 2;
 
@@ -49,9 +49,11 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
-        if (err) throw err;
+        if (err) {
+          throw err;
+        }
         assert.notOk(args.success);
         assert.equal(args.term, 2);
         done();
@@ -60,7 +62,7 @@ describe('follower', function() {
   });
 
   it('replies true to append entries if term = current term', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     // node.on('outgoing call', function(peer, type, message) {
     //   console.log('outgoing call:', peer.id, type, message);
@@ -80,9 +82,11 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
-        if (err) throw err;
+        if (err) {
+          throw err;
+        }
         assert.ok(args.success);
         done();
       }
@@ -90,7 +94,7 @@ describe('follower', function() {
   });
 
   it('applies append entries if term > current term', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.currentTerm = 1;
 
@@ -102,9 +106,11 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
-        if (err) throw err;
+        if (err) {
+          throw err;
+        }
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         done();
@@ -113,7 +119,7 @@ describe('follower', function() {
   });
 
   it('replies to heartbeat', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.currentTerm = 1;
 
@@ -131,7 +137,7 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
         assert.ok(args.success);
         assert.equal(args.term, node.currentTerm());
@@ -141,7 +147,7 @@ describe('follower', function() {
   });
 
   it('applies entries if log is empty', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     var peer = uuid();
     node.join(peer);
@@ -162,7 +168,7 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
@@ -175,7 +181,7 @@ describe('follower', function() {
   });
 
   it('applies entries if there is no conflict', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.log.push({term: 1});
 
@@ -198,7 +204,7 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
@@ -213,7 +219,7 @@ describe('follower', function() {
   });
 
   it('applies entries if there is conflict', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.log.push({term: 1}, {term: 2});
 
@@ -237,7 +243,7 @@ describe('follower', function() {
     var isDone = false;
 
     function replied(err, args) {
-      if (! isDone) {
+      if (!isDone) {
         isDone = true;
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
@@ -252,7 +258,7 @@ describe('follower', function() {
   });
 
   it('eventually persists new log entries', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     node.commonState.persisted.log.push({term: 1}, {term: 2});
 
@@ -280,8 +286,10 @@ describe('follower', function() {
 
     var applied = 0;
     function replied(err) {
-      if (! isDone) {
-        if (err) throw err;
+      if (!isDone) {
+        if (err) {
+          throw err;
+        }
         assert.equal(node.commonState.volatile.commitIndex, 2);
         node.on('applied log', function(logIndex) {
           applied ++;
@@ -290,10 +298,9 @@ describe('follower', function() {
             assert.equal(node.commonState.volatile.lastApplied, 2);
             isDone = true;
             done();
-           }
+          }
         });
       }
     }
   });
-
 });
