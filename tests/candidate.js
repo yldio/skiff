@@ -7,19 +7,21 @@ var it = lab.it;
 var assert = Lab.assert;
 
 var uuid = require('cuid');
-var Node = require('./_node');
+var NodeC = require('./_node');
 var transport = require('./_transport');
 
 describe('candidate', function() {
 
   it('reaches leader state if alone', function(done) {
-    var node = Node();
+    var node = NodeC();
 
     var states = ['follower', 'candidate', 'leader'];
 
     node.on('state', function(state) {
-      if (states.length) assert.equal(state, states.shift());
-      if (! states.length) {
+      if (states.length) {
+        assert.equal(state, states.shift());
+      }
+      if (!states.length) {
         assert.equal(node.currentTerm(), 1);
         done();
       }
@@ -27,7 +29,7 @@ describe('candidate', function() {
   });
 
   it('doesnt reach leader if cannot get majority', function(done) {
-    var node = Node();
+    var node = NodeC();
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id) {
@@ -40,7 +42,7 @@ describe('candidate', function() {
       if (states.length) {
         assert.equal(state, states.shift());
 
-        if (! states.length) {
+        if (!states.length) {
           assert.equal(node.currentTerm(), 1);
           done();
         }
@@ -49,7 +51,7 @@ describe('candidate', function() {
   });
 
   it('reaches leader if can get all the votes', function(done) {
-    var node = Node();
+    var node = NodeC();
     var remotes = [uuid(), uuid()];
     remotes.forEach(function(id) {
       transport.listen(id, listen);
@@ -62,7 +64,7 @@ describe('candidate', function() {
       if (states.length) {
         assert.equal(state, states.shift());
 
-        if (! states.length) {
+        if (!states.length) {
           assert.equal(node.currentTerm(), 1);
           done();
         }
@@ -75,14 +77,14 @@ describe('candidate', function() {
       if (type == 'RequestVote') {
         assert.equal(args.term, 1);
         assert.equal(args.lastLogIndex, 0);
-        assert((++ voteRequests) <= remotes.length);
+        assert((++voteRequests) <= remotes.length);
         cb(null, {voteGranted: true});
       }
     }
   });
 
   it('reaches leader if can get majority of votes', function(done) {
-    var node = Node();
+    var node = NodeC();
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
@@ -90,14 +92,13 @@ describe('candidate', function() {
       node.join(id);
     });
 
-
     var states = ['follower', 'candidate', 'leader'];
 
     node.on('state', function(state) {
       if (states.length) {
         assert.equal(state, states.shift());
 
-        if (! states.length) {
+        if (!states.length) {
           assert.equal(node.currentTerm(), 1);
           done();
         }
@@ -117,7 +118,7 @@ describe('candidate', function() {
   });
 
   it('doesnt reach leader if candidate sends higher term', function(done) {
-    var node = Node();
+    var node = NodeC();
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
@@ -125,14 +126,13 @@ describe('candidate', function() {
       node.join(id);
     });
 
-
     var states = ['follower', 'candidate', 'follower'];
 
     node.on('state', function(state) {
       if (states.length) {
         assert.equal(state, states.shift());
 
-        if (! states.length) {
+        if (!states.length) {
           assert.equal(node.currentTerm(), 2);
           done();
         }
@@ -154,7 +154,7 @@ describe('candidate', function() {
   });
 
   it('reaches leader if other sends same term', function(done) {
-    var node = Node();
+    var node = NodeC();
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
@@ -162,14 +162,13 @@ describe('candidate', function() {
       node.join(id);
     });
 
-
     var states = ['follower', 'candidate', 'leader'];
 
     node.on('state', function(state) {
       if (states.length) {
         assert.equal(state, states.shift());
 
-        if (! states.length) {
+        if (!states.length) {
           assert.equal(node.currentTerm(), 1);
           done();
         }
@@ -189,5 +188,4 @@ describe('candidate', function() {
       };
     }
   });
-
 });
