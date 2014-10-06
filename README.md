@@ -6,7 +6,7 @@ Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.gi
 ## Install
 
 ```bash
-$ node install node-raft --save
+$ node install skiff --save
 ```
 
 ## Require
