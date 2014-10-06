@@ -39,8 +39,8 @@ describe('node', function() {
 
   it('starts with an empty list of peers', function(done) {
     var node = Node();
-    assert.isArray(node.peers);
-    assert.equal(node.peers.length, 0);
+    assert.isArray(node.commonState.persisted.peers);
+    assert.equal(node.commonState.persisted.peers.length, 0);
     done();
   });
 
@@ -56,16 +56,16 @@ describe('node', function() {
     var node = Node();
     var peer = Peer('someid', {transport: transport});
     node.join(peer);
-    assert.equal(node.peers.length, 1);
-    assert.equal(node.peers[0], peer);
+    assert.equal(node.commonState.persisted.peers.length, 1);
+    assert.equal(node.commonState.persisted.peers[0], peer);
     done();
   });
 
   it('can join a peer by desc', function(done) {
     var node = Node();
     node.join('hostname:port');
-    assert.equal(node.peers.length, 1);
-    assert.instanceOf(node.peers[0], Peer);
+    assert.equal(node.commonState.persisted.peers.length, 1);
+    assert.instanceOf(node.commonState.persisted.peers[0], Peer);
     done();
   });
 
