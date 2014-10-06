@@ -46,10 +46,20 @@ var node = Node(options);
 
 #### .join()
 
-Joins a peer.
+Joins a peer into the cluster.
 
 ```javascript
-node.join(peer);
+node.join(peer, cb);
+```
+
+The peer is a string describing the peer. The description depends on the transport you're using.
+
+#### .leave()
+
+Removes a peer from the cluster,
+
+```javascript
+node.leave(peer, cb);
 ```
 
 The peer is a string describing the peer. The description depends on the transport you're using.
