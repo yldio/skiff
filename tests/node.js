@@ -50,17 +50,4 @@ describe('node', function() {
     }, 'need options.transport');
     done();
   });
-
-  it('can join a peer', function(done) {
-    var node = NodeC();
-    var peer = Peer('someid', {transport: transport});
-    node.join(peer);
-    done();
-  });
-
-  it('can join a peer by desc', function(done) {
-    var node = NodeC();
-    node.join('hostname:port');
-    done();
-  });
 });

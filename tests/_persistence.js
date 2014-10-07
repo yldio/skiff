@@ -31,19 +31,19 @@ exports.applyLog = applyLog;
 
 function applyLog(nodeId, commitIndex, log, callback) {
   assert(log, 'empty log');
-  setImmediate(function() {
+  setTimeout(function() {
     if (!store.commands[nodeId]) {
       store.commands[nodeId] = [];
     }
     store.commands[nodeId].push(log.command);
     store.state[nodeId] = commitIndex;
     callback();
-  });
+  }, 5);
 }
 
 exports.lastAppliedCommitIndex = lastAppliedCommitIndex;
 
 function lastAppliedCommitIndex(nodeId, callback) {
   var commitIndex = store.meta[nodeId];
-  setImmediate(callback, null, commitIndex);
+  setTimeout(callback, 5, null, commitIndex);
 }

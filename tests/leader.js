@@ -64,13 +64,15 @@ describe('leader', function() {
       transport.listen(peer, peerListen(peer, index));
     });
 
-    var expectedIndexes = [3, 2, 1, 0, 1, 2];
+    var expectedIndexes = [2, 1, 0, 1, 2, 3, 3];
     var expectedEntries = [
       [],
       [{term: 1, command: 'COMMAND 2'}],
       [{term: 1, command: 'COMMAND 1'}],
       [{term: 1, command: 'COMMAND 2'}],
-      [{term: 1, command: 'COMMAND 3'}]
+      [{term: 1, command: 'COMMAND 3'}],
+      [],
+      []
     ];
     var nodeAppendEntriesCount = {};
     peers.forEach(function(peer) {
@@ -94,7 +96,7 @@ describe('leader', function() {
         if (nodeAppendEntriesCount[id] < expectedIndexes.length) {
           nodeAppendEntriesCount[id] ++;
           assert.equal(
-            args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id]]);
+            args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
           assert.deepEqual(
             args.entries, expectedEntries[nodeAppendEntriesCount[id] - 1]);
         }
@@ -118,7 +120,13 @@ describe('leader', function() {
         if (err) {
           throw err;
         }
-        node.stop(done);
+        setTimeout(function() {
+          peers.forEach(function(peer) {
+            assert.equal(nodeAppendEntriesCount[peer], expectedIndexes.length);
+          });
+          node.stop(done);
+        }, 1e3);
+
       });
     });
   });
