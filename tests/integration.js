@@ -6,28 +6,19 @@ var it = lab.it;
 var assert = Lab.assert;
 var describe = lab.describe;
 
+var async = require('async');
 var NodeC = require('./_node2');
+var Cluster = require('./_cluster2');
 // var debug = require('./_debug');
 var persistence = require('./_persistence');
 
 describe('cluster', function() {
 
   it('elects one leader', function(done) {
-    var nodes = [];
+    var nodes = Cluster(5);
     var leader;
 
-    for (var i = 0 ; i < 5 ; i ++) {
-      nodes.push(NodeC());
-    }
-
     nodes.forEach(function(node, index) {
-
-      nodes.forEach(function(node2) {
-        if (node != node2) {
-          node._join(node2.id);
-        }
-      });
-
       node.once('leader', function() {
         leader = node.id;
         setTimeout(function() {
@@ -44,23 +35,13 @@ describe('cluster', function() {
         }, 1000);
       });
     });
-
   });
 
   it('commands work and get persisted', {timeout: 10e3}, function(done) {
     var MAX_COMMANDS = 50;
-    var nodes = [];
-
-    for (var i = 0 ; i < 5 ; i ++) {
-      nodes.push(NodeC());
-    }
+    var nodes = Cluster(5);
 
     nodes.forEach(function(node) {
-      nodes.forEach(function(node2) {
-        if (node != node2) {
-          node._join(node2.id);
-        }
-      });
       node.once('leader', onLeader);
     });
 
@@ -100,6 +81,72 @@ describe('cluster', function() {
         }
       }
     }
+  });
+
+  it('allows adding a node in-flight (topology change)', {timeout: 10e3}, function(done) {
+    var nodes = Cluster(5);
+
+    nodes.forEach(function(node) {
+      node.once('leader', onLeader);
+    });
+
+    function onLeader(leader) {
+      console.log('leader');
+
+      // add all other nodes to log
+      nodes.forEach(function(node) {
+        leader.commonState.persisted.log.push({
+          term: leader.currentTerm(),
+          command: ['addPeer', node.id],
+          topologyChange: true
+        });
+      })
+
+      leader.on('joined', function(peer) {
+        console.log('leader joined ', peer.id);
+      });
+
+
+      var node = NodeC();
+      node.on('state', function(state) {
+        console.log('state:', state);
+      });
+      node.on('AppendEntries', function(args) {
+        console.log('AppendEntries', args);
+      });
+      node.on('joined', function(peer) {
+        console.log('joined', peer.id);
+      });
+
+      leader.join(node.id, joined);
+
+      function joined(err) {
+        if (err) throw err;
+
+        var commands = [];
+
+        for(var i = 0 ; i < 1 ; i ++) {
+          commands.push(++ i);
+        }
+        console.log(commands);
+
+        async.each(commands, function(cmd, cb) {
+          leader.command(cmd, cb);
+        }, commanded);
+
+        function commanded(err) {
+          if (err) {
+            throw err;
+          }
+
+          setTimeout(function() {
+            assert.deepEqual(persistence.store[node.id], commands);
+            done();
+          }, 5e3);
+        }
+      }
+    }
+
   });
 
 });
