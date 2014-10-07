@@ -114,15 +114,41 @@ describe('cluster', function() {
           }
 
           setTimeout(function() {
-            commands.unshift(['addPeer', node.id]);
-
             assert.deepEqual(persistence.store.commands[node.id], commands);
             done();
           }, 2e3);
         }
       }
     }
-
   });
+
+  it('allows removing a node in-flight that is not the leader', {timeout: 5e3}, function(done) {
+    var nodes = Cluster(5);
+
+    nodes.forEach(function(node) {
+      node.once('leader', onLeader);
+    });
+
+    function onLeader(leader) {
+      var node;
+      for(var i = 0 ; i < nodes.length; i ++) {
+        node = nodes[i];
+        if (node != leader) break;
+      }
+
+      leader.leave(node.id, left);
+
+      function left(err) {
+        if (err) {
+          throw err;
+        }
+        assert.equal(node.state.name, 'standby');
+        done();
+      }
+
+    }
+  });
+
+  it('allows 2 nodes to start talking to each other');
 
 });

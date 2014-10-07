@@ -1,11 +1,19 @@
 'use strict';
 
+var inherits = require('util').inherits;
+var EventEmitter = require('events').EventEmitter;
+
 module.exports = Connection;
 
 function Connection(id, hub) {
+
+  EventEmitter.call(this);
+
   this.id = id;
   this.hub = hub;
 }
+
+inherits(Connection, EventEmitter);
 
 var C = Connection.prototype;
 
@@ -25,4 +33,17 @@ C.invoke = function invoke(type, args, cb) {
 
 C.listen = function listen(cb) {
   this.hub.in[this.id] = cb;
+};
+
+C.close = function(cb) {
+  var self = this;
+
+  if (this.hub.out[this.id]) delete this.hub.out[this.id];
+  if (this.hub.in[this.id]) delete this.hub.in[this.id];
+  setTimeout(function() {
+    self.emit('close');
+    if (cb) {
+      cb();
+    }
+  }, 5);
 };

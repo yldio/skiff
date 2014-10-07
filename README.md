@@ -112,6 +112,9 @@ The connection API implements the following interface:
 * `listen(callback)` — listen for messages from the remote peer. The `callback` argument is a function with the signature `function (type, args, cb)`. `cb` is a function that accepts the reply arguments.
 * `close(callback)` — for closing the connection. The `callback` argument is a function with the signature `function (err)`.
 
+The connection object is an EventEmitter, emitting the following events:
+
+* `close` - once the connection closes
 
 ### Persistence provider API
 
@@ -127,7 +130,7 @@ The node `persistence` option accepts a provider object that implements the foll
 * `lastAppliedCommitIndex(nodeId, callback)` - returns the last `commitIndex` that was successfully applied to the node state machine.
   * is asynchronous: `callback` is a function invoked once the result is ready
   * `callback` is a function with the following signature: `function(err, commitIndex)` - if operation resulted in error, `err` contains an error object. Otherwise, `commitIndex` may contain an integer with the index of the latest applied `commitIndex` if there was one.
-
+* `saveCommitIndex(nodeId, commitIndex, callback)`  - saves only the commit index
 
 ## License
 
