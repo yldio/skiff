@@ -4,7 +4,7 @@ var Connection2 = require('./_connection2');
 
 var hub = {};
 
-module.exports = Transport;
+module.exports = exports = Transport;
 
 function Transport(from) {
   this.from = from;

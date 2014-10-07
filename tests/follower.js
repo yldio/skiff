@@ -144,7 +144,7 @@ describe('follower', function() {
 
     var args = {
       term: 2,
-      prevLogIndex: null,
+      prevLogIndex: 0,
       prevLogTerm: null,
       entries: entries
     };
