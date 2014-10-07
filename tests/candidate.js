@@ -33,7 +33,7 @@ describe('candidate', function() {
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id) {
-      node.join(id);
+      node._join(id);
     });
 
     var states = ['follower', 'candidate', 'candidate'];
@@ -55,7 +55,7 @@ describe('candidate', function() {
     var remotes = [uuid(), uuid()];
     remotes.forEach(function(id) {
       transport.listen(id, listen);
-      node.join(id);
+      node._join(id);
     });
 
     var states = ['follower', 'candidate', 'leader'];
@@ -89,7 +89,7 @@ describe('candidate', function() {
 
     remotes.forEach(function(id, index) {
       transport.listen(remotes[index], listen(index));
-      node.join(id);
+      node._join(id);
     });
 
     var states = ['follower', 'candidate', 'leader'];
@@ -123,7 +123,7 @@ describe('candidate', function() {
 
     remotes.forEach(function(id, index) {
       transport.listen(remotes[index], listen(id, index));
-      node.join(id);
+      node._join(id);
     });
 
     var states = ['follower', 'candidate', 'follower'];
@@ -159,7 +159,7 @@ describe('candidate', function() {
 
     remotes.forEach(function(id, index) {
       transport.listen(remotes[index], listen(id, index));
-      node.join(id);
+      node._join(id);
     });
 
     var states = ['follower', 'candidate', 'follower'];

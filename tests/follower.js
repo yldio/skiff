@@ -38,40 +38,29 @@ describe('follower', function() {
     node.commonState.persisted.currentTerm = 2;
 
     var peer = uuid();
-    node.join(peer);
-
+    node._join(peer);
     transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
 
     var isDone = false;
 
     function replied(err, args) {
-      if (!isDone) {
-        isDone = true;
-        if (err) {
-          throw err;
-        }
-        assert.notOk(args.success);
-        assert.equal(args.term, 2);
-        done();
+      if (err) {
+        throw err;
       }
+      assert.notOk(args.success);
+      assert.equal(args.term, 2);
+      done();
     }
+
   });
 
   it('replies true to append entries if term = current term', function(done) {
     var node = NodeC();
 
-    // node.on('outgoing call', function(peer, type, message) {
-    //   console.log('outgoing call:', peer.id, type, message);
-    // });
-
-    // node.on('response', function(peer, err, args) {
-    //   console.log('response:', peer.id, err, args);
-    // });
-
     node.commonState.persisted.currentTerm = 1;
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
 
@@ -95,7 +84,7 @@ describe('follower', function() {
     node.commonState.persisted.currentTerm = 1;
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     transport.invoke(peer, 'AppendEntries', {term: 2}, replied);
 
@@ -120,7 +109,7 @@ describe('follower', function() {
     node.commonState.persisted.currentTerm = 1;
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     var args = {
       term: 1,
@@ -146,7 +135,7 @@ describe('follower', function() {
     var node = NodeC();
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     var entries = [
       {term: 2},
@@ -169,7 +158,7 @@ describe('follower', function() {
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         entries.forEach(function(entry, index) {
-          assert.deepEqual(node.commonState.persisted.log[index], entry);
+          assert.deepEqual(node.commonState.persisted.log.entries[index], entry);
         });
         done();
       }
@@ -182,7 +171,7 @@ describe('follower', function() {
     node.commonState.persisted.log.push({term: 1});
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     var entries = [
       {term: 2},
@@ -205,9 +194,9 @@ describe('follower', function() {
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         assert.equal(node.commonState.persisted.log.length, 3);
-        assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
+        assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
         entries.forEach(function(entry, index) {
-          assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
+          assert.deepEqual(node.commonState.persisted.log.entries[index + 1], entry);
         });
         done();
       }
@@ -220,7 +209,7 @@ describe('follower', function() {
     node.commonState.persisted.log.push({term: 1}, {term: 2});
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     var entries = [
       {term: 2},
@@ -244,9 +233,9 @@ describe('follower', function() {
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         assert.equal(node.commonState.persisted.log.length, 3);
-        assert.deepEqual(node.commonState.persisted.log[0], {term: 1});
+        assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
         entries.forEach(function(entry, index) {
-          assert.deepEqual(node.commonState.persisted.log[index + 1], entry);
+          assert.deepEqual(node.commonState.persisted.log.entries[index + 1], entry);
         });
         done();
       }
@@ -262,7 +251,7 @@ describe('follower', function() {
     assert.equal(node.commonState.volatile.lastApplied, 0);
 
     var peer = uuid();
-    node.join(peer);
+    node._join(peer);
 
     var entries = [
       {term: 2, command: 'COMMAND 1'},

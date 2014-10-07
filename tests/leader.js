@@ -17,7 +17,7 @@ describe('leader', function() {
 
     var peers = [uuid(), uuid()];
     peers.forEach(function(peer) {
-      node.join(peer);
+      node._join(peer);
       transport.listen(peer, peerListen);
     });
 
@@ -60,7 +60,7 @@ describe('leader', function() {
 
     var peers = [uuid(), uuid()];
     peers.forEach(function(peer, index) {
-      node.join(peer);
+      node._join(peer);
       transport.listen(peer, peerListen(peer, index));
     });
 

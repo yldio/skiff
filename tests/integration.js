@@ -7,7 +7,7 @@ var assert = Lab.assert;
 var describe = lab.describe;
 
 var NodeC = require('./_node2');
-//var debug = require('./_debug');
+// var debug = require('./_debug');
 var persistence = require('./_persistence');
 
 describe('cluster', function() {
@@ -24,7 +24,7 @@ describe('cluster', function() {
 
       nodes.forEach(function(node2) {
         if (node != node2) {
-          node.join(node2.id);
+          node._join(node2.id);
         }
       });
 
@@ -58,7 +58,7 @@ describe('cluster', function() {
     nodes.forEach(function(node) {
       nodes.forEach(function(node2) {
         if (node != node2) {
-          node.join(node2.id);
+          node._join(node2.id);
         }
       });
       node.once('leader', onLeader);
@@ -86,7 +86,7 @@ describe('cluster', function() {
         }
         else {
           setTimeout(function() {
-            nodes.forEach(function(node) {
+            nodes.forEach(function(node, index) {
               assert.deepEqual(persistence.store.commands[node.id], commands);
               if (node == leader) {
                 assert.equal(node.state.name, 'leader');

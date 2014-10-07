@@ -1,5 +1,7 @@
 'use strict';
 
+var assert = require('assert');
+
 var store = {
   meta: {},
   state: {},
@@ -28,6 +30,7 @@ function loadMeta(nodeId, callback) {
 exports.applyLog = applyLog;
 
 function applyLog(nodeId, commitIndex, log, callback) {
+  assert(log, 'empty log');
   setImmediate(function() {
     if (!store.commands[nodeId]) {
       store.commands[nodeId] = [];
