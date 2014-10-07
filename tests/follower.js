@@ -26,12 +26,8 @@ describe('follower', function() {
     var node = NodeC();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
     node.once('election timeout', function() {
-      assert.equal(lastState, 'candidate');
+      assert.equal(node.state.name, 'candidate');
       done();
-    });
-
-    node.on('state', function(state) {
-      lastState = state;
     });
 
   });
