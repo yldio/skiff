@@ -15,27 +15,28 @@ function saveMeta(nodeId, state, callback) {
   setImmediate(callback);
 }
 
-
 exports.loadMeta = loadMeta;
 
 function loadMeta(nodeId, callback) {
   var data = store.meta[nodeId];
-  if (data) data = JSON.parse(data);
+  if (data) {
+    data = JSON.parse(data);
+  }
   setImmediate(callback, null, data);
 }
-
 
 exports.applyLog = applyLog;
 
 function applyLog(nodeId, commitIndex, log, callback) {
   setImmediate(function() {
-    if (! store.commands[nodeId]) store.commands[nodeId] = [];
+    if (!store.commands[nodeId]) {
+      store.commands[nodeId] = [];
+    }
     store.commands[nodeId].push(log.command);
     store.state[nodeId] = commitIndex;
     callback();
   });
 }
-
 
 exports.lastAppliedCommitIndex = lastAppliedCommitIndex;
 

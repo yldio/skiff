@@ -63,13 +63,17 @@ describe('peer', function() {
     var timeouts = [100, 0];
 
     peer.invoke('type', 'args', function(err) {
-      if (err) throw err;
+      if (err) {
+        throw err;
+      }
       active = false;
     });
 
     peer.invoke('type', 'args', function(err) {
-      if (err) throw err;
-      assert(! active);
+      if (err) {
+        throw err;
+      }
+      assert(!active);
       done();
     });
 
@@ -101,7 +105,9 @@ describe('peer', function() {
     function checkReply(i) {
       peer.invoke('type', 'args', function() {
         assert.deepEqual(Array.prototype.slice.call(arguments), replies[i]);
-        if (i == replies.length - 1) done();
+        if (i == replies.length - 1) {
+          done();
+        }
       });
     }
 
@@ -123,5 +129,4 @@ describe('peer', function() {
       cb();
     }
   });
-
 });
