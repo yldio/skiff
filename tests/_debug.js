@@ -41,3 +41,19 @@ function debug(node) {
     log('reset election timeout');
   });
 }
+
+
+debug.debug2 = function(node) {
+  node.on('state', function(state) {
+    log(index, state, node.currentTerm());
+  });
+  node.on('vote granted', function(node) {
+    log(index, 'voted for', node);
+  });
+  node.on('AppendEntries', function(args) {
+    log(index, 'AppendEntries from', args[0].leaderId);
+  });
+  node.on('election timeout', function() {
+    log(index, 'timed out');
+  });
+}

@@ -153,7 +153,7 @@ describe('candidate', function() {
     }
   });
 
-  it('reaches leader if other sends same term', function(done) {
+  it('converts to follower if other sends same term', function(done) {
     var node = NodeC();
     var remotes = [uuid(), uuid()];
 
@@ -162,7 +162,7 @@ describe('candidate', function() {
       node.join(id);
     });
 
-    var states = ['follower', 'candidate', 'leader'];
+    var states = ['follower', 'candidate', 'follower'];
 
     node.on('state', function(state) {
       if (states.length) {

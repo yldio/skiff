@@ -20,33 +20,34 @@ describe('cluster', function() {
       nodes.push(NodeC());
     }
 
-    nodes.forEach(function(node) {
+    nodes.forEach(function(node, index) {
+
       nodes.forEach(function(node2) {
         if (node != node2) {
           node.join(node2.id);
         }
       });
+
       node.once('leader', function() {
         leader = node.id;
+        setTimeout(function() {
+          var states = nodes.map(function(node) {
+            return node.state.name;
+          });
+          assert.deepEqual(states.sort(),
+            ['follower', 'follower', 'follower', 'follower', 'leader']);
+          nodes.forEach(function(node) {
+            assert(node.currentTerm() >= 1);
+            assert.equal(node.commonState.volatile.leaderId, leader);
+          });
+          done();
+        }, 1000);
       });
     });
 
-    setTimeout(function() {
-      var states = nodes.map(function(node) {
-        return node.state.name;
-      });
-      assert.deepEqual(states.sort(),
-        ['follower', 'follower', 'follower', 'follower', 'leader']);
-      nodes.forEach(function(node) {
-        assert.equal(node.currentTerm(), 1);
-        assert.equal(node.commonState.volatile.leaderId, leader);
-      });
-      done();
-    }, 1e3);
-
   });
 
-  it('commands work and get persisted', {timeout: 20e3}, function(done) {
+  it('commands work and get persisted', {timeout: 10e3}, function(done) {
     var MAX_COMMANDS = 50;
     var nodes = [];
 

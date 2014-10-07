@@ -20,7 +20,7 @@ var C = Connection2.prototype;
 C.invoke = function invoke(type, args, cb) {
   var self = this;
 
-  process.nextTick(function() {
+  setTimeout(function() {
     var fn = self.hub[self.from][self.to];
     if (fn) {
       fn.call(null, type, args, cb);
@@ -28,7 +28,7 @@ C.invoke = function invoke(type, args, cb) {
     else {
       cb.call(null, new Error('cannot connect to ' + self.to));
     }
-  });
+  }, 5);
 };
 
 C.listen = function listen(cb) {
