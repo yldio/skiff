@@ -31,7 +31,7 @@ describe('peer', function() {
   it('cannot send messages before connected', function(done) {
     var options = uuid();
     var peer = Peer(options, {transport: transport});
-    peer.invoke('type', 'args', function(err) {
+    peer.send('type', 'args', function(err) {
       assert.instanceOf(err, Error);
       done();
     });
@@ -41,8 +41,8 @@ describe('peer', function() {
     var options = uuid();
     var peer = Peer(options, {transport: transport});
     var conn = peer.connect();
-    var spy = sinon.spy(conn, 'invoke');
-    peer.invoke('type', 'args', invoked);
+    var spy = sinon.spy(conn, 'send');
+    peer.send('type', 'args', invoked);
 
     function invoked() {
       assert.ok(spy.called);
@@ -62,14 +62,14 @@ describe('peer', function() {
     var active = true;
     var timeouts = [100, 0];
 
-    peer.invoke('type', 'args', function(err) {
+    peer.send('type', 'args', function(err) {
       if (err) {
         throw err;
       }
       active = false;
     });
 
-    peer.invoke('type', 'args', function(err) {
+    peer.send('type', 'args', function(err) {
       if (err) {
         throw err;
       }
@@ -103,7 +103,7 @@ describe('peer', function() {
     }
 
     function checkReply(i) {
-      peer.invoke('type', 'args', function() {
+      peer.send('type', 'args', function() {
         assert.deepEqual(Array.prototype.slice.call(arguments), replies[i]);
         if (i == replies.length - 1) {
           done();
@@ -122,7 +122,7 @@ describe('peer', function() {
     transport.listen(id, listen);
     peer.connect();
 
-    peer.invoke('type', 'args', done);
+    peer.send('type', 'args', done);
 
     function listen(type, args, cb) {
       cb();

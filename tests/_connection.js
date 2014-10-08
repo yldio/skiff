@@ -17,7 +17,7 @@ inherits(Connection, EventEmitter);
 
 var C = Connection.prototype;
 
-C.invoke = function invoke(type, args, cb) {
+C.send = function send(type, args, cb) {
   var self = this;
 
   setTimeout(function() {
@@ -31,7 +31,7 @@ C.invoke = function invoke(type, args, cb) {
   }, 5);
 };
 
-C.listen = function listen(cb) {
+C.receive = function receive(cb) {
   this.hub.in[this.id] = cb;
 };
 
