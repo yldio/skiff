@@ -45,7 +45,16 @@ var node = Node(options);
 
 ### Node API
 
-#### .join()
+#### .listen(options, listener)
+
+Makes the peer listen for peer communications. Takes the following arguments:
+
+* `options` - connection options, depends on the transport provider being used.
+* `listener` - a function with the following signature: `function (peerId, connection)`. The arguments for the listener function are:
+  * `peerId` - the identification of the peer
+  * `connection` - a connection with the peer, an object implementing the Connection API (see below).
+
+#### .join(peer, cb)
 
 Joins a peer into the cluster.
 
@@ -55,7 +64,7 @@ node.join(peer, cb);
 
 The peer is a string describing the peer. The description depends on the transport you're using.
 
-#### .leave()
+#### .leave(peer, cb)
 
 Removes a peer from the cluster,
 
@@ -103,13 +112,14 @@ A node emits the following events that may or not be interesting to you:
 The node `transport` option accepts a provider object that implements the following interface:
 
 * `connect(options)` — for connecting to the peer. returns a connection object
+* `listen(options, fn)` — for listening to incoming connection requests. The `fn` argument is a function with the signaure `function (peerId, connection)` that gets invoked when there is a connection request, passing in a connection object that implements the Connection API (see below).
 
 #### Connection API
 
 The connection API implements the following interface:
 
-* `invoke(type, arguments, callback)` — for making a remote call into the peer. The `callback` argument is a function with the signature `function (err, result)`.
-* `listen(callback)` — listen for messages from the remote peer. The `callback` argument is a function with the signature `function (type, args, cb)`. `cb` is a function that accepts the reply arguments.
+* `send(type, arguments, callback)` — for making a remote call into the peer. The `callback` argument is a function with the signature `function (err, result)`.
+* `receive(fn)` — listen for messages from the remote peer. The `fn` argument is a function with the signature `function (type, args, cb)`. `cb` is a function that accepts the reply arguments.
 * `close(callback)` — for closing the connection. The `callback` argument is a function with the signature `function (err)`.
 
 The connection object is an EventEmitter, emitting the following events:

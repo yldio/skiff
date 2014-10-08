@@ -15,40 +15,32 @@ var debug = require('./_debug');
 describe('cluster', function() {
 
   it('elects one leader', function(done) {
-    var nodes = Cluster(5);
-    var leader;
+    Cluster(5, onLeader);
 
-    nodes.forEach(function(node, index) {
-      node.once('leader', function() {
-        leader = node.id;
-        setTimeout(function() {
-          var states = nodes.map(function(node) {
-            return node.state.name;
-          });
-          assert.deepEqual(states.sort(),
-            ['follower', 'follower', 'follower', 'follower', 'leader']);
-          nodes.forEach(function(node) {
-            assert(node.currentTerm() >= 1);
-            assert.equal(node.commonState.volatile.leaderId, leader);
-          });
-          done();
-        }, 1000);
-      });
-    });
+    function onLeader(leader, nodes) {
+      setTimeout(function() {
+        assert.equal(nodes.length, 4);
+        assert.equal(leader.state.name, 'leader');
+        assert.equal(leader.commonState.volatile.leaderId, leader.id);
+        nodes.forEach(function(node) {
+          assert.equal(node.state.name, 'follower');
+          assert(node.currentTerm() >= 1);
+          assert.equal(node.commonState.volatile.leaderId, leader.id);
+        });
+        done();
+      }, 1e3);
+    };
   });
 
   it('commands work and get persisted', {timeout: 10e3}, function(done) {
     var MAX_COMMANDS = 50;
-    var nodes = Cluster(5);
 
-    nodes.forEach(function(node) {
-      node.once('leader', onLeader);
-    });
+    Cluster(5, onLeader);
 
     var commands = [];
     var index = 0;
 
-    function onLeader(leader) {
+    function onLeader(leader, nodes) {
       // debug(leader);
       pushCommand();
 
@@ -69,12 +61,6 @@ describe('cluster', function() {
           setTimeout(function() {
             nodes.forEach(function(node, index) {
               assert.deepEqual(persistence.store.commands[node.id], commands);
-              if (node == leader) {
-                assert.equal(node.state.name, 'leader');
-              }
-              else {
-                assert.equal(node.state.name, 'follower');
-              }
             });
             done();
           }, 1e3);
@@ -83,16 +69,12 @@ describe('cluster', function() {
     }
   });
 
-  it('allows adding a node in-flight (topology change)', {timeout: 3e3}, function(done) {
-    var nodes = Cluster(5);
-
-    nodes.forEach(function(node) {
-      node.once('leader', onLeader);
-    });
+  it('allows adding a node in-flight (topology change)', {timeout: 5e3}, function(done) {
+    Cluster(5, onLeader);
 
     function onLeader(leader) {
       var node = NodeC({standby: true});
-      node._join(leader.id);
+      node.listen(node.id);
 
       leader.join(node.id, joined);
 
@@ -123,20 +105,11 @@ describe('cluster', function() {
     }
   });
 
-  it('allows removing a node in-flight that is not the leader', {timeout: 5e3}, function(done) {
-    var nodes = Cluster(5);
+  it('allows removing a node in-flight that is not the leader', function(done) {
+    Cluster(5, onLeader);
 
-    nodes.forEach(function(node) {
-      node.once('leader', onLeader);
-    });
-
-    function onLeader(leader) {
-      var node;
-      for(var i = 0 ; i < nodes.length; i ++) {
-        node = nodes[i];
-        if (node != leader) break;
-      }
-
+    function onLeader(leader, nodes) {
+      var node = nodes[0];
       leader.leave(node.id, left);
 
       function left(err) {
@@ -145,11 +118,39 @@ describe('cluster', function() {
         }
         done();
       }
-
     }
   });
 
-  it('allows 2 nodes to start talking to each other');
+  it('allows removing a node in-flight that is the leader');
+
+  it('allows 2 nodes to start talking to each other', function(done) {
+    var leader = NodeC();
+    var follower = NodeC({standby: true});
+    follower.listen(follower.id);
+
+    leader.once('leader', function() {
+      leader.join(follower.id, joined);
+    });
+
+    function joined(err) {
+      if (err) {
+        throw err;
+      }
+
+      leader.command('COMMAND', commanded);
+    }
+
+    function commanded(err) {
+      if (err) {
+        throw err;
+      }
+
+      setTimeout(function() {
+        assert.deepEqual(persistence.store.commands[follower.id], ['COMMAND']);
+        done();
+      }, 1e3);
+    }
+  });
 
   it('separating 2 nodes from 3 node cluster makes node become leader');
 

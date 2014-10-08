@@ -15,7 +15,6 @@ function debug(node) {
   var log = Logger(node);
   node.on('state', function(state) {
     log('state:', state);
-    console.trace();
   });
   node.on('AppendEntries', function(args) {
     log('-> AppendEntries: %j', args);
@@ -43,6 +42,9 @@ function debug(node) {
   });
   node.on('reset election timeout', function() {
     log('reset election timeout');
+  });
+  node.on('joined', function(peer) {
+    log('joined %s', peer.id);
   });
 }
 

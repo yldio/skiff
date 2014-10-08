@@ -7,6 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 module.exports = Connection2;
 
 function Connection2(from, to, hub) {
+  var self = this;
 
   EventEmitter.call(this);
 
@@ -14,23 +15,25 @@ function Connection2(from, to, hub) {
   this.to = to;
   this.hub = hub;
 
-  if (!hub[from]) {
-    hub[from] = {};
-  }
-  if (!hub[to]) {
-    hub[to] = {};
-  }
+  setTimeout(function() {
+    var listener = self.hub.listens[to];
+
+    if (listener) {
+      listener.call(null, self.from, self);
+    }
+  }, 5);
 }
 
 inherits(Connection2, EventEmitter);
 
 var C = Connection2.prototype;
 
-C.invoke = function invoke(type, args, cb) {
+C.send = function send(type, args, cb) {
   var self = this;
 
   setTimeout(function() {
-    var fn = self.hub[self.from][self.to];
+    var to = self.hub.connections[self.to];
+    var fn = to && to[self.from];
     if (fn) {
       fn.call(null, type, args, cb);
     }
@@ -40,15 +43,24 @@ C.invoke = function invoke(type, args, cb) {
   }, 5);
 };
 
-C.listen = function listen(cb) {
-  this.hub[this.to][this.from] = cb;
+C.receive = function listen(cb) {
+  if (! this.hub.connections[this.to]) {
+    this.hub.connections[this.to] = {};
+  }
+  this.hub.connections[this.to][this.from] = cb;
 };
 
-C.close = function(cb) {
+C.close = function close(cb) {
   var self = this;
 
-  if (this.hub[this.to][this.from]) delete this.hub[this.to][this.from];
-  if (this.hub[this.from][this.to]) delete this.hub[this.from][this.to];
+  var to = this.hub.connections[this.to];
+  var from = to && to[from];
+  if (from) delete to[from];
+
+  from = this.hub.connections[this.from];
+  to = from && from[to];
+  if (to) delete from[to];
+
   setTimeout(function() {
     self.emit('close');
     if (cb) {
