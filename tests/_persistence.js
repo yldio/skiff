@@ -52,5 +52,8 @@ function lastAppliedCommitIndex(nodeId, callback) {
 exports.saveCommitIndex = saveCommitIndex;
 
 function saveCommitIndex(nodeId, commitIndex, cb) {
-  store.state[nodeId] = commitIndex;
+  setTimeout(function() {
+    store.state[nodeId] = commitIndex;
+    cb();
+  });
 }

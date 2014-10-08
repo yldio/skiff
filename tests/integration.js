@@ -10,6 +10,7 @@ var async = require('async');
 var NodeC = require('./_node2');
 var Cluster = require('./_cluster2');
 var persistence = require('./_persistence');
+var debug = require('./_debug');
 
 describe('cluster', function() {
 
@@ -142,7 +143,6 @@ describe('cluster', function() {
         if (err) {
           throw err;
         }
-        assert.equal(node.state.name, 'standby');
         done();
       }
 
@@ -150,5 +150,7 @@ describe('cluster', function() {
   });
 
   it('allows 2 nodes to start talking to each other');
+
+  it('separating 2 nodes from 3 node cluster makes node become leader');
 
 });
