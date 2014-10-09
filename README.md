@@ -197,6 +197,7 @@ var leader = Node({
   persistence: persistence,
   standby: true // important
 });
+```
 
 This makes the follower start in the standby mode.
 
