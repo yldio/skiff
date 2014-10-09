@@ -121,7 +121,37 @@ describe('cluster', function() {
     }
   });
 
-  it('allows removing a node in-flight that is the leader');
+  it('allows removing a node in-flight that is the leader', function(done) {
+    Cluster(5, onLeader);
+
+    function onLeader(leader, nodes) {
+      leader.leave(leader.id, left);
+
+      nodes.forEach(function(node) {
+        node.once('leader', onNewLeader);
+      });
+
+      function left(err) {
+        if (err) {
+          throw err;
+        }
+      }
+
+      var oneLeader = false;
+      function onNewLeader(node) {
+        if (! oneLeader) {
+          oneLeader = true;
+          setTimeout(function() {
+            var states = nodes.map(function(node) {
+              return node.state.name;
+            }).sort();
+            assert.deepEqual(states, ['follower', 'follower', 'follower', 'leader']);
+            done();
+          }, 1e3);
+        }
+      }
+    }
+  });
 
   it('allows 2 nodes to start talking to each other', function(done) {
     var leader = NodeC();
@@ -152,6 +182,34 @@ describe('cluster', function() {
     }
   });
 
-  it('separating 2 nodes from 3 node cluster makes node become leader');
+  it('separating 2 nodes from 3 node cluster makes node become leader', function(done) {
+    Cluster(3, onLeader);
+
+    function onLeader(leader, nodes) {
+      leader.leave(leader.id);
+
+      nodes.forEach(function(node) {
+        node.once('leader', onNewLeader);
+      });
+
+      var gotNewLeader = false;
+      var follower;
+
+      function onNewLeader(newLeader) {
+        if (! gotNewLeader) {
+          gotNewLeader = true;
+          follower = nodes[(nodes.indexOf(newLeader) + 1) %2];
+          newLeader.leave(newLeader.id);
+          follower.once('leader', onNewNewLeader);
+        }
+      }
+
+      function onNewNewLeader(newNewLeader) {
+        assert.equal(newNewLeader, follower);
+        done();
+      }
+
+     };
+  });
 
 });
