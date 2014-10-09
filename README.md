@@ -186,9 +186,7 @@ leader.once('joined', function(peer) {
 });
 ```
 
-Once this is done and persisted you should never need to do this again since the nodes will know each other and elect a leader at random.
-
-The follower code would look something like this:
+The follower bootstrapping code would look something like this:
 
 ```javascript
 var Node = require('skiff');
