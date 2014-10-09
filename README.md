@@ -162,7 +162,8 @@ The node `persistence` option accepts a provider object that implements the foll
 
 ## Cluster Setup
 
-Setting up a Skiff cluster can be kind of tricky. To avoid partitions you will need to start with a node that will become leader and then add the followers in the standby mode. Mind you that you can only send `join` commands to a leader node (to avoid partitions — it's all explained in detail in the Raft paper).
+Setting up a Skiff cluster can be kind of tricky. To avoid partitions you will need to start with a node that will become leader and then add the followers in the standby mode. Mind you that you can only send `join` commands to a leader node (to avoid partitions — it's all explained in detail in the Raft paper). Once this is done and persisted you should never need to do this again since the nodes will know each other and elect a leader at random if leader goes down.
+
 
 So typically the bootstrap code for the leader would be something like:
 
