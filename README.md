@@ -3,6 +3,16 @@
 
 Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.github.io/).
 
+Contents:
+
+* [Install](#install)
+* [Require](#require)
+* [Create a node](#create-a-node)
+* [Node API](#node-api)
+* [Plugins](#plugins)
+* [Cluster setup](#cluster-setup)
+* [License](#license)
+
 ## Install
 
 ```bash
@@ -33,6 +43,7 @@ var node = Node(options);
 ### Node create options
 
 * `id`: id of the node. if not defined, it's self assigned. accessible on `node.id`
+* `standby`: if true, will start at the `standby` state instead of the `follower` state. In the `standby` state the node only waits for a leader to send commands. Defaults to `false`.
 * `cluster`: the id of the cluster this node will be a part of
 * `standy`: be in the `standby` state, voting and waiting to be contacted by a leader
 * `transport`: the transport to communicate with peers. See the [transport API](#transport-provider-api)
@@ -43,9 +54,9 @@ var node = Node(options);
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
 
 
-### Node API
+## Node API
 
-#### .listen(options, listener)
+### .listen(options, listener)
 
 Makes the peer listen for peer communications. Takes the following arguments:
 
@@ -54,7 +65,7 @@ Makes the peer listen for peer communications. Takes the following arguments:
   * `peerId` - the identification of the peer
   * `connection` - a connection with the peer, an object implementing the Connection API (see below).
 
-#### .join(peer, cb)
+### .join(peer, cb)
 
 Joins a peer into the cluster.
 
@@ -64,7 +75,7 @@ node.join(peer, cb);
 
 The peer is a string describing the peer. The description depends on the transport you're using.
 
-#### .leave(peer, cb)
+### .leave(peer, cb)
 
 Removes a peer from the cluster,
 
@@ -74,12 +85,12 @@ node.leave(peer, cb);
 
 The peer is a string describing the peer. The description depends on the transport you're using.
 
-#### .peers
+### .peers
 
 An array containing all the known peers.
 
 
-#### .command(command, callback)
+### .command(command, callback)
 
 Appends a command to the leader log. If node is not the leader, callback gets invoked with an error. Example:
 
@@ -96,7 +107,7 @@ node.command('some command', function(err) {
 ```
 
 
-#### Events
+### Events
 
 A node emits the following events that may or not be interesting to you:
 
@@ -106,6 +117,10 @@ A node emits the following events that may or not be interesting to you:
 * `election timeout()` - when an election timeout occurs.
 * `applied log(logIndex)` - when a node applies a log entry to the state machine
 
+
+## Plugins
+
+Skiff if failry high-level and doesn't implement the network transport or the persistence layers. Instead, you have to provide an implementation for these.
 
 ### Transport provider API
 
@@ -141,6 +156,58 @@ The node `persistence` option accepts a provider object that implements the foll
   * is asynchronous: `callback` is a function invoked once the result is ready
   * `callback` is a function with the following signature: `function(err, commitIndex)` - if operation resulted in error, `err` contains an error object. Otherwise, `commitIndex` may contain an integer with the index of the latest applied `commitIndex` if there was one.
 * `saveCommitIndex(nodeId, commitIndex, callback)`  - saves only the commit index
+
+
+## Cluster Setup
+
+Setting up a Skiff cluster can be kind of tricky. To avoid partitions you will need to start with a node that will become leader and then add the followers in the standby mode. Mind you that you can only send `join` commands to a leader node (to avoid partitions — it's all explained in detail in the Raft paper).
+
+So typically the bootstrap code for the leader would be something like:
+
+```javascript
+var Node = require('skiff');
+var leader = Node({
+  transport: transport,
+  persistence: persistence
+});
+
+leader.listen(address);
+
+/// wait for the leader node to actually become a leader of it's one node
+leader.once('leader', function() {
+  leader.join('node1');
+  leader.join('node2');
+});
+
+leader.once('joined', function(peer) {
+  console.log('leader joined %s', peer.id);
+});
+```
+
+Once this is done and persisted you should never need to do this again since the nodes will know each other and elect a leader at random.
+
+The follower code would look something like this:
+
+```javascript
+var Node = require('skiff');
+var leader = Node({
+  transport: transport,
+  persistence: persistence,
+  standby: true // important
+});
+
+This makes the follower start in the standby mode.
+
+As mentioned, once the cluster enters stationary mode you just need to bootstrap all the nodes in the same way:
+
+```javascript
+var Node = require('skiff');
+var node = Node({
+  transport: transport,
+  persistence: persistence,
+});
+```
+
 
 ## License
 
