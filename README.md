@@ -192,11 +192,13 @@ The follower code would look something like this:
 
 ```javascript
 var Node = require('skiff');
-var leader = Node({
+var node = Node({
   transport: transport,
   persistence: persistence,
   standby: true // important
 });
+
+node.listen(address);
 ```
 
 This makes the follower start in the standby mode.
@@ -209,6 +211,8 @@ var node = Node({
   transport: transport,
   persistence: persistence,
 });
+
+node.listen(address);
 ```
 
 
