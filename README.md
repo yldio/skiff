@@ -182,7 +182,7 @@ leader.once('leader', function() {
   leader.join('node2');
 });
 
-leader.once('joined', function(peer) {
+leader.on('joined', function(peer) {
   console.log('leader joined %s', peer.id);
 });
 ```
