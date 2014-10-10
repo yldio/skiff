@@ -7,6 +7,7 @@ var it = lab.it;
 var assert = Lab.assert;
 var Peer = require('../lib/peer');
 var transport = require('./_transport');
+var Connection = require('./_connection');
 var sinon = require('sinon');
 var uuid = require('cuid');
 
@@ -127,6 +128,34 @@ describe('peer', function() {
     function listen(type, args, cb) {
       cb();
       cb();
+    }
+  });
+
+  it('is able to disconnect', function(done) {
+    var id = uuid();
+    var peer = Peer(id, {transport: transport});
+    peer.connect();
+    peer.once('connection closed', done);
+    peer.disconnect();
+  });
+
+  it('emits an error if disconnect errors', function(done) {
+    var id = uuid();
+    var peer = Peer(id, {transport: transport});
+
+    var close = Connection.prototype.close;
+    Connection.prototype.close = function(cb) {
+      cb(new Error('oops'));
+    };
+    peer.connect();
+    peer.once('error', onError);
+    peer.disconnect();
+
+    Connection.prototype.close = close;
+
+    function onError(err) {
+      assert(err instanceof Error);
+      done();
     }
   });
 });
