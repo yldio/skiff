@@ -7,8 +7,20 @@ var assert = Lab.assert;
 var describe = lab.describe;
 
 var NodeC = require('./_node');
+var Node = require('../');
+var transport = require('./_transport');
+var persistence = require('./_persistence');
 
 describe('node', function() {
+
+  it('creates an id for you', function(done) {
+    var node = Node({
+      transport: transport,
+      persistence: persistence
+    });
+    assert.typeOf(node.id, 'string');
+    done();
+  });
 
   it('errors if maxElectionTimeout < minElectionTimeout', function(done) {
     var node = NodeC({
