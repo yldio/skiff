@@ -38,8 +38,13 @@ C.receive = function receive(cb) {
 C.close = function(cb) {
   var self = this;
 
-  if (this.hub.out[this.id]) delete this.hub.out[this.id];
-  if (this.hub.in[this.id]) delete this.hub.in[this.id];
+  if (this.hub.out[this.id]) {
+    delete this.hub.out[this.id];
+  }
+  if (this.hub.in[this.id]) {
+    delete this.hub.in[this.id];
+  }
+
   setTimeout(function() {
     self.emit('close');
     if (cb) {

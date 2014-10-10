@@ -48,18 +48,18 @@ function debug(node) {
   });
 }
 
-
 debug.debug2 = function(node) {
+  var log = Logger(node);
   node.on('state', function(state) {
-    log(index, state, node.currentTerm());
+    log(state, node.currentTerm());
   });
   node.on('vote granted', function(node) {
-    log(index, 'voted for', node);
+    log('voted for', node);
   });
   node.on('AppendEntries', function(args) {
-    log(index, 'AppendEntries from', args[0].leaderId);
+    log('AppendEntries from', args[0].leaderId);
   });
   node.on('election timeout', function() {
-    log(index, 'timed out');
+    log('timed out');
   });
-}
+};

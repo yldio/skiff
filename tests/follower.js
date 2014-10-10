@@ -21,8 +21,6 @@ describe('follower', function() {
   });
 
   it('transforms into candidate when election timeout', function(done) {
-    var lastState;
-
     var node = NodeC();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
     node.once('election timeout', function() {
@@ -41,8 +39,6 @@ describe('follower', function() {
     node._join(peer);
     transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
 
-    var isDone = false;
-
     function replied(err, args) {
       if (err) {
         throw err;
@@ -51,7 +47,6 @@ describe('follower', function() {
       assert.equal(args.term, 2);
       done();
     }
-
   });
 
   it('replies true to append entries if term = current term', function(done) {
@@ -158,7 +153,8 @@ describe('follower', function() {
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         entries.forEach(function(entry, index) {
-          assert.deepEqual(node.commonState.persisted.log.entries[index], entry);
+          assert.deepEqual(
+            node.commonState.persisted.log.entries[index], entry);
         });
         done();
       }
@@ -196,7 +192,8 @@ describe('follower', function() {
         assert.equal(node.commonState.persisted.log.length, 3);
         assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
         entries.forEach(function(entry, index) {
-          assert.deepEqual(node.commonState.persisted.log.entries[index + 1], entry);
+          assert.deepEqual(
+            node.commonState.persisted.log.entries[index + 1], entry);
         });
         done();
       }
@@ -235,7 +232,8 @@ describe('follower', function() {
         assert.equal(node.commonState.persisted.log.length, 3);
         assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
         entries.forEach(function(entry, index) {
-          assert.deepEqual(node.commonState.persisted.log.entries[index + 1], entry);
+          assert.deepEqual(
+            node.commonState.persisted.log.entries[index + 1], entry);
         });
         done();
       }

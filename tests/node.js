@@ -6,9 +6,7 @@ var it = lab.it;
 var assert = Lab.assert;
 var describe = lab.describe;
 
-var Peer = require('../lib/peer');
 var NodeC = require('./_node');
-var transport = require('./_transport');
 
 describe('node', function() {
 

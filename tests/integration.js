@@ -10,7 +10,6 @@ var async = require('async');
 var NodeC = require('./_node2');
 var Cluster = require('./_cluster2');
 var persistence = require('./_persistence');
-var debug = require('./_debug');
 
 describe('cluster', function() {
 
@@ -29,7 +28,7 @@ describe('cluster', function() {
         });
         done();
       }, 1e3);
-    };
+    }
   });
 
   it('commands work and get persisted', {timeout: 10e3}, function(done) {
@@ -59,7 +58,7 @@ describe('cluster', function() {
         }
         else {
           setTimeout(function() {
-            nodes.forEach(function(node, index) {
+            nodes.forEach(function(node) {
               assert.deepEqual(persistence.store.commands[node.id], commands);
             });
             done();
@@ -69,41 +68,45 @@ describe('cluster', function() {
     }
   });
 
-  it('allows adding a node in-flight (topology change)', {timeout: 5e3}, function(done) {
-    Cluster(5, onLeader);
+  it('allows adding a node in-flight (topology change)', {timeout: 5e3},
+    function(done) {
+      Cluster(5, onLeader);
 
-    function onLeader(leader) {
-      var node = NodeC({standby: true});
-      node.listen(node.id);
+      function onLeader(leader) {
+        var node = NodeC({standby: true});
+        node.listen(node.id);
 
-      leader.join(node.id, joined);
+        leader.join(node.id, joined);
 
-      function joined(err) {
-        if (err) throw err;
-
-        var commands = [];
-
-        for(var i = 0 ; i < 10 ; i ++) {
-          commands.push(i);
-        }
-
-        async.each(commands, function(cmd, cb) {
-          leader.command(cmd, cb);
-        }, commanded);
-
-        function commanded(err) {
+        function joined(err) {
           if (err) {
             throw err;
           }
 
-          setTimeout(function() {
-            assert.deepEqual(persistence.store.commands[node.id], commands);
-            done();
-          }, 2e3);
+          var commands = [];
+
+          for (var i = 0 ; i < 10 ; i ++) {
+            commands.push(i);
+          }
+
+          async.each(commands, function(cmd, cb) {
+            leader.command(cmd, cb);
+          }, commanded);
+
+          function commanded(err) {
+            if (err) {
+              throw err;
+            }
+
+            setTimeout(function() {
+              assert.deepEqual(persistence.store.commands[node.id], commands);
+              done();
+            }, 2e3);
+          }
         }
       }
     }
-  });
+  );
 
   it('allows removing a node in-flight that is not the leader', function(done) {
     Cluster(5, onLeader);
@@ -138,14 +141,15 @@ describe('cluster', function() {
       }
 
       var oneLeader = false;
-      function onNewLeader(node) {
-        if (! oneLeader) {
+      function onNewLeader() {
+        if (!oneLeader) {
           oneLeader = true;
           setTimeout(function() {
             var states = nodes.map(function(node) {
               return node.state.name;
             }).sort();
-            assert.deepEqual(states, ['follower', 'follower', 'follower', 'leader']);
+            assert.deepEqual(states,
+              ['follower', 'follower', 'follower', 'leader']);
             done();
           }, 1e3);
         }
@@ -182,7 +186,7 @@ describe('cluster', function() {
     }
   });
 
-  it('separating 2 nodes from 3 node cluster makes node become leader', function(done) {
+  it('removing all nodes but 1 makes sole node leader', function(done) {
     Cluster(3, onLeader);
 
     function onLeader(leader, nodes) {
@@ -196,9 +200,9 @@ describe('cluster', function() {
       var follower;
 
       function onNewLeader(newLeader) {
-        if (! gotNewLeader) {
+        if (!gotNewLeader) {
           gotNewLeader = true;
-          follower = nodes[(nodes.indexOf(newLeader) + 1) %2];
+          follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
           newLeader.leave(newLeader.id);
           follower.once('leader', onNewNewLeader);
         }
@@ -208,8 +212,9 @@ describe('cluster', function() {
         assert.equal(newNewLeader, follower);
         done();
       }
-
-     };
+    }
   });
+
+  it('fails to emit a command if the majority is not reachable');
 
 });

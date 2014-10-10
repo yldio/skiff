@@ -3,7 +3,6 @@
 var inherits = require('util').inherits;
 var EventEmitter = require('events').EventEmitter;
 
-
 module.exports = Connection2;
 
 function Connection2(from, to, hub) {
@@ -44,7 +43,7 @@ C.send = function send(type, args, cb) {
 };
 
 C.receive = function listen(cb) {
-  if (! this.hub.connections[this.to]) {
+  if (!this.hub.connections[this.to]) {
     this.hub.connections[this.to] = {};
   }
   this.hub.connections[this.to][this.from] = cb;
@@ -55,11 +54,15 @@ C.close = function close(cb) {
 
   var to = this.hub.connections[this.to];
   var from = to && to[from];
-  if (from) delete to[from];
+  if (from) {
+    delete to[from];
+  }
 
   from = this.hub.connections[this.from];
   to = from && from[to];
-  if (to) delete from[to];
+  if (to) {
+    delete from[to];
+  }
 
   setTimeout(function() {
     self.emit('close');

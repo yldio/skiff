@@ -48,7 +48,6 @@ function lastAppliedCommitIndex(nodeId, callback) {
   setTimeout(callback, 5, null, commitIndex);
 }
 
-
 exports.saveCommitIndex = saveCommitIndex;
 
 function saveCommitIndex(nodeId, commitIndex, cb) {
