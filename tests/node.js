@@ -147,4 +147,13 @@ describe('node', function() {
     setTimeout(done, 1e3);
   });
 
+  it('doesn\'t let you issue a command unless is a leader', function(done) {
+    var node = NodeC();
+    node.command('abc', function(err) {
+      assert.equal(err && err.message, 'not the leader');
+      assert.equal(err.code, 'ENOTLEADER');
+      done();
+    });
+  });
+
 });
