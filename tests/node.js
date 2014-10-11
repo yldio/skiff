@@ -156,4 +156,20 @@ describe('node', function() {
     });
   });
 
+  it('doesn\'t handle peer call after stopped', function(done) {
+    var node = NodeC();
+    node.stop(function(err) {
+      if (err) {
+        throw err;
+      }
+      node.handlePeerCall('peer', 'RequestVote', {what:'ever'}, replied);
+    });
+
+    function replied() {
+      throw new Error('should not have replied');
+    }
+
+    setTimeout(done, 1e3);
+  });
+
 });
