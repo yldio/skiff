@@ -54,6 +54,7 @@ var node = Node(options);
 * `heartbeatInterval`: the interval between heartbeats sent from leader. defaults to 50 ms.
 * `minElectionTimeout`: the minimum election timeout. defaults to 150 ms.
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
+* `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 2 seconds. You can ovverride this in each command call.
 
 
 ## Node API
@@ -92,12 +93,25 @@ The peer is a string describing the peer. The description depends on the transpo
 An array containing all the known peers.
 
 
-### .command(command, callback)
+### .command(command[, options], callback)
 
 Appends a command to the leader log. If node is not the leader, callback gets invoked with an error. Example:
 
 ```javascript
 node.command('some command', function(err) {
+  if (err) {
+    if (err.code == 'ENOTLEADER') {
+       // redirect client to err.leader
+    }
+  } else {
+    console.log('cluster agreed on this command');
+  }
+});
+```
+
+This command times out after the `options.commandTimeout` passes by, but you can override this by passing in some options:
+
+node.command('some command', {timeout: 5000}, function(err) {
   if (err) {
     if (err.code == 'ENOTLEADER') {
        // redirect client to err.leader

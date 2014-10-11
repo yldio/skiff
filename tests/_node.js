@@ -17,5 +17,14 @@ function Node(options) {
     persistence: persistence
   }, options);
 
-  return NNode(options);
+  var node = NNode(options);
+
+  node.once('stopped', onceStopped);
+  function onceStopped() {
+    node.on('error', function(err) {
+      console.error(err);
+    });
+  }
+
+  return node;
 }

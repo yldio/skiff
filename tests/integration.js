@@ -6,10 +6,13 @@ var it = lab.it;
 var assert = Lab.assert;
 var describe = lab.describe;
 
+var uuid = require('cuid');
 var async = require('async');
 var NodeC = require('./_node2');
+var NodeCC = require('../');
 var Cluster = require('./_cluster2');
 var persistence = require('./_persistence');
+var Transport = require('./_transport2');
 
 describe('cluster', function() {
 
@@ -40,7 +43,6 @@ describe('cluster', function() {
     var index = 0;
 
     function onLeader(leader, nodes) {
-      // debug(leader);
       pushCommand();
 
       function pushCommand() {
@@ -124,38 +126,41 @@ describe('cluster', function() {
     }
   });
 
-  it('allows removing a node in-flight that is the leader', function(done) {
-    Cluster(5, onLeader);
+  it('allows removing a node in-flight that is the leader', {timeout: 6e3},
+    function(done) {
+      Cluster(5, onLeader);
 
-    function onLeader(leader, nodes) {
-      leader.leave(leader.id, left);
+      function onLeader(leader, nodes) {
+        leader.on('error', function(err) {
+          console.log('leader error:', err);
+        });
+        leader.leave(leader.id);
 
-      nodes.forEach(function(node) {
-        node.once('leader', onNewLeader);
-      });
+        nodes.forEach(function(node) {
+          node.on('error', function(err) {
+            console.log(err);
+          });
+          node.once('leader', onNewLeader);
+        });
 
-      function left(err) {
-        if (err) {
-          throw err;
-        }
-      }
-
-      var oneLeader = false;
-      function onNewLeader() {
-        if (!oneLeader) {
-          oneLeader = true;
-          setTimeout(function() {
-            var states = nodes.map(function(node) {
-              return node.state.name;
-            }).sort();
-            assert.deepEqual(states,
-              ['follower', 'follower', 'follower', 'leader']);
-            done();
-          }, 1e3);
+        var oneLeader = false;
+        function onNewLeader() {
+          if (!oneLeader) {
+            oneLeader = true;
+            setTimeout(function() {
+              var states = nodes.map(function(node) {
+                return node.state.name;
+              }).sort();
+              assert.deepEqual(states,
+                ['follower', 'follower', 'follower', 'leader']);
+              leader.stop();
+              done();
+            }, 1e3);
+          }
         }
       }
     }
-  });
+  );
 
   it('allows 2 nodes to start talking to each other', function(done) {
     var leader = NodeC();
@@ -215,6 +220,42 @@ describe('cluster', function() {
     }
   });
 
-  it('fails to emit a command if the majority is not reachable');
+  it('fails to emit a command if the majority is not reachable', {timeout: 6e3},
+    function(done) {
+      var id = uuid();
+      var options = {
+        standby: false,
+        id: id,
+        transport: new Transport(id),
+        persistence: persistence
+      };
+      var leader = new NodeCC(options);
+
+      var nodes = [];
+
+      for (var i = 0 ; i < 2 ; i ++) {
+        options.standby = true;
+        options.id = uuid();
+        options.transport = new Transport(options.id);
+        nodes.push(new NodeCC(options));
+      }
+
+      leader.once('leader', onceLeader);
+
+      function onceLeader(leader) {
+        nodes.forEach(function(node) {
+          leader.join(node.id);
+        });
+
+        leader.command('COMMAND', {timeout: 2e3}, onCommand);
+      }
+
+      function onCommand(err) {
+        assert(err instanceof Error);
+        assert.equal(err.message, 'timedout trying to replicate log index 3');
+        done();
+      }
+    }
+  );
 
 });

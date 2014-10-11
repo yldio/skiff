@@ -13,6 +13,9 @@ module.exports = debug;
 
 function debug(node) {
   var log = Logger(node);
+  node.once('loaded', function() {
+    log('loaded');
+  });
   node.on('state', function(state) {
     log('state:', state);
   });
