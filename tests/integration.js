@@ -131,9 +131,6 @@ describe('cluster', function() {
       Cluster(5, onLeader);
 
       function onLeader(leader, nodes) {
-        leader.on('error', function(err) {
-          console.log('leader error:', err);
-        });
         leader.leave(leader.id);
 
         nodes.forEach(function(node) {
@@ -153,9 +150,9 @@ describe('cluster', function() {
               }).sort();
               assert.deepEqual(states,
                 ['follower', 'follower', 'follower', 'leader']);
-              leader.stop();
+              assert.equal(leader.state.name, 'standby');
               done();
-            }, 1e3);
+            }, 2e3);
           }
         }
       }
@@ -191,34 +188,35 @@ describe('cluster', function() {
     }
   });
 
-  it('removing all nodes but 1 makes sole node leader', function(done) {
-    Cluster(3, onLeader);
+  it('removing all nodes but 1 makes sole node leader', {timeout: 10e3},
+    function(done) {
+      Cluster(3, onLeader);
 
-    function onLeader(leader, nodes) {
-      leader.leave(leader.id);
+      function onLeader(leader, nodes) {
+        leader.leave(leader.id);
 
-      nodes.forEach(function(node) {
-        node.once('leader', onNewLeader);
-      });
+        nodes.forEach(function(node) {
+          node.once('leader', onNewLeader);
+        });
 
-      var gotNewLeader = false;
-      var follower;
+        var gotNewLeader = false;
+        var follower;
 
-      function onNewLeader(newLeader) {
-        if (!gotNewLeader) {
-          gotNewLeader = true;
-          follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
-          newLeader.leave(newLeader.id);
-          follower.once('leader', onNewNewLeader);
+        function onNewLeader(newLeader) {
+          if (!gotNewLeader) {
+            gotNewLeader = true;
+            follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
+            newLeader.leave(newLeader.id);
+            follower.once('leader', onNewNewLeader);
+          }
+        }
+
+        function onNewNewLeader() {
+          done();
         }
       }
-
-      function onNewNewLeader(newNewLeader) {
-        assert.equal(newNewLeader, follower);
-        done();
-      }
     }
-  });
+  );
 
   it('fails to emit a command if the majority is not reachable', {timeout: 6e3},
     function(done) {

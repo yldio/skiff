@@ -58,11 +58,11 @@ C.close = function close(cb) {
     delete to[from];
   }
 
-  from = this.hub.connections[this.from];
-  to = from && from[to];
-  if (to) {
-    delete from[to];
-  }
+  // from = this.hub.connections[this.from];
+  // to = from && from[to];
+  // if (to) {
+  //   delete from[to];
+  // }
 
   setTimeout(function() {
     self.emit('close');

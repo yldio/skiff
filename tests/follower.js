@@ -27,7 +27,6 @@ describe('follower', function() {
       assert.equal(node.state.name, 'candidate');
       done();
     });
-
   });
 
   it('replies false to append entries if term < current term', function(done) {
@@ -37,7 +36,7 @@ describe('follower', function() {
 
     var peer = uuid();
     node._join(peer);
-    transport.invoke(peer, 'AppendEntries', {term: 1}, replied);
+    transport.invoke(peer, 'AppendEntries', {term: 1, WTF:'WTF'}, replied);
 
     function replied(err, args) {
       if (err) {
