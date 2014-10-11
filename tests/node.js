@@ -108,4 +108,16 @@ describe('node', function() {
       done();
     });
   });
+
+  it('forwards errors in log applier to self', function(done) {
+    var node = NodeC();
+
+    node.once('error', function(err) {
+      assert(err instanceof Error);
+      assert.equal(err.message, 'ayay');
+      done();
+    });
+
+    node.logApplier.emit('error', new Error('ayay'));
+  });
 });
