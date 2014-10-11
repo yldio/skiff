@@ -1,6 +1,6 @@
 {
   "name": "skiff",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
     "test": "istanbul cover lab --  tests/*.js -l && istanbul check-coverage --statements 90 --functions 90 --lines 90 --branches 70",
@@ -31,7 +31,7 @@
     "sinon": "^1.10.3",
     "jscs": "^1.6.2",
     "pre-commit": "0.0.9",
-    "istanbul": "^0.3.2",
+    "istanbul": "^0.3.2"
   },
   "dependencies": {
     "async": "^0.9.0",
