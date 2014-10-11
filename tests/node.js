@@ -120,4 +120,13 @@ describe('node', function() {
 
     node.logApplier.emit('error', new Error('ayay'));
   });
+
+  it('can\'t join self', function(done) {
+    var node = NodeC();
+    node.once('error', function(err) {
+      assert.equal(err.message, 'can\'t join self');
+      done();
+    });
+    node.join(node.id);
+  });
 });
