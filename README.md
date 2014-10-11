@@ -112,6 +112,7 @@ node.command('some command', function(err) {
 
 This command times out after the `options.commandTimeout` passes by, but you can override this by passing in some options:
 
+```javascript
 node.command('some command', {timeout: 5000}, function(err) {
   if (err) {
     if (err.code == 'ENOTLEADER') {
