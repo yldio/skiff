@@ -6,8 +6,9 @@ var it = lab.it;
 var assert = Lab.assert;
 var describe = lab.describe;
 
-var NodeC = require('./_node');
+var uuid = require('cuid');
 var Node = require('../');
+var NodeC = require('./_node');
 var transport = require('./_transport');
 var persistence = require('./_persistence');
 
@@ -77,7 +78,34 @@ describe('node', function() {
     });
   });
 
-  it('saves peer data as ids');
+  it('saves peer data as ids', function(done) {
+    var node = NodeC();
+    var peer = uuid();
+    node._join(peer);
 
-  it('loads peer data from persistence');
+    node.save(saved);
+
+    function saved(err) {
+      if (err) {
+        throw err;
+      }
+      var stored = persistence.store.meta[node.id];
+      if (stored) {
+        stored = JSON.parse(stored);
+      }
+      assert.deepEqual(stored && stored.peers, [peer]);
+      done();
+    }
+  });
+
+  it('loads peer data from persistence', function(done) {
+    var id = uuid();
+    var peer = uuid();
+    persistence.store.meta[id] = JSON.stringify({peers: [peer]});
+    var node = NodeC({id: id});
+    node.once('loaded', function() {
+      assert.equal(node.commonState.persisted.peers[0].id, peer);
+      done();
+    });
+  });
 });

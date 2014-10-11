@@ -5,11 +5,12 @@ var lab = exports.lab = Lab.script();
 var describe = lab.describe;
 var it = lab.it;
 var assert = Lab.assert;
+
 var Peer = require('../lib/peer');
+var uuid = require('cuid');
+var sinon = require('sinon');
 var transport = require('./_transport');
 var Connection = require('./_connection');
-var sinon = require('sinon');
-var uuid = require('cuid');
 
 describe('peer', function() {
 
