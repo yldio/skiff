@@ -110,6 +110,36 @@ describe('follower', function() {
     }
   });
 
+  it('does grants vote if last log term < args.lastLogTerm', function(done) {
+    var node = NodeC();
+    var peer = uuid();
+    node._join(peer);
+    node.currentTerm(3);
+    node.commonState.persisted.log.entries.push({
+      command: 'a',
+      term: 3
+    });
+    node.commonState.persisted.log.entries.push({
+      command: 'b',
+      term: 3
+    });
+    node.commonState.persisted.log.length = 2;
+
+    transport.invoke(peer, 'RequestVote', {
+      term: 5,
+      lastLogTerm: 4,
+      lastLogIndex: 1
+    }, onReply);
+
+    function onReply(err, args) {
+      if (err) {
+        throw err;
+      }
+      assert(args.voteGranted);
+      done();
+    }
+  });
+
   it('transforms into candidate when election timeout', function(done) {
     var node = NodeC();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
