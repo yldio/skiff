@@ -13,8 +13,10 @@ exports.store = store;
 exports.saveMeta = saveMeta;
 
 function saveMeta(nodeId, state, callback) {
-  store.meta[nodeId] = JSON.stringify(state);
-  setImmediate(callback);
+  setTimeout(function() {
+    store.meta[nodeId] = JSON.stringify(state);
+    callback();
+  }, randomTimeout());
 }
 
 exports.loadMeta = loadMeta;
@@ -38,7 +40,7 @@ function applyLog(nodeId, commitIndex, log, callback) {
     store.commands[nodeId].push(log.command);
     store.state[nodeId] = commitIndex;
     callback();
-  }, 5);
+  }, randomTimeout());
 }
 
 exports.lastAppliedCommitIndex = lastAppliedCommitIndex;
@@ -54,5 +56,9 @@ function saveCommitIndex(nodeId, commitIndex, cb) {
   setTimeout(function() {
     store.state[nodeId] = commitIndex;
     cb();
-  });
+  }, randomTimeout());
+}
+
+function randomTimeout() {
+  return Math.floor(Math.random() * 5);
 }
