@@ -109,7 +109,7 @@ describe('node', function() {
     });
   });
 
-  it('forwards errors in log applier to self', function(done) {
+  it('paopagates error in log applier to self', function(done) {
     var node = NodeC();
 
     node.once('error', function(err) {
@@ -119,6 +119,18 @@ describe('node', function() {
     });
 
     node.logApplier.emit('error', new Error('ayay'));
+  });
+
+  it('propagates state error to self', function(done) {
+    var node = NodeC();
+
+    node.once('error', function(err) {
+      assert(err instanceof Error);
+      assert.equal(err.message, 'ayay');
+      done();
+    });
+
+    node.state.emit('error', new Error('ayay'));
   });
 
   it('can\'t join self', function(done) {
@@ -134,4 +146,5 @@ describe('node', function() {
     node._leave('abc');
     setTimeout(done, 1e3);
   });
+
 });
