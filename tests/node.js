@@ -128,4 +128,10 @@ describe('node', function() {
       done();
     });
   });
+
+  it('ignores leaving non-existing peer', function(done) {
+    var node = NodeC();
+    node._leave('abc');
+    setTimeout(done, 1e3);
+  });
 });
