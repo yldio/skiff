@@ -385,23 +385,26 @@ describe('follower', function() {
     transport.invoke(peer, 'AppendEntries', args, replied);
 
     var isDone = false;
-
     var applied = 0;
+    var didReply = false;
+
+    node.on('applied log', function(logIndex) {
+      assert.equal(logIndex, ++applied);
+      if (applied == entries.length) {
+        assert.equal(node.commonState.volatile.lastApplied, 2);
+        assert(didReply);
+        isDone = true;
+        done();
+      }
+    });
+
     function replied(err) {
       if (!isDone) {
         if (err) {
           throw err;
         }
         assert.equal(node.commonState.volatile.commitIndex, 2);
-        node.on('applied log', function(logIndex) {
-          applied ++;
-          assert.equal(logIndex, applied);
-          if (applied == entries.length) {
-            assert.equal(node.commonState.volatile.lastApplied, 2);
-            isDone = true;
-            done();
-          }
-        });
+        didReply = true;
       }
     }
   });
