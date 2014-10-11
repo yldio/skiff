@@ -123,10 +123,9 @@ describe('node', function() {
 
   it('can\'t join self', function(done) {
     var node = NodeC();
-    node.once('error', function(err) {
-      assert.equal(err.message, 'can\'t join self');
+    node.join(node.id, function(err) {
+      assert.equal(err && err.message, 'can\'t join self');
       done();
     });
-    node.join(node.id);
   });
 });
