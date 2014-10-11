@@ -60,4 +60,24 @@ describe('node', function() {
     }, 'need options.transport');
     done();
   });
+
+  it('emits error if the loading metadata fails', function(done) {
+    var loadMeta = persistence.loadMeta;
+
+    persistence.loadMeta = function(nodeId, cb) {
+      persistence.loadMeta = loadMeta;
+      process.nextTick(function() {
+        cb(new Error('oops'));
+      });
+    };
+    var node = NodeC();
+    node.once('error', function(err) {
+      assert(err instanceof Error);
+      done();
+    });
+  });
+
+  it('saves peer data as ids');
+
+  it('loads peer data from persistence');
 });
