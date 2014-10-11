@@ -20,6 +20,60 @@ describe('follower', function() {
     });
   });
 
+  it('replies false to request vote for lower terms', function(done) {
+    var node = NodeC();
+    var peer = uuid();
+    node._join(peer);
+    node.currentTerm(3);
+
+    transport.invoke(peer, 'RequestVote', {term: 2}, onReply);
+
+    function onReply(err, args) {
+      if (err) {
+        throw err;
+      }
+      assert.typeOf(args.voteGranted, 'boolean');
+      assert.notOk(args.voteGranted);
+      done();
+    }
+  });
+
+  it('replies false to second vote request on the same term', function(done) {
+    var node = NodeC();
+    var peer1 = uuid();
+    var peer2 = uuid();
+    node._join(peer1);
+    node._join(peer2);
+
+    transport.invoke(peer1, 'RequestVote', {
+      term: 2,
+      candidateId: peer1,
+      lastLogIndex: 0,
+      lastLogTerm: 1
+    }, onReply1);
+
+    transport.invoke(peer2, 'RequestVote', {
+      term: 2,
+      candidateId: peer2,
+      lastLogIndex: 0,
+      lastLogTerm: 1
+    }, onReply2);
+
+    function onReply1(err, args) {
+      if (err) {
+        throw err;
+      }
+      assert(args.voteGranted);
+    }
+
+    function onReply2(err, args) {
+      assert.typeOf(args.voteGranted, 'boolean');
+      assert.equal(args.voteGranted, false);
+      done();
+    }
+
+  });
+
   it('transforms into candidate when election timeout', function(done) {
     var node = NodeC();
     assert.typeOf(node.options.maxElectionTimeout, 'number');
