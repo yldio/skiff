@@ -26,7 +26,12 @@ describe('follower', function() {
     node._join(peer);
     node.currentTerm(3);
 
-    transport.invoke(peer, 'RequestVote', {term: 2}, onReply);
+    transport.invoke(peer, 'RequestVote', {
+      term: 2,
+      candidateId: peer,
+      lastLogIndex: 10,
+      lastLogTerm: 10
+    }, onReply);
 
     function onReply(err, args) {
       if (err) {
@@ -72,6 +77,37 @@ describe('follower', function() {
       done();
     }
 
+  });
+
+  it('does not grant vote if candidate lagging behind', function(done) {
+    var node = NodeC();
+    var peer = uuid();
+    node._join(peer);
+    node.currentTerm(3);
+    node.commonState.persisted.log.entries.push({
+      command: 'a',
+      term: 3
+    });
+    node.commonState.persisted.log.entries.push({
+      command: 'b',
+      term: 3
+    });
+    node.commonState.persisted.log.length = 2;
+
+    transport.invoke(peer, 'RequestVote', {
+      term: 4,
+      lastLogTerm: 3,
+      lastLogIndex: 1
+    }, onReply);
+
+    function onReply(err, args) {
+      if (err) {
+        throw err;
+      }
+      assert.typeOf(args.voteGranted, 'boolean');
+      assert.notOk(args.voteGranted);
+      done();
+    }
   });
 
   it('transforms into candidate when election timeout', function(done) {
