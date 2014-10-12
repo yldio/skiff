@@ -3,7 +3,7 @@
   "version": "0.2.2",
   "description": "Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
-    "test": "istanbul cover lab --  tests/*.js -l && istanbul check-coverage --statements 95 --functions 90 --lines 95 --branches 78",
+    "test": "istanbul cover lab --  tests/*.js -l && istanbul check-coverage --statements 95 --functions 90 --lines 95 --branches 85",
     "jshint": "jshint -c .jshintrc --exclude-path .gitignore .",
     "codestyle": "jscs -p google lib/ index.js tests/",
     "coverage": "open coverage/lcov-report/index.html"
