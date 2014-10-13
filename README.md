@@ -174,7 +174,8 @@ The node `persistence` option accepts a provider object that implements the foll
   * is asynchronous: `callback` is a function invoked once the result is ready
   * `callback` is a function with the following signature: `function(err, commitIndex)` - if operation resulted in error, `err` contains an error object. Otherwise, `commitIndex` may contain an integer with the index of the latest applied `commitIndex` if there was one.
 * `saveCommitIndex(nodeId, commitIndex, callback)`  - saves only the commit index
-* `createWriteStream()` - resets the state machine and returns a write stream to overwrite all the state machine data.
+* `createReadStream(nodeId)` - returns a read stream that streams all the state machine data.
+* `createWriteStream(nodeId)` - resets the state machine and returns a write stream to overwrite all the state machine data.
 
 ## Cluster Setup
 
