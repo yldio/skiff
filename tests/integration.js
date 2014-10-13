@@ -225,6 +225,9 @@ describe('cluster', function() {
         options.id = uuid();
         options.transport = new Transport(options.id);
         nodes.push(new NodeCC(options));
+        // notice that there is no node.listen() here.
+        // it's on purpose so that the leader isn't
+        // able to contact them
       }
 
       leader.once('leader', onceLeader);
