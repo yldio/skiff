@@ -4,21 +4,36 @@ var Connection2 = require('./_connection2');
 
 var hub = {
   listens: {},
-  connections: {}
+  connections: {},
+  connectionCounts: {},
+  connected: function(from, to) {
+    var key = from + ':' + to;
+    if (!this.connectionCounts[key]) {
+      this.connectionCounts[key] = 0;
+    }
+    this.connectionCounts[key] ++;
+  },
+  disconnected: function(from, to) {
+    var key = from + ':' + to;
+    if (this.connectionCounts[key]) {
+      this.connectionCounts[key] --;
+    }
+    return this.connectionCounts[key] === 0;
+  }
 };
 
 module.exports = exports = Transport;
 
-function Transport(from) {
-  this.from = from;
+function Transport(local) {
+  this.local = local;
 }
 
 var T = Transport.prototype;
 
-T.connect = function connect(to) {
-  return new Connection2(this.from, to, hub);
+T.connect = function connect(remote) {
+  return new Connection2(this.local, remote, hub);
 };
 
 T.listen = function listen(options, listener) {
-  hub.listens[this.from] = listener;
+  hub.listens[this.local] = listener;
 };

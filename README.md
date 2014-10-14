@@ -56,6 +56,7 @@ var node = Node(options);
 * `minElectionTimeout`: the minimum election timeout. defaults to 150 ms.
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
 * `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 2 seconds. You can ovverride this in each command call.
+* `retainedLogEntries`: the maximum number of log entries that are committed to the state machine that should remain in memory. Defaults to 50.
 
 
 ## Node API

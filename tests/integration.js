@@ -37,7 +37,7 @@ describe('cluster', function() {
   it('commands work and get persisted', {timeout: 10e3}, function(done) {
     var MAX_COMMANDS = 50;
 
-    Cluster(5, onLeader);
+    Cluster(3, onLeader);
 
     var commands = [];
     var index = 0;
@@ -128,21 +128,26 @@ describe('cluster', function() {
 
   it('allows removing a node in-flight that is the leader', {timeout: 6e3},
     function(done) {
+      var oneNewLeader = false;
+
       Cluster(5, onLeader);
 
       function onLeader(leader, nodes) {
-        leader.leave(leader.id);
-
         nodes.forEach(function(node) {
           node.once('leader', onNewLeader);
         });
 
-        var oneLeader = false;
-        function onNewLeader() {
-          if (!oneLeader) {
-            oneLeader = true;
-            done();
-          }
+        setTimeout(function() {
+          leader.leave(leader.id);
+
+        }, 1e3);
+
+      }
+
+      function onNewLeader() {
+        if (!oneNewLeader) {
+          oneNewLeader = true;
+          done();
         }
       }
     }
@@ -217,24 +222,17 @@ describe('cluster', function() {
         persistence: persistence
       };
       var leader = new NodeCC(options);
-
       var nodes = [];
 
       for (var i = 0 ; i < 2 ; i ++) {
-        options.standby = true;
-        options.id = uuid();
-        options.transport = new Transport(options.id);
-        nodes.push(new NodeCC(options));
-        // notice that there is no node.listen() here.
-        // it's on purpose so that the leader isn't
-        // able to contact them
+        nodes.push(uuid());
       }
 
       leader.once('leader', onceLeader);
 
       function onceLeader(leader) {
         nodes.forEach(function(node) {
-          leader.join(node.id);
+          leader.join(node, joinReplied);
         });
 
         leader.command('COMMAND', {timeout: 2e3}, onCommand);
@@ -242,8 +240,18 @@ describe('cluster', function() {
 
       function onCommand(err) {
         assert(err instanceof Error);
-        assert.equal(err.message, 'timedout trying to replicate log index 3');
+        assert.equal(err && err.message,
+          'timedout trying to replicate log index 3');
         done();
+      }
+
+      var index = 0;
+
+      function joinReplied(err) {
+        index ++;
+        assert(err instanceof Error);
+        assert.equal(err && err.message,
+          'timedout trying to replicate log index ' + index);
       }
     }
   );
