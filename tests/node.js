@@ -172,4 +172,15 @@ describe('node', function() {
     setTimeout(done, 1e3);
   });
 
+  it('if alone converts to leader and stays that way', function(done) {
+    var node = NodeC();
+
+    node.once('leader', function() {
+      setTimeout(function() {
+        assert.equal(node.state.name, 'leader');
+        done();
+      }, 1e3);
+    });
+  });
+
 });

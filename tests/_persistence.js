@@ -71,10 +71,15 @@ function createReadStream(nodeId) {
   var stream = new Readable({objectMode: true});
   var commandIndex = -1;
   var finished = false;
+  var commands = store.commands[nodeId] || [];
+  var length = commands.length;
+
   stream._read = function _read() {
+    var command;
     commandIndex += 1;
-    var command = store.commands[nodeId];
-    command = command && [commandIndex];
+    if (commandIndex < length) {
+      command = commands && commands[commandIndex];
+    }
     if (!command && !finished) {
       finished = true;
       stream.push(null);

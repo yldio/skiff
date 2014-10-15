@@ -187,21 +187,25 @@ describe('cluster', function() {
       Cluster(3, onLeader);
 
       function onLeader(leader, nodes) {
-        leader.leave(leader.id);
-
-        nodes.forEach(function(node) {
-          node.once('leader', onNewLeader);
-        });
-
         var gotNewLeader = false;
         var follower;
 
+        setTimeout(function() {
+          leader.leave(leader.id);
+
+          nodes.forEach(function(node) {
+            node.once('leader', onNewLeader);
+          });
+        }, 5e2);
+
         function onNewLeader(newLeader) {
           if (!gotNewLeader) {
-            gotNewLeader = true;
-            follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
-            newLeader.leave(newLeader.id);
-            follower.once('leader', onNewNewLeader);
+            setTimeout(function() {
+              gotNewLeader = true;
+              follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
+              follower.once('leader', onNewNewLeader);
+              newLeader.leave(newLeader.id);
+            }, 5e2);
           }
         }
 
@@ -249,11 +253,51 @@ describe('cluster', function() {
 
       function joinReplied(err) {
         index ++;
-        assert(err instanceof Error);
-        assert.equal(err && err.message,
-          'timedout trying to replicate log index ' + index);
+        if (index == 2) {
+          assert(err instanceof Error);
+          assert.equal(err && err.message,
+            'timedout trying to replicate log index ' + index);
+        }
+        else {
+          assert(!err);
+        }
       }
     }
   );
+
+  it('streams snapshot to new peer', {timeout: 10e3}, function(done) {
+    var MAX_COMMANDS = 100;
+    var node;
+    var follower;
+
+    node = NodeC({
+      retainedLogEntries: 10
+    });
+    node.listen(node.id);
+
+    // debug(node);
+
+    node.once('leader', function() {
+      for (var i = 1 ; i <= MAX_COMMANDS ; i ++) {
+        node.command('command ' + i);
+      }
+
+      node.on('applied log', function(index) {
+        if (index == MAX_COMMANDS) {
+          follower = NodeC({standby: true});
+
+          follower.listen(follower.id);
+          node.join(follower.id);
+
+          follower.once('done persisting', followerAppliedLog);
+        }
+      });
+    });
+
+    function followerAppliedLog(logIndex) {
+      assert.equal(logIndex, MAX_COMMANDS + 1);
+      done();
+    }
+  });
 
 });
