@@ -182,7 +182,7 @@ describe('cluster', function() {
     }
   });
 
-  it('removing all nodes but 1 makes sole node leader', {timeout: 10e3},
+  it('removing all nodes but 1 makes sole node leader', {timeout: 5e3},
     function(done) {
       Cluster(3, onLeader);
 
@@ -200,8 +200,8 @@ describe('cluster', function() {
 
         function onNewLeader(newLeader) {
           if (!gotNewLeader) {
+            gotNewLeader = true;
             setTimeout(function() {
-              gotNewLeader = true;
               follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
               follower.once('leader', onNewNewLeader);
               newLeader.leave(newLeader.id);
