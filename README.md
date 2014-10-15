@@ -165,7 +165,7 @@ The node `persistence` option accepts a provider object that implements the foll
 
 * `saveMeta(nodeId, state, callback)` — saves the raft engine metadata. `nodeId` is a string that represents the current node. `state` is an arbitrary object (hash map) and `callback` is a function with the signature `function callback(err)`;
 * `loadMeta(nodeId, callback)` — loads the engine metadata state. `callback` is a function with the signature `function callback(err, state)`;
-* `applyLog(nodeId, commitIndex, logEntry, callback)` - applies a log entry to the node state machine.
+* `applyCommand(nodeId, commitIndex, command, callback)` - applies a command to the node state machine.
   * Persistence layer should save the commitIndex if it wants to make sure that log entries are not repeated.
   * Saving this should be atomic: the `commitIndex` and the log application to the state machine should be successful or fail entirely.
   * If the commitIndex has already been applied in the past, just callback with success.

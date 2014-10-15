@@ -1,6 +1,5 @@
 'use strict';
 
-var assert = require('assert');
 var Readable = require('stream').Readable;
 var Writable = require('stream').Writable;
 
@@ -31,15 +30,14 @@ function loadMeta(nodeId, callback) {
   setImmediate(callback, null, data);
 }
 
-exports.applyLog = applyLog;
+exports.applyCommand = applyCommand;
 
-function applyLog(nodeId, commitIndex, log, callback) {
-  assert(log, 'empty log');
+function applyCommand(nodeId, commitIndex, command, callback) {
   setTimeout(function() {
     if (!store.commands[nodeId]) {
       store.commands[nodeId] = [];
     }
-    store.commands[nodeId].push(log.command);
+    store.commands[nodeId].push(command);
     store.state[nodeId] = commitIndex;
     callback();
   }, randomTimeout());
