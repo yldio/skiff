@@ -56,6 +56,7 @@ var node = Node(options);
 * `minElectionTimeout`: the minimum election timeout. defaults to 150 ms.
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
 * `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 2 seconds. You can ovverride this in each command call.
+* `retainedLogEntries`: the maximum number of log entries that are committed to the state machine that should remain in memory. Defaults to 50.
 
 
 ## Node API
@@ -174,7 +175,8 @@ The node `persistence` option accepts a provider object that implements the foll
   * is asynchronous: `callback` is a function invoked once the result is ready
   * `callback` is a function with the following signature: `function(err, commitIndex)` - if operation resulted in error, `err` contains an error object. Otherwise, `commitIndex` may contain an integer with the index of the latest applied `commitIndex` if there was one.
 * `saveCommitIndex(nodeId, commitIndex, callback)`  - saves only the commit index
-
+* `createReadStream(nodeId)` - returns a read stream that streams all the state machine data.
+* `createWriteStream(nodeId)` - resets the state machine and returns a write stream to overwrite all the state machine data.
 
 ## Cluster Setup
 

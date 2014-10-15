@@ -5,22 +5,30 @@ var EventEmitter = require('events').EventEmitter;
 
 module.exports = Connection2;
 
-function Connection2(from, to, hub) {
+function Connection2(local, remote, hub, secondary) {
   var self = this;
 
   EventEmitter.call(this);
 
-  this.from = from;
-  this.to = to;
+  this.local = local;
+  this.remote = remote;
   this.hub = hub;
 
-  setTimeout(function() {
-    var listener = self.hub.listens[to];
+  hub.connected(local, remote);
+  hub.connected(remote, local);
 
-    if (listener) {
-      listener.call(null, self.from, self);
-    }
-  }, 5);
+  if (!secondary) {
+    setTimeout(function() {
+      var listener = self.hub.listens[remote];
+
+      if (listener) {
+        var otherConnection = new Connection2(
+          self.remote, self.local, hub, true);
+
+        listener.call(null, self.local, otherConnection);
+      }
+    }, 5);
+  }
 }
 
 inherits(Connection2, EventEmitter);
@@ -31,38 +39,40 @@ C.send = function send(type, args, cb) {
   var self = this;
 
   setTimeout(function() {
-    var to = self.hub.connections[self.to];
-    var fn = to && to[self.from];
+    var local = self.hub.connections[self.local];
+    var fn = local && local[self.remote];
     if (fn) {
       fn.call(null, type, args, cb);
     }
     else {
-      cb.call(null, new Error('cannot connect to ' + self.to));
+      cb.call(null, new Error('cannot connect remote ' + self.remote));
     }
   }, 5);
 };
 
-C.receive = function listen(cb) {
-  if (!this.hub.connections[this.to]) {
-    this.hub.connections[this.to] = {};
+C.receive = function receive(cb) {
+  if (!this.hub.connections[this.remote]) {
+    this.hub.connections[this.remote] = {};
   }
-  this.hub.connections[this.to][this.from] = cb;
+  this.hub.connections[this.remote][this.local] = cb;
 };
 
 C.close = function close(cb) {
   var self = this;
 
-  var to = this.hub.connections[this.to];
-  var from = to && to[from];
-  if (from) {
-    delete to[from];
+  if (this.hub.disconnected(this.local, this.remote)) {
+    var local = this.hub.connections[this.local];
+    if (local) {
+      delete local[this.remote];
+    }
   }
 
-  // from = this.hub.connections[this.from];
-  // to = from && from[to];
-  // if (to) {
-  //   delete from[to];
-  // }
+  if (this.hub.disconnected(this.remote, this.local)) {
+    var remote = this.hub.connections[this.remote];
+    if (remote) {
+      delete remote[this.local];
+    }
+  }
 
   setTimeout(function() {
     self.emit('close');

@@ -92,7 +92,6 @@ describe('follower', function() {
       command: 'b',
       term: 3
     });
-    node.commonState.persisted.log.length = 2;
 
     transport.invoke(peer, 'RequestVote', {
       term: 4,
@@ -123,7 +122,6 @@ describe('follower', function() {
       command: 'b',
       term: 3
     });
-    node.commonState.persisted.log.length = 2;
 
     transport.invoke(peer, 'RequestVote', {
       term: 5,
@@ -308,7 +306,7 @@ describe('follower', function() {
         isDone = true;
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
-        assert.equal(node.commonState.persisted.log.length, 3);
+        assert.equal(node.commonState.persisted.log.length(), 3);
         assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
         entries.forEach(function(entry, index) {
           assert.deepEqual(
@@ -348,8 +346,8 @@ describe('follower', function() {
         isDone = true;
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
-        assert.equal(node.commonState.persisted.log.length, 3);
-        assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
+        assert.equal(node.commonState.persisted.log.length(), 3);
+        assert.deepEqual(node.commonState.persisted.log.entryAt(1), {term: 1});
         entries.forEach(function(entry, index) {
           assert.deepEqual(
             node.commonState.persisted.log.entries[index + 1], entry);

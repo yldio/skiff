@@ -1,6 +1,8 @@
 'use strict';
 
 var assert = require('assert');
+var Readable = require('stream').Readable;
+var Writable = require('stream').Writable;
 
 var store = {
   meta: {},
@@ -61,4 +63,43 @@ function saveCommitIndex(nodeId, commitIndex, cb) {
 
 function randomTimeout() {
   return Math.floor(Math.random() * 5);
+}
+
+exports.createReadStream = createReadStream;
+
+function createReadStream(nodeId) {
+  var stream = new Readable({objectMode: true});
+  var commandIndex = -1;
+  var finished = false;
+  var commands = store.commands[nodeId] || [];
+  var length = commands.length;
+
+  stream._read = function _read() {
+    var command;
+    commandIndex += 1;
+    if (commandIndex < length) {
+      command = commands && commands[commandIndex];
+    }
+    if (!command && !finished) {
+      finished = true;
+      stream.push(null);
+    } else if (command) {
+      stream.push(command);
+    }
+  };
+
+  return stream;
+}
+
+exports.createWriteStream = createWriteStream;
+
+function createWriteStream(nodeId) {
+  store.commands[nodeId] = [];
+  var stream = new Writable({objectMode: true});
+  stream._write = function _write(chunk, encoding, callback) {
+    store.commands[nodeId].push(chunk);
+    setImmediate(callback);
+  };
+
+  return stream;
 }

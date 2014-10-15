@@ -37,7 +37,7 @@ describe('cluster', function() {
   it('commands work and get persisted', {timeout: 10e3}, function(done) {
     var MAX_COMMANDS = 50;
 
-    Cluster(5, onLeader);
+    Cluster(3, onLeader);
 
     var commands = [];
     var index = 0;
@@ -128,21 +128,26 @@ describe('cluster', function() {
 
   it('allows removing a node in-flight that is the leader', {timeout: 6e3},
     function(done) {
+      var oneNewLeader = false;
+
       Cluster(5, onLeader);
 
       function onLeader(leader, nodes) {
-        leader.leave(leader.id);
-
         nodes.forEach(function(node) {
           node.once('leader', onNewLeader);
         });
 
-        var oneLeader = false;
-        function onNewLeader() {
-          if (!oneLeader) {
-            oneLeader = true;
-            done();
-          }
+        setTimeout(function() {
+          leader.leave(leader.id);
+
+        }, 1e3);
+
+      }
+
+      function onNewLeader() {
+        if (!oneNewLeader) {
+          oneNewLeader = true;
+          done();
         }
       }
     }
@@ -182,21 +187,25 @@ describe('cluster', function() {
       Cluster(3, onLeader);
 
       function onLeader(leader, nodes) {
-        leader.leave(leader.id);
-
-        nodes.forEach(function(node) {
-          node.once('leader', onNewLeader);
-        });
-
         var gotNewLeader = false;
         var follower;
 
+        setTimeout(function() {
+          leader.leave(leader.id);
+
+          nodes.forEach(function(node) {
+            node.once('leader', onNewLeader);
+          });
+        }, 5e2);
+
         function onNewLeader(newLeader) {
           if (!gotNewLeader) {
-            gotNewLeader = true;
-            follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
-            newLeader.leave(newLeader.id);
-            follower.once('leader', onNewNewLeader);
+            setTimeout(function() {
+              gotNewLeader = true;
+              follower = nodes[(nodes.indexOf(newLeader) + 1) % 2];
+              follower.once('leader', onNewNewLeader);
+              newLeader.leave(newLeader.id);
+            }, 5e2);
           }
         }
 
@@ -217,21 +226,17 @@ describe('cluster', function() {
         persistence: persistence
       };
       var leader = new NodeCC(options);
-
       var nodes = [];
 
       for (var i = 0 ; i < 2 ; i ++) {
-        options.standby = true;
-        options.id = uuid();
-        options.transport = new Transport(options.id);
-        nodes.push(new NodeCC(options));
+        nodes.push(uuid());
       }
 
       leader.once('leader', onceLeader);
 
       function onceLeader(leader) {
         nodes.forEach(function(node) {
-          leader.join(node.id);
+          leader.join(node, joinReplied);
         });
 
         leader.command('COMMAND', {timeout: 2e3}, onCommand);
@@ -239,10 +244,60 @@ describe('cluster', function() {
 
       function onCommand(err) {
         assert(err instanceof Error);
-        assert.equal(err.message, 'timedout trying to replicate log index 3');
+        assert.equal(err && err.message,
+          'timedout trying to replicate log index 3');
         done();
+      }
+
+      var index = 0;
+
+      function joinReplied(err) {
+        index ++;
+        if (index == 2) {
+          assert(err instanceof Error);
+          assert.equal(err && err.message,
+            'timedout trying to replicate log index ' + index);
+        }
+        else {
+          assert(!err);
+        }
       }
     }
   );
+
+  it('streams snapshot to new peer', {timeout: 10e3}, function(done) {
+    var MAX_COMMANDS = 100;
+    var node;
+    var follower;
+
+    node = NodeC({
+      retainedLogEntries: 10
+    });
+    node.listen(node.id);
+
+    // debug(node);
+
+    node.once('leader', function() {
+      for (var i = 1 ; i <= MAX_COMMANDS ; i ++) {
+        node.command('command ' + i);
+      }
+
+      node.on('applied log', function(index) {
+        if (index == MAX_COMMANDS) {
+          follower = NodeC({standby: true});
+
+          follower.listen(follower.id);
+          node.join(follower.id);
+
+          follower.once('done persisting', followerAppliedLog);
+        }
+      });
+    });
+
+    function followerAppliedLog(logIndex) {
+      assert.equal(logIndex, MAX_COMMANDS + 1);
+      done();
+    }
+  });
 
 });

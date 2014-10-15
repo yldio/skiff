@@ -43,7 +43,7 @@ describe('candidate', function() {
         assert.equal(state, states.shift());
 
         if (!states.length) {
-          assert.equal(node.currentTerm(), 1);
+          assert.equal(node.currentTerm(), 2);
           done();
         }
       }
