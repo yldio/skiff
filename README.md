@@ -48,7 +48,6 @@ var node = Node(options);
 * `id`: id of the node. if not defined, it's self assigned. accessible on `node.id`
 * `standby`: if true, will start at the `standby` state instead of the `follower` state. In the `standby` state the node only waits for a leader to send commands. Defaults to `false`.
 * `cluster`: the id of the cluster this node will be a part of
-* `standy`: be in the `standby` state, voting and waiting to be contacted by a leader
 * `transport`: the transport to communicate with peers. See the [transport API](#transport-provider-api)
 * `persistence`: the node persistence layer. See the [persistence API](#persistence-provider-api)
 * `uuid`: function that generates a UUID. Defaults to using the [`cuid`](https://github.com/ericelliott/cuid) package.
