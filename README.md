@@ -176,6 +176,7 @@ The node `persistence` option accepts a provider object that implements the foll
 * `saveCommitIndex(nodeId, commitIndex, callback)`  - saves only the commit index
 * `createReadStream(nodeId)` - returns a read stream that streams all the state machine data.
 * `createWriteStream(nodeId)` - resets the state machine and returns a write stream to overwrite all the state machine data.
+* `removeAllState(nodeId, callback)` - remove all state for the given node
 
 ## Cluster Setup
 

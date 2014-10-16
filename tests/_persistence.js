@@ -92,7 +92,6 @@ function createReadStream(nodeId) {
 exports.createWriteStream = createWriteStream;
 
 function createWriteStream(nodeId) {
-  store.commands[nodeId] = [];
   var stream = new Writable({objectMode: true});
   stream._write = function _write(chunk, encoding, callback) {
     store.commands[nodeId].push(chunk);
@@ -100,4 +99,13 @@ function createWriteStream(nodeId) {
   };
 
   return stream;
+}
+
+exports.removeAllState = removeAllState;
+
+function removeAllState(nodeId, callback) {
+  setTimeout(function() {
+    store.commands[nodeId] = [];
+    callback();
+  }, randomTimeout());
 }
