@@ -9,7 +9,7 @@ var hub = {
 
 exports.connect = connect;
 
-function connect(options) {
+function connect(local, options) {
   return new Connection(options, hub);
 }
 

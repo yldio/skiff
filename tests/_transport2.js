@@ -30,8 +30,8 @@ function Transport(local) {
 
 var T = Transport.prototype;
 
-T.connect = function connect(remote) {
-  return new Connection2(this.local, remote, hub);
+T.connect = function connect(local, remote) {
+  return new Connection2(local, remote, hub);
 };
 
 T.listen = function listen(options, listener) {
