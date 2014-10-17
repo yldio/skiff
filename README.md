@@ -144,8 +144,8 @@ Skiff if failry high-level and doesn't implement the network transport or the pe
 
 The node `transport` option accepts a provider object that implements the following interface:
 
-* `connect(id, options)` — for connecting to the peer. returns a connection object. The `id` argument contains the local node id.
-* `listen(id, options, fn)` — for listening to incoming connection requests. The `fn` argument is a function with the signaure `function (peerId, connection)` that gets invoked when there is a connection request, passing in a connection object that implements the Connection API (see below). The `id` argument contains the local node id.
+* `connect(localNodeId, options)` — for connecting to the peer. returns a connection object. The `localNodeId` argument contains the local node id.
+* `listen(localNodeId, options, fn)` — for listening to incoming connection requests. The `fn` argument is a function with the signaure `function (peerId, connection)` that gets invoked when there is a connection request, passing in a connection object that implements the Connection API (see below). The `localNodeId` argument contains the local node id.
 
 #### Connection API
 
