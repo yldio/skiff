@@ -15,7 +15,7 @@ function connect(local, options) {
 
 exports.listen = listen;
 
-function listen(id, fn) {
+function listen(localid, id, fn) {
   hub.out[id] = fn;
 }
 

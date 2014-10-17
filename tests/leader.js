@@ -18,7 +18,7 @@ describe('leader', function() {
     var peers = [uuid(), uuid()];
     peers.forEach(function(peer) {
       node._join(peer);
-      transport.listen(peer, peerListen);
+      transport.listen(node.id, peer, peerListen);
     });
 
     var heartbeats = 0;
@@ -61,7 +61,7 @@ describe('leader', function() {
     var peers = [uuid(), uuid()];
     peers.forEach(function(peer, index) {
       node._join(peer);
-      transport.listen(peer, peerListen(peer, index));
+      transport.listen(node.id, peer, peerListen(peer, index));
     });
 
     var expectedIndexes = [2, 1, 0, 1, 2, 3, 3];

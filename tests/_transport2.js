@@ -34,6 +34,6 @@ T.connect = function connect(local, remote) {
   return new Connection2(local, remote, hub);
 };
 
-T.listen = function listen(options, listener) {
-  hub.listens[this.local] = listener;
+T.listen = function listen(local, options, listener) {
+  hub.listens[local] = listener;
 };

@@ -59,7 +59,7 @@ describe('peer', function() {
   it('serializes remote calls', function(done) {
     var id = uuid();
     var peer = Peer(id, {transport: transport}, undefined, {id: uuid()});
-    transport.listen(id, listen);
+    transport.listen(uuid(), id, listen);
     peer.connect();
 
     var active = true;
@@ -90,7 +90,7 @@ describe('peer', function() {
   it('replies to remote calls', function(done) {
     var id = uuid();
     var peer = Peer(id, {transport: transport}, undefined, {id: uuid()});
-    transport.listen(id, listen);
+    transport.listen(uuid(), id, listen);
     peer.connect();
 
     var replies = [
@@ -122,7 +122,7 @@ describe('peer', function() {
   it('does not call callbacks twice', function(done) {
     var id = uuid();
     var peer = Peer(id, {transport: transport}, undefined, {id: uuid()});
-    transport.listen(id, listen);
+    transport.listen(uuid(), id, listen);
     peer.connect();
 
     peer.send('type', 'args', done);

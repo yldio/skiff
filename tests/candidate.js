@@ -54,7 +54,7 @@ describe('candidate', function() {
     var node = NodeC();
     var remotes = [uuid(), uuid()];
     remotes.forEach(function(id) {
-      transport.listen(id, listen);
+      transport.listen(node.id, id, listen);
       node._join(id);
     });
 
@@ -88,7 +88,7 @@ describe('candidate', function() {
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
-      transport.listen(remotes[index], listen(index));
+      transport.listen(node.id, remotes[index], listen(index));
       node._join(id);
     });
 
@@ -122,7 +122,7 @@ describe('candidate', function() {
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
-      transport.listen(remotes[index], listen(id, index));
+      transport.listen(node.id, remotes[index], listen(id, index));
       node._join(id);
     });
 
@@ -158,7 +158,7 @@ describe('candidate', function() {
     var remotes = [uuid(), uuid()];
 
     remotes.forEach(function(id, index) {
-      transport.listen(remotes[index], listen(id, index));
+      transport.listen(node.id, remotes[index], listen(id, index));
       node._join(id);
     });
 
