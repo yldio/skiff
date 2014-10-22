@@ -307,7 +307,7 @@ describe('follower', function() {
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         assert.equal(node.commonState.persisted.log.length(), 3);
-        assert.deepEqual(node.commonState.persisted.log.entries[0], {term: 1});
+        assert.equal(node.commonState.persisted.log.entries[0].term, 1);
         entries.forEach(function(entry, index) {
           assert.deepEqual(
             node.commonState.persisted.log.entries[index + 1], entry);
@@ -347,7 +347,7 @@ describe('follower', function() {
         assert.ok(args.success);
         assert.equal(node.currentTerm(), 2);
         assert.equal(node.commonState.persisted.log.length(), 3);
-        assert.deepEqual(node.commonState.persisted.log.entryAt(1), {term: 1});
+        assert.deepEqual(node.commonState.persisted.log.entryAt(1).term, 1);
         entries.forEach(function(entry, index) {
           assert.deepEqual(
             node.commonState.persisted.log.entries[index + 1], entry);

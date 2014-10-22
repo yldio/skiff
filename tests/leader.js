@@ -67,10 +67,10 @@ describe('leader', function() {
     var expectedIndexes = [2, 1, 0, 1, 2, 3, 3];
     var expectedEntries = [
       [],
-      [{term: 1, command: 'COMMAND 2'}],
-      [{term: 1, command: 'COMMAND 1'}],
-      [{term: 1, command: 'COMMAND 2'}],
-      [{term: 1, command: 'COMMAND 3'}],
+      [{term: 1, command: 'COMMAND 2', index: 2}],
+      [{term: 1, command: 'COMMAND 1', index: 1}],
+      [{term: 1, command: 'COMMAND 2', index: 2}],
+      [{term: 1, command: 'COMMAND 3', index: 3}],
       [],
       []
     ];
@@ -98,7 +98,8 @@ describe('leader', function() {
           assert.equal(
             args.prevLogIndex, expectedIndexes[nodeAppendEntriesCount[id] - 1]);
           assert.deepEqual(
-            args.entries, expectedEntries[nodeAppendEntriesCount[id] - 1]);
+            args.entries.map(
+              filterLogEntry), expectedEntries[nodeAppendEntriesCount[id] - 1]);
         }
 
         if (args.prevLogIndex <= lastIndex) {
@@ -129,5 +130,13 @@ describe('leader', function() {
 
       });
     });
+
+    function filterLogEntry(entry) {
+      return {
+        term:   entry.term,
+        index:   entry.index,
+        command: entry.command
+      };
+    }
   });
 });
