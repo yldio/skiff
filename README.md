@@ -4,7 +4,9 @@
 [![Dependencies] (https://david-dm.org/pgte/skiff.png)](https://david-dm.org/pgte/skiff)
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/pgte/skiff?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.github.io/).
+Abstract Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.github.io/).
+
+> If you're looking for a directly usable module, take a look at [skiff-client](https://github.com/pgte/skiff-client) (LevelDB + Msgpack).
 
 Contents:
 
