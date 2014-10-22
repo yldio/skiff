@@ -56,7 +56,7 @@ var node = Node(options);
 * `heartbeatInterval`: the interval between heartbeats sent from leader. defaults to 50 ms.
 * `minElectionTimeout`: the minimum election timeout. defaults to 150 ms.
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
-* `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 2 seconds. You can ovverride this in each command call.
+* `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 3 seconds. You can override this in each command call.
 * `retainedLogEntries`: the maximum number of log entries that are committed to the state machine that should remain in memory. Defaults to 50.
 
 

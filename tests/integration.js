@@ -232,7 +232,7 @@ describe('cluster', function() {
     }
   );
 
-  it('fails to emit a command if the majority is not reachable', {timeout: 6e3},
+  it('fails to emit a command if the majority reachable', {timeout: 6e3},
     function(done) {
       var id = uuid();
       var options = {
@@ -261,7 +261,7 @@ describe('cluster', function() {
       function onCommand(err) {
         assert(err instanceof Error);
         assert.equal(err && err.message,
-          'timedout trying to replicate log index 3');
+          'timedout after 2000 ms trying to replicate log index 3');
         done();
       }
 
@@ -272,7 +272,7 @@ describe('cluster', function() {
         if (index == 2) {
           assert(err instanceof Error);
           assert.equal(err && err.message,
-            'timedout trying to replicate log index ' + index);
+            'timedout after 3000 ms trying to replicate log index ' + index);
         }
         else {
           assert(!err);
