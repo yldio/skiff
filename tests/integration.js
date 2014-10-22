@@ -14,6 +14,8 @@ var Cluster = require('./_cluster2');
 var persistence = require('./_persistence');
 var Transport = require('./_transport2');
 
+var domain = require('domain');
+
 describe('cluster', function() {
 
   it('elects one leader', function(done) {
@@ -129,8 +131,16 @@ describe('cluster', function() {
   it('allows removing a node in-flight that is the leader', {timeout: 6e3},
     function(done) {
       var oneNewLeader = false;
+      var d = domain.create();
 
-      Cluster(5, onLeader);
+      d.on('error', function(err) {
+        console.error(err.stack);
+        throw err;
+      });
+
+      d.run(function() {
+        Cluster(5, onLeader);
+      });
 
       function onLeader(leader, nodes) {
         nodes.forEach(function(node) {
@@ -139,9 +149,7 @@ describe('cluster', function() {
 
         setTimeout(function() {
           leader.leave(leader.id);
-
         }, 1e3);
-
       }
 
       function onNewLeader() {
@@ -184,7 +192,15 @@ describe('cluster', function() {
 
   it('removing all nodes but 1 makes sole node leader', {timeout: 5e3},
     function(done) {
-      Cluster(3, onLeader);
+
+      var d = domain.create();
+      d.on('error', function(err) {
+        console.error(err.stack);
+        throw err;
+      });
+      d.run(function() {
+        Cluster(3, onLeader);
+      });
 
       function onLeader(leader, nodes) {
         var gotNewLeader = false;
