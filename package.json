@@ -1,17 +1,18 @@
 {
-  "name": "skiff-algorithm",
-  "version": "0.7.6",
-  "description": "Implementation of the Raft consensus algorithm in Node.js",
+  "name": "skiff",
+  "version": "0.7.7",
+  "description": "Skiff - Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
-    "test": "istanbul cover lab --  tests/*.js -l && istanbul check-coverage --statements 95 --functions 90 --lines 95 --branches 85",
+    "test": "lab -v tests/standalone.js && lab -v tests/compatibility.js && lab -v tests/networking.js && lab -v tests/resilience.js && lab -v tests/replication.js",
     "jshint": "jshint -c .jshintrc --exclude-path .gitignore .",
-    "codestyle": "jscs -p google lib/ index.js tests/",
+    "codestyle": "jscs -p google lib/ tests/",
     "coverage": "open coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pgte/skiff.git"
+    "url": "https://github.com/pgte/skiff-client.git"
   },
+  "main": "lib/index.js",
   "keywords": [
     "raft",
     "distributed",
@@ -22,21 +23,32 @@
   "author": "pgte",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/pgte/skiff/issues"
+    "url": "https://github.com/pgte/skiff-client/issues"
   },
-  "homepage": "https://github.com/pgte/skiff",
+  "homepage": "https://github.com/pgte/skiff-client",
   "devDependencies": {
+    "concat-stream": "^1.4.6",
+    "istanbul": "^0.3.2",
+    "jscs": "^1.6.2",
     "jshint": "^2.5.6",
     "lab": "^4.5.1",
-    "sinon": "^1.10.3",
-    "jscs": "^1.6.2",
+    "level-sublevel": "^6.3.15",
+    "mkdirp": "^0.5.0",
     "pre-commit": "0.0.9",
-    "istanbul": "^0.3.2"
+    "rimraf": "^2.2.8",
+    "sinon": "^1.10.3"
   },
   "dependencies": {
     "async": "^0.9.0",
-    "cuid": "^1.2.4",
+    "batch-write-stream": "^0.1.6",
+    "concat-stream": "^1.4.6",
+    "ltgt": "^2.0.0",
+    "msgpack5": "^1.2.0",
     "propagate": "^0.3.0",
+    "skiff-algorithm": "^0.7.6",
+    "skiff-level": "^0.7.0",
+    "skiff-tcp-msgpack": "^0.7.3",
+    "skiff-tcp-nlsjson": "^0.7.2",
     "xtend": "^4.0.0"
   },
   "pre-commit": [

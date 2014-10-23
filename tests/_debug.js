@@ -40,14 +40,23 @@ function debug(node) {
   node.on('reply', function() {
     log('-> reply %j', arguments);
   });
-  node.on('heartbeat', function() {
-    log('heartbeat');
-  });
   node.on('reset election timeout', function() {
     log('reset election timeout');
   });
   node.on('joined', function(peer) {
     log('joined %s', peer.id);
+  });
+  node.on('connecting', function(peer) {
+    log('connecting to %s', peer.id);
+  });
+  node.on('connected', function(peer) {
+    log('connected from %s', peer.id);
+  });
+  node.on('disconnected', function(peer) {
+    log('disconnected from %s', peer.id);
+  });
+  node.on('listening', function(address) {
+    log('listening on %s', address);
   });
 }
 
