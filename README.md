@@ -1,4 +1,4 @@
-# skiff-client
+# Skiff
 
 [![Build Status](https://travis-ci.org/pgte/skiff.svg?branch=master)](https://travis-ci.org/pgte/skiff)
 [![Dependency Status](https://david-dm.org/pgte/skiff.svg)](https://david-dm.org/pgte/skiff)
