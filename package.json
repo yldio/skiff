@@ -1,5 +1,5 @@
 {
-  "name": "skiff",
+  "name": "skiff-algorithm",
   "version": "0.7.6",
   "description": "Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {

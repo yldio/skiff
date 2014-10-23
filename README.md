@@ -1,12 +1,12 @@
 # Skiff
 
-[![Build Status](https://travis-ci.org/pgte/skiff.svg)](https://travis-ci.org/pgte/skiff)
-[![Dependencies] (https://david-dm.org/pgte/skiff.png)](https://david-dm.org/pgte/skiff)
+[![Build Status](https://travis-ci.org/pgte/skiff-algorithm.svg)](https://travis-ci.org/pgte/skiff-algorithm)
+[![Dependencies] (https://david-dm.org/pgte/skiff-algorithm.png)](https://david-dm.org/pgte/skiff-algorithm)
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/pgte/skiff?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Abstract Node.js implementation of the [Raft Consensus Algorithm](http://raftconsensus.github.io/).
 
-> If you're looking for a directly usable module, take a look at [skiff-client](https://github.com/pgte/skiff-client) (LevelDB + Msgpack).
+> If you're looking for a directly usable module, take a look at [skiff](https://github.com/pgte/skiff) (LevelDB + Msgpack).
 
 Contents:
 
