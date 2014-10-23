@@ -3,10 +3,12 @@
 [![Build Status](https://travis-ci.org/pgte/skiff.svg?branch=master)](https://travis-ci.org/pgte/skiff)
 [![Dependency Status](https://david-dm.org/pgte/skiff.svg)](https://david-dm.org/pgte/skiff)
 
-Node.js implementation of the Raft algorithm.
+Node.js implementation of the Raft concensus algorithm.
 
 * Persistence: LevelDB
 * Protocol: Msgpack over TCP
+
+> (for the abstract implementation check [skiff-algorithm](https://github.com/pgte/skiff-algorithm)).
 
 # Install
 
@@ -76,6 +78,33 @@ To boot a cluster, start a node and wait for it to become a leader. Then, create
 
 See [this test](https://github.com/pgte/skiff/blob/master/tests/networking.js#L27) for an actual implementation.
 
+# Events
+
+A Skiff node emits a bunch of events that may or not interest you. In no particular order:
+
+* `error (error)` - if something goes terribly bad.
+* `warning (warning)` - if something goes mildly bad.
+* `loaded` - once the node persisted state is loaded on bootup
+* `applied log (logIndex)` - after a certain log index is applied to the state machine.
+* `election timeout` - when a node detects a timeout and will become a candidate because of that.
+* `joined (peer)` - when a node joins a given peer.
+* `connected(peer)` - when a node is connected to a given peer.
+* `disconnected(peer)` - when a node is disconnected from a peer.
+* `connecting(peer)` - when a node is trying to connect to a peer.
+* `reconnected(peer)` - when a node is reconnected to a peer.
+* `outgoing call (peer, type, args)` - when a node sends an RPC call to a peer.
+* `response (peer, err, args)` - when a node receives a response from a peer.
+* `left (peer)` - when a node leaves a peer
+* `state (state)` - after a node has transitioned to a given state
+* `leader (node)` - after a node has transitioned to the leader state
+* `candidate (node)` - after a node has transitioned to the candidate state
+* `follower (node)` - after a node has transitioned to the follower state
+* `stopped (node)` - after a node has transitioned to the stopped state
+* `standby (node)` - after a node has transitioned to the standby state
+* 'RequestVote (args)' - when a node receives a RequestVote RPC call
+* 'AppendEntries (args)' - when a node receives an AppendEntries RPC call
+* 'InstallSnapshot (args)' - when a node receives an InstallSnapshot RPC call
+* 'reply (args)' - once a node has replied to an RPC call
 # License
 
 ISC
