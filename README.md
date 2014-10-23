@@ -101,10 +101,11 @@ A Skiff node emits a bunch of events that may or not interest you. In no particu
 * `follower (node)` - after a node has transitioned to the follower state
 * `stopped (node)` - after a node has transitioned to the stopped state
 * `standby (node)` - after a node has transitioned to the standby state
-* 'RequestVote (args)' - when a node receives a RequestVote RPC call
-* 'AppendEntries (args)' - when a node receives an AppendEntries RPC call
-* 'InstallSnapshot (args)' - when a node receives an InstallSnapshot RPC call
-* 'reply (args)' - once a node has replied to an RPC call
+* `RequestVote (args)` - when a node receives a RequestVote RPC call
+* `AppendEntries (args)` - when a node receives an AppendEntries RPC call
+* `InstallSnapshot (args)` - when a node receives an InstallSnapshot RPC call
+* `reply (args)` - once a node has replied to an RPC call
+
 # License
 
 ISC
