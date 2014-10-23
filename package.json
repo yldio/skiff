@@ -1,6 +1,6 @@
 {
   "name": "skiff",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "description": "Skiff - Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
     "test": "lab -v tests/standalone.js && lab -v tests/compatibility.js && lab -v tests/networking.js && lab -v tests/resilience.js && lab -v tests/replication.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pgte/skiff-client.git"
+    "url": "https://github.com/pgte/skiff.git"
   },
   "main": "lib/index.js",
   "keywords": [
@@ -23,9 +23,9 @@
   "author": "pgte",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/pgte/skiff-client/issues"
+    "url": "https://github.com/pgte/skiff/issues"
   },
-  "homepage": "https://github.com/pgte/skiff-client",
+  "homepage": "https://github.com/pgte/skiff",
   "devDependencies": {
     "concat-stream": "^1.4.6",
     "istanbul": "^0.3.2",
