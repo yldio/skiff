@@ -46,7 +46,7 @@
     "msgpack5": "^1.2.0",
     "propagate": "^0.3.0",
     "skiff-algorithm": "^0.7.7",
-    "skiff-level": "^0.7.0",
+    "skiff-level": "^0.7.1",
     "skiff-tcp-msgpack": "^0.7.3",
     "skiff-tcp-nlsjson": "^0.7.2",
     "xtend": "^4.0.0"
