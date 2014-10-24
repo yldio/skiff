@@ -20,14 +20,9 @@ $ npm install skiff
 
 ```javascript
 var Skiff = require('skiff');
-var node = Skiff('tcp+msgpack://localhost:8081');
-```
 
-or, with options:
-
-```javascript
-var options {
-  // ...
+var options = {
+  dbPath: '/path/to/my/leveldb/database/dir'
 };
 
 var node = Skiff('tcp+msgpack://localhost:8081', options);
