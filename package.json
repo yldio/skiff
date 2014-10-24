@@ -45,7 +45,7 @@
     "ltgt": "^2.0.0",
     "msgpack5": "^1.2.0",
     "propagate": "^0.3.0",
-    "skiff-algorithm": "^0.7.6",
+    "skiff-algorithm": "^0.7.7",
     "skiff-level": "^0.7.0",
     "skiff-tcp-msgpack": "^0.7.3",
     "skiff-tcp-nlsjson": "^0.7.2",
