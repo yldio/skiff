@@ -58,7 +58,7 @@ describe('resilient clients', function() {
     });
   });
 
-  it('leader can join other nodes', function(done) {
+  it('leader can join other nodes', {timeout: 4e3}, function(done) {
     async.eachSeries(nodes, function(node, cb) {
       leader.join(node.id, cb);
     }, function(err) {
