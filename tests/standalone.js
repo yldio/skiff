@@ -32,11 +32,11 @@ describe('standalone client', function() {
     });
   });
 
-  it('allows putting', function(done) {
+  it('allows putting', {timeout: 4e3}, function(done) {
     client.put('key', 'value', done);
   });
 
-  it('allows getting', function(done) {
+  it('allows getting', {timeout: 4e3}, function(done) {
     client.get('key', function(err, value) {
       if (err) {
         throw err;
