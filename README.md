@@ -44,7 +44,7 @@ var node = Skiff('tcp+msgpack://localhost:8081', options);
 * `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
 * `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 3 seconds. You can override this in each command call.
 * `retainedLogEntries`: the maximum number of log entries that are committed to the state machine that should remain in memory. Defaults to 50.
-
+* `metadata`: to be used by plugins if necessary
 
 # Use
 
@@ -65,6 +65,11 @@ Joins a node given its URL.
 ## .leave(url, cb)
 
 Leaves a node given its URL.
+
+## .peerMeta(url)
+
+Return the peer metadata (if the node knows about such peer).
+
 
 # Setting up a cluster
 
