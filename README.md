@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/pgte/skiff.svg?branch=master)](https://travis-ci.org/pgte/skiff)
 [![Dependency Status](https://david-dm.org/pgte/skiff.svg)](https://david-dm.org/pgte/skiff)
 
-Node.js implementation of the Raft concensus algorithm.
+Node.js implementation of the Raft consensus algorithm.
 
 * Persistence: LevelDB
 * Protocol: Msgpack over TCP
