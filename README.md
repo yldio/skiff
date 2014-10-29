@@ -10,6 +10,9 @@ Node.js implementation of the Raft consensus algorithm.
 
 > (for the abstract implementation check [skiff-algorithm](https://github.com/pgte/skiff-algorithm)).
 
+(If you're looking for a solution that forwards write requests done in the followers to the leader, look at [sombrero-node](https://github.com/sombrerohq/sombrero-node).)
+
+
 # Install
 
 ```bash
