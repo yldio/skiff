@@ -36,7 +36,7 @@ var node = Skiff('tcp+msgpack://localhost:8081', options);
 * `autoListen`: start listening on bootup. defaults to `true`.
 * `transport`: transport type. Supported values:
   * `tcp-msgpack`: Msgpack over TCP (default)
-  * `tcp-nlsjson`: New-line separated JSON over TCP
+  * any module respecting the [transport interface](https://github.com/pgte/abstract-skiff-transport).
 * `dbPath`: database path
 * `waitLeaderTimeout`: the time to wait to become a leader. defaults to 3000 (ms).
 * `standby`: if true, will start at the `standby` state instead of the `follower` state. In the `standby` state the node only waits for a leader to send commands. Defaults to `false`.
