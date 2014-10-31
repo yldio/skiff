@@ -59,7 +59,7 @@ Other than that, you can:
 
 ## .listen(cb)
 
-Listen for nodes connecting to us.
+Listen for nodes connecting to us. (if `options.autoListen` is true, your node is already listening).
 
 ## .join(url, cb)
 
@@ -72,7 +72,6 @@ Leaves a node given its URL.
 ## .peerMeta(url)
 
 Return the peer metadata (if the node knows about such peer).
-
 
 # Setting up a cluster
 
