@@ -31,6 +31,17 @@ var options = {
 var node = Skiff('tcp+msgpack://localhost:8081', options);
 ```
 
+## The URL
+
+The URL contains:
+
+* The protocol: for now we only support `tcp+msgpack`.
+* The host name to bind to
+* The port to listen to for other peers
+
+If `options.autoListen` is true (the default), the node will listen for peer connections on this URL.
+
+
 ## Options
 
 * `autoListen`: start listening on bootup. defaults to `true`.
