@@ -48,7 +48,7 @@
     "propagate": "^0.3.0",
     "skiff-algorithm": "^0.8.2",
     "skiff-level": "^0.8.0",
-    "skiff-tcp-msgpack": "^0.8.1",
+    "skiff-tcp-msgpack": "^0.8.2",
     "xtend": "^4.0.0"
   },
   "pre-commit": [
