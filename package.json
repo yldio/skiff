@@ -1,6 +1,6 @@
 {
   "name": "skiff",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Skiff - Implementation of the Raft consensus algorithm in Node.js",
   "scripts": {
     "test": "lab -v tests/standalone.js && lab -v tests/compatibility.js && lab -v tests/networking.js && lab -v tests/resilience.js && lab -v tests/replication.js",
