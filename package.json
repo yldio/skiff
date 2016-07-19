@@ -1,10 +1,11 @@
 {
   "name": "skiff",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Raft for Node.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
+    "style": "eslint src"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,23 @@
   "bugs": {
     "url": "https://github.com/pgte/skiff/issues"
   },
-  "homepage": "https://github.com/pgte/skiff#readme"
+  "homepage": "https://github.com/pgte/skiff#readme",
+  "devDependencies": {
+    "eslint": "^3.1.1",
+    "eslint-config-standard": "^5.3.5",
+    "eslint-plugin-promise": "^2.0.0",
+    "eslint-plugin-standard": "^2.0.0",
+    "istanbul": "^0.4.4",
+    "pre-commit": "^1.1.3"
+  },
+  "pre-commit": [
+    "style",
+    "test"
+  ],
+  "dependencies": {
+    "debug": "^2.2.0",
+    "msgpack5": "^3.4.0",
+    "multiaddr": "^2.0.2",
+    "reconnect-core": "^1.3.0"
+  }
 }

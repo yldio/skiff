@@ -1,0 +1,8 @@
+instrumentation:
+    excludes: ['test', 'node_modules']
+check:
+    global:
+        lines: 100
+        branches: 100
+        statements: 100
+        functions: 100
