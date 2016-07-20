@@ -2,7 +2,9 @@
 
 const debug = require('debug')('skiff.network')
 const Duplex = require('stream').Duplex
+
 const Peer = require('./peer')
+const OK_ERRORS = require('./errors').OK_ERRORS
 
 const defaultOptions = {
   objectMode: true,
@@ -18,14 +20,19 @@ class Network extends Duplex {
     this._peers = {}
     this._options = options
 
-    this.once('finish', this._finish.bind(this))
+    this.once('finish', () => {
+      debug('network finished')
+      debug('ending peers')
+      Object.keys(this._peers).forEach((address) => this._peers[address].end())
+    })
   }
 
   _read (size) {
     // do nothing
   }
 
-  _write (message, encoding, callback) {
+  _write (message, _, callback) {
+    debug('writing %j', message)
     const peer = this._ensurePeer(message.to)
     peer.write(message, callback)
   }
@@ -35,17 +42,24 @@ class Network extends Duplex {
     let peer = this._peers[address]
     if (!peer) {
       peer = this._peers[address] = new Peer(address, this._options)
-      peer.on('error', (err) => this.emit('error', err))
+      peer
+        .on('error', (err) => {
+          if (OK_ERRORS.indexOf(err.code) === -1) {
+            debug('caught peer error: %s', err.stack)
+            this.emit('error', err)
+          }
+        })
+        .once('close', () => {
+          debug('peer %s closed', address)
+          delete this.peers[address]
+        })
     }
 
-    peer.pipe(this, { end: false }).pipe(peer, { end: false })
-    return peer
-  }
+    peer
+      .pipe(this, { end: false })
+      .pipe(peer)
 
-  _finish () {
-    debug('finishing')
-    Object.keys(this._peers).forEach((addr) => this._peers[addr].end())
-    this._peers = {}
+    return peer
   }
 
 }

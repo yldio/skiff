@@ -38,27 +38,35 @@ class Peer extends Duplex {
     this._connect()
   }
 
+  end(buf) {
+    debug('peer end() called for peer %s', this._address)
+    super.end(buf)
+  }
+
   _connect () {
     debug('connecting to %s', this._address)
 
+    const peer = this
     this._reconnect = reconnect(reconnectOptions, (peer) => {
-      debug('got stream to peer %s', this._address)
+      debug('connected to peer %s', this._address)
       const msgpack = Msgpack()
 
-      const toPeer = msgpack.encoder()
+      // to peer
+      const toPeer = this._out = msgpack.encoder()
       toPeer.pipe(peer)
 
-      const fromPeer = this._out = msgpack.decoder()
+      // from peer
+      const fromPeer = msgpack.decoder()
       fromPeer.pipe(this, { end: false })
       fromPeer.on('data', (data) => this.push(data))
 
-      peer.on('error', (err) => {
-        if (OK_ERRORS.indexOf(err.code) === -1) {
-          this.emit('error', err)
-        }
-      })
+      peer.on('error', handlePeerError)
     })
-    .connect(this._address)
+    .on('error', handlePeerError)
+    .on('disconnect', () => {
+      debug('disconnected from %s', this._address)
+      this._out = undefined
+    })
 
     interestingEvents.forEach((event) => {
       this._reconnect.on(event, (payload) => {
@@ -66,18 +74,14 @@ class Peer extends Duplex {
       })
     })
 
-    this._reconnect
-      .on('connect', (con) => {
-        debug('connected to %s', this._address)
-        con.on('error', (err) => {
-          debug('error from peer:\n%s', err.stack)
-          this.emit('warning', err)
-        })
-      })
-      .on('disconnect', () => {
-        debug('disconnected from %s', this._address)
-        this._out = undefined
-      })
+    this._reconnect.connect(this._address)
+
+    function handlePeerError(err) {
+      if (OK_ERRORS.indexOf(err.code) === -1) {
+        debug('relaying error')
+        peer.emit('error', err)
+      }
+    }
   }
 
   _read (size) {
@@ -87,7 +91,7 @@ class Peer extends Duplex {
   _write (message, encoding, callback) {
     debug('writing %j to %s', message, this._address)
     if (this._out) {
-      return this._out.write(message, callback)
+      this._out.write(message, callback)
     } else {
       debug('not connected yet to peer %s', this._address)
       // if we're not connected we discard the message

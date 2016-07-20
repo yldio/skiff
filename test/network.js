@@ -43,6 +43,7 @@ describe('network', () => {
       }
 
       function onServerData(data) {
+        console.log('got server data: %j', data)
         serverData[index].push(data)
       }
     })
@@ -67,7 +68,7 @@ describe('network', () => {
     }
   })
 
-  it('can be instantiated', done => {
+  it('can be created', done => {
     network = Network()
     done()
   })
