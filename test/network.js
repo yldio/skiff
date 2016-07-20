@@ -32,12 +32,19 @@ describe('network', () => {
     return function(conn) {
       const msgpack = Msgpack()
       conn.pipe(msgpack.decoder()).on('data', onServerData)
+
+      const reply = msgpack.encoder()
+      reply.pipe(conn)
+
+      function onServerData(data) {
+        console.log('got server data: %j', data)
+        serverData[index].push(data)
+        const message = Object.assign({}, data, { isReply: true})
+        console.log('replying %j', message)
+        reply.write(message)
+      }
     }
 
-    function onServerData(data) {
-      console.log('got server data: %j', data)
-      serverData[index].push(data)
-    }
   })
   let serverConns = serverAddresses.map(() => [])
 
@@ -87,8 +94,18 @@ describe('network', () => {
     network.write({to: serverAddresses[0], what: 'hey'}, done)
   })
 
+  it('gets message back', done => {
+    console.log('--- expecting mesage back...')
+    network.once('data', message => {
+      console.log('network data')
+      expect(message).to.equal({to: serverAddresses[0], what: 'hey', isReply: true})
+      done()
+    })
+  })
+
   it('peer gets the message', done => {
-    expect(serverData[0]).to.equal([{to: serverAddresses[0], what: 'hey'}])
+    expect(serverData[0].length).to.equal(1)
+    expect(serverData[0].shift()).to.equal({to: serverAddresses[0], what: 'hey'})
     done();
   })
 
@@ -111,13 +128,24 @@ describe('network', () => {
   })
 
   it('can still send data to another peer', done => {
-    network.write({to: serverAddresses[1], what: 'hey'}, done)
+    network.write({to: serverAddresses[1], what: 'hey you'}, done)
   })
 
   it('peer gets the message', done => {
-    expect(serverData[1]).to.equal([{to: serverAddresses[1], what: 'hey'}])
+    expect(serverData[1]).to.equal([{to: serverAddresses[1], what: 'hey you'}])
     done();
   })
+
+  it('can send data to reconnected peer', done => {
+    network.write({to: serverAddresses[0], what: 'hey you\'re back!'}, done)
+  })
+
+  it('reconnected peer gets the message', done => {
+    expect(serverData[0].length).to.equal(1)
+    expect(serverData[0].shift()).to.equal({to: serverAddresses[0], what: 'hey you\'re back!'})
+    done();
+  })
+
 
 
   // it('allows peer to reconnect', done => {

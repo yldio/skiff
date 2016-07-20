@@ -44,17 +44,18 @@ class Peer extends Duplex {
     debug('connecting to %s', this._address)
 
     const peer = this
-    this._reconnect = reconnect(reconnectOptions, (peer) => {
+    this._reconnect = reconnect(reconnectOptions, (peerRawConn) => {
       debug('connected to peer %s', this._address)
       const msgpack = Msgpack()
 
       // to peer
-      const toPeer = this._out = msgpack.encoder()
-      toPeer.pipe(peer)
+      this._out = msgpack.encoder()
+      this._out.pipe(peerRawConn)
 
       // from peer
       const fromPeer = msgpack.decoder()
-      fromPeer.pipe(this, { end: false })
+      peerRawConn.pipe(fromPeer)
+
       fromPeer.on('data', (data) => this.push(data))
 
       peer.on('error', handlePeerError)

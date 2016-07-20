@@ -55,9 +55,7 @@ class Network extends Duplex {
         })
     }
 
-    peer
-      .pipe(this, { end: false })
-      .pipe(peer)
+    peer.on('data', (message) => this.push(message))
 
     return peer
   }
