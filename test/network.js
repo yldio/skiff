@@ -102,8 +102,8 @@ describe('network', () => {
     done()
   })
 
-  it('waits a bit', done => {
-    timers.setTimeout(done, A_BIT)
+  it('sending a message while trying to reconnect will fail silently', done => {
+    network.write({to: serverAddresses[0], what: 'should not have reached you'}, done)
   })
 
   it('can still send data to another peer', done => {
@@ -112,6 +112,18 @@ describe('network', () => {
       done()
     })
     network.write({to: serverAddresses[1], what: 'hey you'})
+  })
+
+  it('waits a bit', done => {
+    timers.setTimeout(done, A_BIT)
+  })
+
+  it('can still send data to another peer 2', done => {
+    network.once('data', message => {
+      expect(message).to.equal({to: serverAddresses[2], what: 'hey you dude', isReply: true})
+      done()
+    })
+    network.write({to: serverAddresses[2], what: 'hey you dude'})
   })
 
   it('peer gets the message', done => {
