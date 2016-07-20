@@ -22,10 +22,24 @@ const serverAddresses = [
   '/ip4/127.0.0.1/tcp/8082',
   ]
 
+const A_BIT = 500
+
 describe('network', () => {
 
   let network, servers
   let serverData = serverAddresses.map(() => [])
+  let serverHandlers = serverAddresses.map((server, index) => {
+    return function(conn) {
+      const msgpack = Msgpack()
+      conn.pipe(msgpack.decoder()).on('data', onServerData)
+    }
+
+    function onServerData(data) {
+      console.log('got server data: %j', data)
+      serverData[index].push(data)
+    }
+  })
+  let serverConns = serverAddresses.map(() => [])
 
   before(done => {
     let listening = 0
@@ -38,14 +52,10 @@ describe('network', () => {
       return server
 
       function onServerConnection(conn) {
-        const msgpack = Msgpack()
-        conn.pipe(msgpack.decoder()).on('data', onServerData)
+        serverConns[index] = conn
+        serverHandlers[index](conn)
       }
 
-      function onServerData(data) {
-        console.log('got server data: %j', data)
-        serverData[index].push(data)
-      }
     })
 
 
@@ -87,12 +97,28 @@ describe('network', () => {
   })
 
   it('waits a bit', done => {
-    timers.setTimeout(done, 1000)
+    timers.setTimeout(done, A_BIT)
   })
 
-  // it('allows peer to disconnect', done => {
+  it('allows peer to disconnect', done => {
+    console.log('DISCONNECTING...')
+    serverConns[0].destroy()
+    done()
+  })
 
-  // })
+  it('waits a bit', done => {
+    timers.setTimeout(done, A_BIT)
+  })
+
+  it('can still send data to another peer', done => {
+    network.write({to: serverAddresses[1], what: 'hey'}, done)
+  })
+
+  it('peer gets the message', done => {
+    expect(serverData[1]).to.equal([{to: serverAddresses[1], what: 'hey'}])
+    done();
+  })
+
 
   // it('allows peer to reconnect', done => {
 
