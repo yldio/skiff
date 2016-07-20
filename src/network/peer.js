@@ -6,6 +6,7 @@ const Multiaddr = require('multiaddr')
 const Msgpack = require('msgpack5')
 
 const reconnect = require('./reconnect')
+const OK_ERRORS = require('./errors').OK_ERRORS
 
 const defaultOptions = {
   objectMode: true,
@@ -23,10 +24,6 @@ const reconnectOptions = {
   immediate: true
 }
 
-const OK_ERRORS = [
-  'ECONNREFUSED'
-]
-
 class Peer extends Duplex {
 
   constructor (address, options) {
@@ -38,7 +35,7 @@ class Peer extends Duplex {
     this._connect()
   }
 
-  end(buf) {
+  end (buf) {
     debug('peer end() called for peer %s', this._address)
     super.end(buf)
   }
@@ -76,7 +73,7 @@ class Peer extends Duplex {
 
     this._reconnect.connect(this._address)
 
-    function handlePeerError(err) {
+    function handlePeerError (err) {
       if (OK_ERRORS.indexOf(err.code) === -1) {
         debug('relaying error')
         peer.emit('error', err)
