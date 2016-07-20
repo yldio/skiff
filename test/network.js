@@ -37,10 +37,8 @@ describe('network', () => {
       reply.pipe(conn)
 
       function onServerData(data) {
-        console.log('got server data: %j', data)
         serverData[index].push(data)
         const message = Object.assign({}, data, { isReply: true})
-        console.log('replying %j', message)
         reply.write(message)
       }
     }
@@ -91,16 +89,11 @@ describe('network', () => {
   })
 
   it('can be used to send a message to a peer', done => {
-    network.write({to: serverAddresses[0], what: 'hey'}, done)
-  })
-
-  it('gets message back', done => {
-    console.log('--- expecting mesage back...')
     network.once('data', message => {
-      console.log('network data')
       expect(message).to.equal({to: serverAddresses[0], what: 'hey', isReply: true})
       done()
     })
+    network.write({to: serverAddresses[0], what: 'hey'})
   })
 
   it('peer gets the message', done => {
@@ -118,7 +111,6 @@ describe('network', () => {
   })
 
   it('allows peer to disconnect', done => {
-    console.log('DISCONNECTING...')
     serverConns[0].destroy()
     done()
   })
@@ -128,7 +120,11 @@ describe('network', () => {
   })
 
   it('can still send data to another peer', done => {
-    network.write({to: serverAddresses[1], what: 'hey you'}, done)
+    network.once('data', message => {
+      expect(message).to.equal({to: serverAddresses[1], what: 'hey you', isReply: true})
+      done()
+    })
+    network.write({to: serverAddresses[1], what: 'hey you'})
   })
 
   it('peer gets the message', done => {
@@ -137,7 +133,11 @@ describe('network', () => {
   })
 
   it('can send data to reconnected peer', done => {
-    network.write({to: serverAddresses[0], what: 'hey you\'re back!'}, done)
+    network.once('data', message => {
+      expect(message).to.equal({to: serverAddresses[0], what: 'hey you\'re back!', isReply: true})
+      done()
+    })
+    network.write({to: serverAddresses[0], what: 'hey you\'re back!'})
   })
 
   it('reconnected peer gets the message', done => {
@@ -146,7 +146,9 @@ describe('network', () => {
     done();
   })
 
-
+  it('waits a bit', done => {
+    timers.setTimeout(done, A_BIT)
+  })
 
   // it('allows peer to reconnect', done => {
 
