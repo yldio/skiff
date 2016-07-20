@@ -49,9 +49,9 @@ class Network extends Duplex {
             this.emit('error', err)
           }
         })
-        .once('close', () => {
+        .once('finish', () => {
           debug('peer %s closed', address)
-          delete this.peers[address]
+          delete this._peers[address]
         })
     }
 
