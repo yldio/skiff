@@ -28,7 +28,7 @@ class Peer extends Duplex {
 
   constructor (address, options) {
     debug('constructing peer from address %j', address)
-    super(Object.assign({}, options || {}, defaultOptions))
+    super(Object.assign({}, options, defaultOptions))
     this._address = Multiaddr(address)
 
     this.once('finish', this._finish.bind(this))
@@ -58,7 +58,8 @@ class Peer extends Duplex {
 
       fromPeer.on('data', (data) => this.push(data))
 
-      peer.on('error', handlePeerError)
+      peerRawConn.on('error', handlePeerError)
+      fromPeer.on('error', handlePeerError)
     })
     .on('error', handlePeerError)
     .on('disconnect', () => {

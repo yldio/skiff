@@ -4,7 +4,6 @@ const debug = require('debug')('skiff.network')
 const Duplex = require('stream').Duplex
 
 const Peer = require('./peer')
-const OK_ERRORS = require('./errors').OK_ERRORS
 
 const defaultOptions = {
   objectMode: true,
@@ -27,6 +26,13 @@ class Network extends Duplex {
     })
   }
 
+  disconnect (address) {
+    const peer = this._peers[address]
+    if (peer) {
+      peer.end()
+    }
+  }
+
   _read (size) {
     // do nothing
   }
@@ -44,18 +50,14 @@ class Network extends Duplex {
       peer = this._peers[address] = new Peer(address, this._options)
       peer
         .on('error', (err) => {
-          if (OK_ERRORS.indexOf(err.code) === -1) {
-            debug('caught peer error: %s', err.stack)
-            this.emit('error', err)
-          }
+          this.emit('warning', err)
         })
         .once('finish', () => {
           debug('peer %s closed', address)
           delete this._peers[address]
         })
+        .on('data', (message) => this.push(message))
     }
-
-    peer.on('data', (message) => this.push(message))
 
     return peer
   }

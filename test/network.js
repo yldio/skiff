@@ -145,6 +145,39 @@ describe('network', () => {
     done();
   })
 
+  it('can remove existing peer', done => {
+    network.disconnect('/ip4/127.0.0.1/tcp/8083')
+    done()
+  })
+
+  it('can remove non-existing peer', done => {
+    network.disconnect('/ip4/127.0.0.1/tcp/8084')
+    done()
+  })
+
+  it('waits a bit', done => {
+    timers.setTimeout(done, A_BIT)
+  })
+
+  it('catches errors', done => {
+    serverHandlers[2] = function(conn) {
+      const msgpack = Msgpack()
+      conn.pipe(msgpack.decoder()).on('data', onServerData)
+
+      function onServerData(data) {
+        expect(data).to.equal({to: serverAddresses[2], what: 'yo'})
+        // reply garbage
+        conn.end(new Buffer([0xc1]))
+        done()
+      }
+    }
+
+    // make it reconnect
+    serverConns[2].destroy()
+
+    setTimeout(() => network.write({to: serverAddresses[2], what: 'yo'}), A_BIT)
+  })
+
   it('waits a bit', done => {
     timers.setTimeout(done, A_BIT)
   })
