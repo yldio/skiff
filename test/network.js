@@ -27,8 +27,9 @@ const A_BIT = 500
 describe('network', () => {
 
   let network, servers
-  let serverData = serverAddresses.map(() => [])
-  let serverHandlers = serverAddresses.map((server, index) => {
+  const serverData = serverAddresses.map(() => [])
+  const serverConns = serverAddresses.map(() => undefined)
+  const serverHandlers = serverAddresses.map((server, index) => {
     return function(conn) {
       const msgpack = Msgpack()
       conn.pipe(msgpack.decoder()).on('data', onServerData)
@@ -44,7 +45,6 @@ describe('network', () => {
     }
 
   })
-  let serverConns = serverAddresses.map(() => [])
 
   before(done => {
     let listening = 0
@@ -59,25 +59,12 @@ describe('network', () => {
       function onServerConnection(conn) {
         serverConns[index] = conn
         serverHandlers[index](conn)
+        conn.once('finish', () => serverConns[index] = undefined)
       }
-
     })
-
 
     function onceListening() {
       if (++ listening === servers.length) {
-        done()
-      }
-    }
-  })
-
-  after(done => {
-    let closed = 0
-    servers.forEach(server => server.close(onceClosed))
-    network.end()
-
-    function onceClosed() {
-      if (++ closed === servers.length) {
         done()
       }
     }
@@ -150,8 +137,16 @@ describe('network', () => {
     timers.setTimeout(done, A_BIT)
   })
 
-  // it('allows peer to reconnect', done => {
+  it('can get closed', done => {
+    let closed = 0
+    servers.forEach(server => server.close(onceClosed))
+    network.end()
 
-  // })
+    function onceClosed() {
+      if (++ closed === servers.length) {
+        done()
+      }
+    }
+  })
 
 })
