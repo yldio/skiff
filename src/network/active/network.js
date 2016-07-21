@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('skiff.network')
+const debug = require('debug')('skiff.active-network')
 const Duplex = require('stream').Duplex
 
 const Peer = require('./peer')

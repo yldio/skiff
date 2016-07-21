@@ -1,13 +1,11 @@
 'use strict'
 
-const Lab = require('lab')
-const lab = exports.lab = Lab.script()
+const lab = exports.lab = require('lab').script()
 const describe = lab.experiment
 const before = lab.before
 const after = lab.after
 const it = lab.it
-const Code = require('code')
-const expect = Code.expect
+const expect = require('code').expect
 
 const Multiaddr = require('multiaddr')
 const net = require('net')
@@ -24,7 +22,7 @@ const serverAddresses = [
 
 const A_BIT = 500
 
-describe('network', () => {
+describe('active network', () => {
 
   let network, servers
   const serverData = serverAddresses.map(() => [])
