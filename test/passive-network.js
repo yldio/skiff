@@ -90,7 +90,6 @@ describe('passive network', () => {
   })
 
   it('allows the peer to reconnect and send message', done => {
-    console.log('-----')
     const client = clients[0]
     const oldConn = client.conn
     setupClient(client, () => {
