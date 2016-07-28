@@ -1,18 +1,21 @@
 'use strict'
 
+const debug = require('debug')('skiff.states.candidate')
 const Base = require('./base')
 
 class Candidate extends Base {
 
-  constructor (node, options) {
-    super(node, options)
-    this._votes = 1
+  _start () {
+    this._gatherVotes()
   }
 
-  start () {
-    let haveMajority = false
+  _gatherVotes () {
+    let majorityVoted = false
+    let votedForMe = 1
+    let voteCount = 1
 
     this._node.network.peers.forEach(peer => {
+      debug('requesting vote from %s', peer)
       const requestVoteArgs = {
         term: this._node.state.term(),
         candidateId: this._node.state.id,
@@ -24,12 +27,18 @@ class Candidate extends Base {
         peer, // to
         'RequestVote', // action
         requestVoteArgs, // params
-        (err, reply) => {
-          if (!haveMajority && !err && reply.voteGranted) {
-            this._votes ++
-            haveMajority = this._node.network.isMajority(this._votes)
-            if (haveMajority) {
-              this._electionWon()
+        (err, reply) => { // callback
+          if (!err && !majorityVoted) {
+            debug('reply for request vote from %s: err = %j, message = %j', peer, err, reply)
+            voteCount++
+            majorityVoted = this._node.network.isMajority(voteCount)
+            if (reply && reply.params.voteGranted) {
+              votedForMe++
+              if (this._node.network.isMajority(votedForMe)) {
+                this._electionWon()
+              }
+            } else if (majorityVoted) {
+              this._resetElectionTimeout()
             }
           }
         }
@@ -37,10 +46,9 @@ class Candidate extends Base {
     })
   }
 
-  stop () {}
-
   _electionWon () {
-    this._node.state.setState('leader')
+    debug('%s: election won', this._node.state.id)
+    this._node.state.transition('leader')
   }
 }
 

@@ -56,7 +56,10 @@ class Network extends Duplex {
           debug('peer %s closed', address)
           delete this._peers[address]
         })
-        .on('data', (message) => this.push(message))
+        .on('data', (message) => {
+          debug('have message from peer: %j', message)
+          this.push(message)
+        })
     }
 
     return peer

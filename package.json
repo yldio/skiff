@@ -4,7 +4,9 @@
   "description": "Raft for Node.js",
   "main": "src/node.js",
   "scripts": {
-    "test": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
+    "test-unison": "lab -vl",
+    "test": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js",
+    "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
     "style": "eslint src"
   },
   "repository": {

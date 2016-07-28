@@ -1,5 +1,6 @@
 'use strict'
 
+const debug = require('debug')('skiff.incoming-dispatcher')
 const Writable = require('stream').Writable
 const merge = require('deepmerge')
 
@@ -22,6 +23,7 @@ class Dispatcher extends Writable {
   }
 
   _write (message, _, callback) {
+    debug('_write %j', message)
     this._pending.push(message)
     this._cap()
     callback()

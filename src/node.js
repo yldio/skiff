@@ -20,6 +20,8 @@ class Node {
     debug('creating node %s with options %j', id, _options)
     this.id = id
     this._options = merge(defaultOptions, _options || {})
+    this._dispatcher = new IncomingDispatcher()
+    this._state = new State(this.id, this._dispatcher, this._options)
   }
 
   start (cb) {
@@ -43,10 +45,8 @@ class Node {
       active: new ActiveNetwork()
     }
 
-    const dispatcher = new IncomingDispatcher()
-    this._network.passive.pipe(dispatcher)
-
-    this._state = new State(this.id, dispatcher, this._options)
+    this._network.passive.pipe(this._dispatcher, { end: false })
+    this._network.active.pipe(this._dispatcher, { end: false })
 
     this._state.passive.pipe(this._network.passive)
     this._state.active.pipe(this._network.active)
@@ -56,7 +56,25 @@ class Node {
     if (cb) {
       this._network.passive.once('closed', cb)
     }
-    this._network.passive.end()
+    if (this._network) {
+      this._network.passive.end()
+      this._network.active.end()
+    }
+
+    this._state.stop()
+
+    delete this._network
+  }
+
+  join (address) {
+    this._state.join(address)
+  }
+
+  is (state) {
+    debug('%s: is state %s ?', this.id, state)
+    const currentState = this._state._stateName
+    debug('%s: current state is %s', this.id, currentState)
+    return this._state._stateName === state
   }
 }
 

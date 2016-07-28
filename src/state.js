@@ -1,5 +1,6 @@
 'use strict'
 
+const debug = require('debug')('skiff.state')
 const Through = require('through2')
 const uuid = require('uuid').v4
 const timers = require('timers')
@@ -13,53 +14,96 @@ class State extends EventEmitter {
   constructor (id, dispatcher, options) {
     super()
     this.id = id
+    this._options = options
     this._dispatcher = dispatcher
     this.passive = this._outStream()
     this.active = this._outStream()
+    this._replies = this._replyStream()
     this._peers = []
+    this._stateName = undefined
 
     // state
-    this._term = 0
-    this._lastLogIndex = 0
-    this._lastLogTerm = 0
+    this._term = -1
+    this._lastLogIndex = -1
+    this._lastLogTerm = -1
+    this._commitIndex = -1
     this._votedFor = null
 
     this._stateServices = {
       id: id,
+      name: this._getStateName.bind(this),
       term: this._getTerm.bind(this),
       lastLogIndex: this._getLastLogIndex.bind(this),
       lastLogTerm: this._getLastLogTerm.bind(this),
-      setState: this._setState.bind(this),
+      commitIndex: this._getOrSetCommitIndex.bind(this),
+      transition: this._transition.bind(this),
       incrementTerm: this._incrementTerm.bind(this),
-      getVotedFor: this._getVotedFor.bind(this)
+      getVotedFor: this._getVotedFor.bind(this),
+      setVotedFor: this._setVotedFor.bind(this)
     }
 
     this._networkingServices = {
       rpc: this._rpc.bind(this),
       reply: this._reply.bind(this),
+      isMajority: this._isMajority.bind(this),
       peers: this._peers
     }
 
-    this._setState('follower')
+    this._transition('follower')
 
     this._dispatch()
   }
 
-  _setState (state) {
-    const oldState = this._state
-    if (oldState) {
-      oldState.stop()
+  stop () {
+    if (this._state) {
+      this._state.stop()
     }
+  }
 
-    const State = States(state)
-    this._state = new State({
-      state: this._stateServices,
-      network: this._networkingServices
-    })
-    this._state.start()
+  // -------------
+  // Peers
 
-    this.emit('new state', state)
-    this.emit(state)
+  join (address) {
+    this._ensurePeer(address)
+  }
+
+  _ensurePeer (address) {
+    if ((this._peers.indexOf(address) < 0) && address !== this.id) {
+      this._peers.push(address)
+    }
+  }
+
+  _isMajority (count) {
+    const quorum = Math.ceil(this._peers.length / 2)
+    return this._peers.length && count >= quorum
+  }
+
+  // -------------
+  // State
+
+  _transition (state) {
+    if (state !== this._stateName) {
+      debug('node %s is transitioning to new state %s', this.id, state)
+      const oldState = this._state
+      if (oldState) {
+        oldState.stop()
+      }
+
+      const State = States(state)
+      this._state = new State({
+        state: this._stateServices,
+        network: this._networkingServices
+      })
+      this._stateName = state
+      this._state.start()
+
+      this.emit('new state', state)
+      this.emit(state)
+    }
+  }
+
+  _getStateName () {
+    return this._stateName
   }
 
   _incrementTerm () {
@@ -79,17 +123,34 @@ class State extends EventEmitter {
     return this._lastLogTerm
   }
 
-  _getVotedFor () {
-    return this._getVotedFor
+  _getOrSetCommitIndex (idx) {
+    if (typeof idx === 'number') {
+      this._commitIndex = idx
+    }
+    return this._commitIndex
   }
 
+  _getVotedFor () {
+    return this._votedFor
+  }
+
+  _setVotedFor (peer) {
+    debug('%s: setting voted for to %s', this.id, peer)
+    this._votedFor = peer
+  }
+
+  // -------------
+  // Comms
+
   _rpc (to, action, params, callback) {
+    debug('%s: rpc to: %s, action: %s, params: %j', this.id, to, action, params)
+    const self = this
     const done = once(callback)
     const id = uuid()
     const timeout = timers.setTimeout(onTimeout, this._options.rpcTimeoutMS)
-    this.active.on('data', onNetworkData)
+    this._replies.on('data', onReplyData)
     this.active.write({
-      from: this._node.state.id,
+      from: this.id,
       id,
       type: 'request',
       to,
@@ -97,16 +158,19 @@ class State extends EventEmitter {
       params
     })
 
-    function onNetworkData (message) {
+    function onReplyData (message) {
+      debug('%s: reply data: %j', self.id, message)
       if (message.type === 'reply' && message.from === to && message.id === id) {
-        this.active.removeListener('data', onNetworkData)
+        debug('%s: this is a reply I was expecting: %j', self.id, message)
+        self._replies.removeListener('data', onReplyData)
         timers.clearTimeout(timeout)
         done(null, message)
       }
     }
 
     function onTimeout () {
-      this.active.removeListener('data', onNetworkData)
+      debug('RPC timeout')
+      self._replies.removeListener('data', onReplyData)
       const err = new Error('timeout RPC to ' + to)
       err.code = 'ETIMEOUT'
       done(err)
@@ -114,9 +178,11 @@ class State extends EventEmitter {
   }
 
   _reply (to, messageId, params, callback) {
+    debug('%s: reply to: %s, messageId: %s, params: %j', this.id, to, messageId, params)
     this.passive.write({
+      to,
       type: 'reply',
-      from: this._node.state.id,
+      from: this.id,
       id: messageId,
       params
     }, callback)
@@ -127,12 +193,34 @@ class State extends EventEmitter {
     if (!message) {
       this._dispatcher.once('readable', this._dispatch.bind(this))
     } else {
-      this._handleMessage(message, this._dispatch.bind(this))
+      debug('%s: got message from dispatcher: %j', this.id, message)
+
+      if (message.type === 'request') {
+        debug('%s: request message from dispatcher: %j', this.id, message)
+        this._handleRequest(message, this._dispatch.bind(this))
+      } else if (message.type === 'reply') {
+        debug('%s: reply message from dispatcher: %j', this.id, message)
+        this._handleReply(message, this._dispatch.bind(this))
+      }
+
+      if (message.params && message.params.term > this._term) {
+        this._transition('follower')
+      }
     }
   }
 
-  _handleMessage (message, done) {
-    this._state.handleMessage(message, done)
+  _handleRequest (message, done) {
+    debug('%s: handling message: %j', this.id, message)
+    const from = message.from
+    if (from) {
+      this._ensurePeer(from)
+      this._state.handleRequest(message, done)
+    }
+  }
+
+  _handleReply (message, done) {
+    debug('%s: handling reply %j', this.id, message)
+    this._replies.write(message, done)
   }
 
   _outStream () {
@@ -140,7 +228,19 @@ class State extends EventEmitter {
     return Through.obj(transform)
 
     function transform (message, _, callback) {
+      debug('%s: out stream transform %j', self.id, message)
       message.from = self.id
+      this.push(message)
+      callback()
+    }
+  }
+
+  _replyStream () {
+    const self = this
+    return Through.obj(transform)
+
+    function transform (message, _, callback) {
+      debug('%s: reply stream transform %j', self.id, message)
       this.push(message)
       callback()
     }

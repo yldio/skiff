@@ -56,7 +56,10 @@ class Peer extends Duplex {
       const fromPeer = msgpack.decoder()
       peerRawConn.pipe(fromPeer)
 
-      fromPeer.on('data', (data) => this.push(data))
+      fromPeer.on('data', (data) => {
+        debug('some data from peer: %j', data)
+        peer.push(data)
+      })
 
       peerRawConn.on('error', handlePeerError)
       fromPeer.on('error', handlePeerError)
@@ -77,7 +80,7 @@ class Peer extends Duplex {
 
     function handlePeerError (err) {
       if (OK_ERRORS.indexOf(err.code) === -1) {
-        debug('relaying error')
+        debug('relaying error:\n%s', err.stack)
         peer.emit('error', err)
       }
     }

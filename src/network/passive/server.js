@@ -45,6 +45,7 @@ class Server extends Duplex {
       debug('I have peer for message to %s', message.to)
       peer.write(message, callback)
     } else {
+      debug('I have no peer to send to')
       callback()
     }
   }
@@ -69,6 +70,7 @@ class Server extends Duplex {
     fromPeer.on('data', this._onMessage.bind(this, conn, toPeer))
 
     function onPeerError (err) {
+      debug('peer error: %s', err.stack)
       server.emit('warning', err)
     }
   }
