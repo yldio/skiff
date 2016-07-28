@@ -47,7 +47,7 @@ class Base {
     this._electionTimeout = undefined
     if (this._node.network.peers.length) {
       this._node.state.incrementTerm()
-      this._node.state.transition('candidate')
+      this._node.state.transition('candidate', true)
     }
   }
 
@@ -63,7 +63,6 @@ class Base {
     switch (message.action) {
 
       case 'AppendEntries':
-        this._resetElectionTimeout()
         this._appendEntriesReceived(message, done)
         break
 
@@ -145,6 +144,7 @@ class Base {
       }, done)
 
     if (success) {
+      this._resetElectionTimeout()
       this._node.state.transition('follower')
     }
   }

@@ -2,8 +2,6 @@
 
 const lab = exports.lab = require('lab').script()
 const describe = lab.experiment
-const before = lab.before
-const after = lab.after
 const it = lab.it
 const expect = require('code').expect
 
@@ -13,17 +11,14 @@ const async = require('async')
 
 const Network = require('../src/network/passive')
 
-const A_BIT = 500
-
 describe('passive network', () => {
-
   let network, clientOptions
 
   const clientAddresses = [
     '/ip4/127.0.0.1/tcp/8080',
     '/ip4/127.0.0.1/tcp/8081',
-    '/ip4/127.0.0.1/tcp/8082',
-    ]
+    '/ip4/127.0.0.1/tcp/8082'
+  ]
 
   const clients = clientAddresses.map(address => {
     return { address: address }
@@ -43,16 +38,16 @@ describe('passive network', () => {
 
   it('accepts a msgpack message from a client', done => {
     const expected = clients.reduce((messages, client) => {
-      messages[client.address] = { from: client.address, what: 'hey'}
+      messages[client.address] = { from: client.address, what: 'hey' }
       return messages
     }, {})
 
     network.on('data', (message) => {
       const from = message.from
       const expectedMessage = expected[from]
-      expect(expectedMessage).to.equal({ from: from, what: 'hey'})
+      expect(expectedMessage).to.equal({ from: from, what: 'hey' })
       delete expected[from]
-      if (! Object.keys(expected).length) {
+      if (!Object.keys(expected).length) {
         network.removeAllListeners('data')
         done()
       }
@@ -94,11 +89,11 @@ describe('passive network', () => {
     const oldConn = client.conn
     setupClient(client, () => {
       oldConn.end()
-      client.encoder.write({ from: client.address, the: 'new me'})
-      client.encoder.write({ from: client.address, the: 'new me again'})
+      client.encoder.write({ from: client.address, the: 'new me' })
+      client.encoder.write({ from: client.address, the: 'new me again' })
 
       network.once('data', (message) => {
-        expect(message).to.equal({ from: client.address, the: 'new me'})
+        expect(message).to.equal({ from: client.address, the: 'new me' })
         client.decoder.once('data', message => {
           expect(message).to.equal({ to: client.address, hope: 'this reaches you' })
           done()
@@ -114,7 +109,7 @@ describe('passive network', () => {
     clients.forEach(client => client.conn.end())
   })
 
-  function setupClient(client, cb) {
+  function setupClient (client, cb) {
     const conn = net.connect(clientOptions, cb)
     const msgpack = Msgpack()
     const decoder = msgpack.decoder()

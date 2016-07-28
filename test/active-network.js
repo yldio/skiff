@@ -3,7 +3,6 @@
 const lab = exports.lab = require('lab').script()
 const describe = lab.experiment
 const before = lab.before
-const after = lab.after
 const it = lab.it
 const expect = require('code').expect
 
@@ -17,31 +16,29 @@ const Network = require('../src/network/active')
 const serverAddresses = [
   '/ip4/127.0.0.1/tcp/8080',
   '/ip4/127.0.0.1/tcp/8081',
-  '/ip4/127.0.0.1/tcp/8082',
-  ]
+  '/ip4/127.0.0.1/tcp/8082'
+]
 
 const A_BIT = 500
 
 describe('active network', () => {
-
   let network, servers
   const serverData = serverAddresses.map(() => [])
   const serverConns = serverAddresses.map(() => undefined)
   const serverHandlers = serverAddresses.map((server, index) => {
-    return function(conn) {
+    return function (conn) {
       const msgpack = Msgpack()
       conn.pipe(msgpack.decoder()).on('data', onServerData)
 
       const reply = msgpack.encoder()
       reply.pipe(conn)
 
-      function onServerData(data) {
+      function onServerData (data) {
         serverData[index].push(data)
-        const message = Object.assign({}, data, { isReply: true})
+        const message = Object.assign({}, data, { isReply: true })
         reply.write(message)
       }
     }
-
   })
 
   before(done => {
@@ -54,15 +51,15 @@ describe('active network', () => {
       server.listen({port: listenAddr.port, host: listenAddr.address}, onceListening)
       return server
 
-      function onServerConnection(conn) {
+      function onServerConnection (conn) {
         serverConns[index] = conn
         serverHandlers[index](conn)
-        conn.once('finish', () => serverConns[index] = undefined)
+        conn.once('finish', () => { serverConns[index] = undefined })
       }
     })
 
-    function onceListening() {
-      if (++ listening === servers.length) {
+    function onceListening () {
+      if (++listening === servers.length) {
         done()
       }
     }
@@ -84,7 +81,7 @@ describe('active network', () => {
   it('peer gets the message', done => {
     expect(serverData[0].length).to.equal(1)
     expect(serverData[0].shift()).to.equal({to: serverAddresses[0], what: 'hey'})
-    done();
+    done()
   })
 
   it('allows message to unconnected peer', done => {
@@ -126,7 +123,7 @@ describe('active network', () => {
 
   it('peer gets the message', done => {
     expect(serverData[1]).to.equal([{to: serverAddresses[1], what: 'hey you'}])
-    done();
+    done()
   })
 
   it('can send data to reconnected peer', done => {
@@ -140,7 +137,7 @@ describe('active network', () => {
   it('reconnected peer gets the message', done => {
     expect(serverData[0].length).to.equal(1)
     expect(serverData[0].shift()).to.equal({to: serverAddresses[0], what: 'hey you\'re back!'})
-    done();
+    done()
   })
 
   it('can remove existing peer', done => {
@@ -158,11 +155,11 @@ describe('active network', () => {
   })
 
   it('catches errors', done => {
-    serverHandlers[2] = function(conn) {
+    serverHandlers[2] = function (conn) {
       const msgpack = Msgpack()
       conn.pipe(msgpack.decoder()).on('data', onServerData)
 
-      function onServerData(data) {
+      function onServerData (data) {
         expect(data).to.equal({to: serverAddresses[2], what: 'yo'})
         // reply garbage
         conn.end(new Buffer([0xc1]))
@@ -185,11 +182,10 @@ describe('active network', () => {
     servers.forEach(server => server.close(onceClosed))
     network.end()
 
-    function onceClosed() {
-      if (++ closed === servers.length) {
+    function onceClosed () {
+      if (++closed === servers.length) {
         done()
       }
     }
   })
-
 })

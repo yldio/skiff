@@ -14,6 +14,8 @@ class Candidate extends Base {
     let votedForMe = 1
     let voteCount = 1
 
+    this._node.state.setVotedFor(this._node.state.id)
+
     this._node.network.peers.forEach(peer => {
       debug('requesting vote from %s', peer)
       const requestVoteArgs = {

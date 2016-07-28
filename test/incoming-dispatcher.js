@@ -2,23 +2,16 @@
 
 const lab = exports.lab = require('lab').script()
 const describe = lab.experiment
-const before = lab.before
-const after = lab.after
 const it = lab.it
 const expect = require('code').expect
-
-const net = require('net')
-const Msgpack = require('msgpack5')
-const async = require('async')
 
 const Dispatcher = require('../src/incoming-dispatcher')
 
 describe('incoming dispatcher', () => {
-
   let dispatcher
 
   it('can be created', done => {
-    dispatcher = new Dispatcher({ maxPending: 10})
+    dispatcher = new Dispatcher({ maxPending: 10 })
     done()
   })
 
@@ -28,7 +21,7 @@ describe('incoming dispatcher', () => {
   })
 
   it('accepts new objects', done => {
-    for(var i = 0 ; i < 10 ; i ++) {
+    for (var i = 0; i < 10; i++) {
       dispatcher.write(i)
     }
     done()
@@ -38,7 +31,7 @@ describe('incoming dispatcher', () => {
     let i
     let prev = -1
 
-    while(i = dispatcher.next()) {
+    while (i = dispatcher.next()) {
       expect(i).to.equal(prev + 1)
       prev = i
     }
@@ -46,13 +39,13 @@ describe('incoming dispatcher', () => {
   })
 
   it('should cap', done => {
-    for(var i = 0 ; i < 20 ; i ++) {
+    for (var i = 0; i < 20; i++) {
       dispatcher.write(i)
     }
 
     let prev = 9
 
-    while(i = dispatcher.next()) {
+    while (i = dispatcher.next()) {
       expect(i).to.equal(prev + 1)
       prev = i
     }
@@ -67,5 +60,4 @@ describe('incoming dispatcher', () => {
     })
     dispatcher.write('a')
   })
-
 })

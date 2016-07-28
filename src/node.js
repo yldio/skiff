@@ -25,13 +25,15 @@ class Node {
   }
 
   start (cb) {
-    debug('starting server %s', this.id)
+    debug('starting node %s', this.id)
     const address = Multiaddr(this.id).nodeAddress()
     const passiveNetworkOptions = {
-      server: merge({
-        port: address.port,
-        host: address.address
-      }, this._options.server)
+      server: merge(
+        {
+          port: address.port,
+          host: address.address
+        },
+        this._options.server)
     }
     debug('about to configure passive network for %s with options %j', this.id, passiveNetworkOptions)
     const passiveNetwork = new PassiveNetwork(passiveNetworkOptions)
@@ -71,7 +73,6 @@ class Node {
   }
 
   is (state) {
-    debug('%s: is state %s ?', this.id, state)
     const currentState = this._state._stateName
     debug('%s: current state is %s', this.id, currentState)
     return this._state._stateName === state

@@ -69,21 +69,24 @@ class State extends EventEmitter {
 
   _ensurePeer (address) {
     if ((this._peers.indexOf(address) < 0) && address !== this.id) {
+      debug('%s is joining %s', this.id, address)
       this._peers.push(address)
     }
   }
 
   _isMajority (count) {
-    const quorum = Math.ceil(this._peers.length / 2)
-    return this._peers.length && count >= quorum
+    const quorum = Math.ceil((this._peers.length + 1) / 2)
+    const isMajority = this._peers.length && count >= quorum
+    debug('%s: is %d majority? %j', this.id, count, isMajority)
+    return isMajority
   }
 
   // -------------
   // State
 
-  _transition (state) {
-    if (state !== this._stateName) {
-      debug('node %s is transitioning to new state %s', this.id, state)
+  _transition (state, force) {
+    if (force || state !== this._stateName) {
+      debug('node %s is transitioning to state %s', this.id, state)
       const oldState = this._state
       if (oldState) {
         oldState.stop()
@@ -112,6 +115,11 @@ class State extends EventEmitter {
   }
 
   _getTerm () {
+    return this._term
+  }
+
+  _setTerm (term) {
+    this._votedFor = null
     return this._term
   }
 
@@ -178,7 +186,7 @@ class State extends EventEmitter {
   }
 
   _reply (to, messageId, params, callback) {
-    debug('%s: reply to: %s, messageId: %s, params: %j', this.id, to, messageId, params)
+    debug('%s: replying to: %s, messageId: %s, params: %j', this.id, to, messageId, params)
     this.passive.write({
       to,
       type: 'reply',
@@ -203,7 +211,10 @@ class State extends EventEmitter {
         this._handleReply(message, this._dispatch.bind(this))
       }
 
+      debug('%s: current term: %d', this.id, this._term)
       if (message.params && message.params.term > this._term) {
+        debug('%s is going to transition to state follower because of outdated term', this.id)
+        this._setTerm(message.params.term)
         this._transition('follower')
       }
     }

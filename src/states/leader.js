@@ -7,7 +7,7 @@ const Base = require('./base')
 class Leader extends Base {
 
   start () {
-    this._resetAppendEntriesTimeout()
+    this._broadcastAppendEntries()
   }
 
   stop () {

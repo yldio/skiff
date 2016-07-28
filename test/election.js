@@ -11,13 +11,13 @@ const async = require('async')
 
 const Node = require('../')
 
-const A_BIT = 500
+const A_BIT = 1000
 
 describe('election', () => {
-
   const nodeAddresses = [
-    '/ip4/127.0.0.1/tcp/8080',
-    '/ip4/127.0.0.1/tcp/8081',
+    '/ip4/127.0.0.1/tcp/9090',
+    '/ip4/127.0.0.1/tcp/9091',
+    '/ip4/127.0.0.1/tcp/9092'
   ]
 
   const nodes = nodeAddresses.map(address => new Node(address))
@@ -31,8 +31,11 @@ describe('election', () => {
   })
 
   it('can join another node', done => {
-    nodes[0].join(nodeAddresses[1])
-    nodes[1].join(nodeAddresses[0])
+    nodes.forEach((node, index) => {
+      const selfAddress = nodeAddresses[index]
+      const peers = nodeAddresses.filter(address => address !== selfAddress)
+      peers.forEach(peer => node.join(peer))
+    })
     done()
   })
 
@@ -46,5 +49,4 @@ describe('election', () => {
     expect(leader === follower).to.not.be.true()
     done()
   })
-
 })
