@@ -50,8 +50,8 @@ class Node {
     this._network.passive.pipe(this._dispatcher, { end: false })
     this._network.active.pipe(this._dispatcher, { end: false })
 
-    this._state.passive.pipe(this._network.passive)
-    this._state.active.pipe(this._network.active)
+    this._state.passive.pipe(this._network.passive, { end: false })
+    this._state.active.pipe(this._network.active, { end: false })
   }
 
   stop (cb) {
