@@ -11,7 +11,7 @@ const defaultOptions = {
 class Dispatcher extends Writable {
 
   constructor (_options) {
-    const options = merge(defaultOptions, _options)
+    const options = merge(defaultOptions, _options || {})
     super(options)
     this._options = options
     this._pending = []

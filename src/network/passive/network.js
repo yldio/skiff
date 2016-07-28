@@ -8,7 +8,6 @@ const Server = require('./server')
 
 const defaultOptions = {
   objectMode: true,
-  highWaterMark: 50,
   server: {
     port: 9163,
     host: '0.0.0.0',
@@ -20,11 +19,11 @@ class Network extends Duplex {
 
   constructor (_options) {
     // TODO: merge options.server
-    const options = merge(_options || {}, defaultOptions)
+    const options = merge(defaultOptions, _options || {})
     debug('creating network with options %j', options)
     super(options)
-    this.once('finish', this._finish.bind(this))
     this._options = options
+    this.once('finish', this._finish.bind(this))
     this._listen()
   }
 
