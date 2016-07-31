@@ -8,6 +8,7 @@ const once = require('once')
 const EventEmitter = require('events')
 
 const States = require('./states')
+const Log = require('./log')
 
 class State extends EventEmitter {
 
@@ -28,6 +29,7 @@ class State extends EventEmitter {
     this._lastLogTerm = -1
     this._commitIndex = -1
     this._votedFor = null
+    this._log = new Log()
 
     this._stateServices = {
       id: id,
@@ -82,7 +84,7 @@ class State extends EventEmitter {
   }
 
   // -------------
-  // State
+  // Internal state
 
   _transition (state, force) {
     if (force || state !== this._stateName) {
@@ -95,7 +97,8 @@ class State extends EventEmitter {
       const State = States(state)
       this._state = new State({
         state: this._stateServices,
-        network: this._networkingServices
+        network: this._networkingServices,
+        log: this._log
       })
       this._stateName = state
       this._state.start()
@@ -148,7 +151,7 @@ class State extends EventEmitter {
   }
 
   // -------------
-  // Comms
+  // Networking
 
   _rpc (to, action, params, callback) {
     debug('%s: rpc to: %s, action: %s, params: %j', this.id, to, action, params)
@@ -203,19 +206,25 @@ class State extends EventEmitter {
     } else {
       debug('%s: got message from dispatcher: %j', this.id, message)
 
+      if (message.params) {
+        if (message.params.leaderId) {
+          this._leaderId = message.params.leaderId
+        }
+
+        debug('%s: current term: %d', this.id, this._term)
+        if (message.params.term > this._term) {
+          debug('%s is going to transition to state follower because of outdated term', this.id)
+          this._setTerm(message.params.term)
+          this._transition('follower')
+        }
+      }
+
       if (message.type === 'request') {
         debug('%s: request message from dispatcher: %j', this.id, message)
         this._handleRequest(message, this._dispatch.bind(this))
       } else if (message.type === 'reply') {
         debug('%s: reply message from dispatcher: %j', this.id, message)
         this._handleReply(message, this._dispatch.bind(this))
-      }
-
-      debug('%s: current term: %d', this.id, this._term)
-      if (message.params && message.params.term > this._term) {
-        debug('%s is going to transition to state follower because of outdated term', this.id)
-        this._setTerm(message.params.term)
-        this._transition('follower')
       }
     }
   }
@@ -254,6 +263,20 @@ class State extends EventEmitter {
       debug('%s: reply stream transform %j', self.id, message)
       this.push(message)
       callback()
+    }
+  }
+
+  //-------
+  // Commands
+
+  command (command, done) {
+    if (this.stateName !== 'leader') {
+      const err = new Error('not the leader')
+      err.code = 'ENOTLEADER'
+      err.leader = this._leaderId
+      done(err)
+    } else {
+      this._state.command(command, done)
     }
   }
 }

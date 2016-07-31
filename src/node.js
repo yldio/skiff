@@ -11,7 +11,7 @@ const State = require('./state')
 
 const defaultOptions = {
   server: {},
-  rpcTimeoutMS: 2000
+  rpcTimeoutMS: 5000
 }
 
 class Node {
@@ -39,7 +39,7 @@ class Node {
     const passiveNetwork = new PassiveNetwork(passiveNetworkOptions)
 
     if (cb) {
-      passiveNetwork.once('listening', () => cb())
+      passiveNetwork.once('listening', () => cb()) // do not carry event args into callback
     }
 
     this._network = {
@@ -70,6 +70,10 @@ class Node {
 
   join (address) {
     this._state.join(address)
+  }
+
+  command (command, done) {
+    this._state.command(command, done)
   }
 
   is (state) {

@@ -3,6 +3,7 @@
 const debug = require('debug')('skiff.states.base')
 const merge = require('deepmerge')
 const timers = require('timers')
+const EventEmitter = require('events')
 
 const defaultOptions = {
   appendEntriesIntervalMS: 100,
@@ -10,9 +11,10 @@ const defaultOptions = {
   electionTimeoutMaxMS: 300
 }
 
-class Base {
+class Base extends EventEmitter {
 
   constructor (node, options) {
+    super()
     this._node = node
     this._options = merge(options, defaultOptions)
   }
@@ -119,8 +121,11 @@ class Base {
   }
 
   _appendEntriesReceived (message, done) {
+    const self = this
+
     let success = false
     let reason
+    let prevLogMatches = false
     const currentTerm = this._node.state.term()
     const termIsAcceptable = (message.params.term >= currentTerm)
     if (!termIsAcceptable) {
@@ -128,24 +133,63 @@ class Base {
       debug('term is not acceptable')
     }
 
-    if (message.params.leaderCommit > this._node.state.commitIndex()) {
-      this._node.state.commitIndex(message.params.leaderCommit)
+    if (termIsAcceptable) {
+      const entry = this._node.log.atLogIndex(message.params.prevLogIndex)
+      if (entry) {
+        prevLogMatches = entry.t === message.params.prevLogTerm
+        if (!prevLogMatches) {
+          reason = 'prev log term does not match'
+          debug(
+            'prev log term does not match. had %d and message contained %d',
+            entry.t,
+            message.params.prevLogIndex)
+        } else {
+          this._node.log.appendAfter(message.params.prevLogIndex, message.params.entries)
+          const leaderCommit = message.params.leaderCommit
+          const commitIndex = this._node.state.commitIndex()
+          if (leaderCommit > commitIndex) {
+            this._node.state.commitIndex(Math.min(leaderCommit, commitIndex))
+          }
+        }
+      } else {
+        reason = 'no entry at log index ' + message.params.prevLogIndex
+        debug('no entry at log index %d', message.params.prevLogIndex)
+      }
     }
 
-    success = termIsAcceptable // TODO: other conditions
+    success = termIsAcceptable && prevLogMatches
 
-    this._node.network.reply(
-      message.from,
-      message.id,
-      {
-        term: this._node.state.term(),
-        success,
-        reason
-      }, done)
+    debug('AppendEntries success? %j', success)
 
     if (success) {
-      this._resetElectionTimeout()
-      this._node.state.transition('follower')
+      this._node.log.commit(message.params.leaderCommit, (err) => {
+        if (err) {
+          success = false
+          reason = err.message
+        } else {
+          this._node.state.commitIndex(message.params.leaderCommit)
+        }
+        reply()
+      })
+    } else {
+      reply()
+    }
+
+    function reply() {
+      self._node.network.reply(
+        message.from,
+        message.id,
+        {
+          replyTo: 'AppendEntries',
+          term: self._node.state.term(),
+          success,
+          reason
+        }, done)
+
+      if (success) {
+        self._resetElectionTimeout()
+        self._node.state.transition('follower')
+      }
     }
   }
 }
