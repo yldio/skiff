@@ -14,6 +14,8 @@ const Node = require('../')
 const A_BIT = 1000
 
 describe('election', () => {
+  let followers, leader
+
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9090',
     '/ip4/127.0.0.1/tcp/9091',
@@ -42,11 +44,23 @@ describe('election', () => {
   it('waits a bit', done => setTimeout(done, A_BIT))
 
   it('one of the nodes gets elected', done => {
-    const leader = nodes.find(node => node.is('leader'))
-    const follower = nodes.find(node => node.is('follower'))
-    expect(follower).to.not.be.undefined()
+    leader = nodes.find(node => node.is('leader'))
+    followers = nodes.filter(node => node.is('follower'))
+    expect(followers.length).to.equal(2)
     expect(leader).to.not.be.undefined()
-    expect(leader === follower).to.not.be.true()
+    expect(followers.indexOf(leader)).to.equal(-1)
     done()
   })
+
+  it('waits a bit', done => setTimeout(done, A_BIT))
+
+  it('still the same', done => {
+    const followers2 = nodes.filter(node => node.is('follower'))
+    const leader2 = nodes.find(node => node.is('leader'))
+    expect(followers2.length).to.equal(2)
+    expect(leader2 === leader).to.equal(true)
+    expect(followers2.indexOf(leader2)).to.equal(-1)
+    done()
+  })
+
 })
