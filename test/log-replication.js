@@ -13,7 +13,7 @@ const Node = require('../')
 
 const A_BIT = 1000
 
-describe('election', () => {
+describe('log replication', () => {
   let follower, leader
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9190',
