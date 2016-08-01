@@ -34,6 +34,7 @@ class Leader extends Base {
     this._resetAppendEntriesTimeout()
 
     const log = this._node.log
+    const lastEntry = log.head()
     const currentTerm = this._node.state.term()
 
     this._node.network.peers.forEach(peer => {
@@ -41,7 +42,6 @@ class Leader extends Base {
 
       const entries = this._entriesForFollower(peer)
       debug('entries for %s are: %j', peer, entries)
-      const lastEntry = entries.length && entries[entries.length - 1]
       const firstEntry = entries.length && entries[0]
       const leaderCommit = log._commitIndex
 
