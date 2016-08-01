@@ -23,14 +23,15 @@ class State extends EventEmitter {
     this._peers = []
     this._stateName = undefined
 
-    // state
+    // persisted state
     this._term = 0
-    this._commitIndex = 0
     this._votedFor = null
-
     this._log = new Log({
       id: this.id
     })
+
+    // volatile state
+    this._commitIndex = 0
 
     this._stateServices = {
       id: id,

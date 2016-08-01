@@ -60,9 +60,9 @@ class Log {
       throw new Error('done needs to be a function')
     }
     debug('%s: commit %d', this._node.id, index)
+    this._commitIndex = index
     setTimeout(() => {
-      this._commitIndex = index
-      this._lastApplied = index // TODO: ???
+      this._lastApplied = index
       debug('%s: done commiting index %d', this._node.id, index)
       done()
     }, 0)
