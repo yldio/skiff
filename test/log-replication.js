@@ -71,4 +71,6 @@ describe('election', () => {
       done()
     })
   })
+
+  it('waits a bit', done => setTimeout(done, A_BIT))
 })

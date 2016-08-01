@@ -25,8 +25,6 @@ class Log {
 
     this._entries.push(newEntry)
     this._lastLogIndex = newLogIndex
-
-    return newLogIndex
   }
 
   head () {
@@ -55,6 +53,12 @@ class Log {
   }
 
   commit (index, done) {
+    if (typeof index !== 'number') {
+      throw new Error('index needs to be a number')
+    }
+    if (typeof done !== 'function') {
+      throw new Error('done needs to be a function')
+    }
     debug('%s: commit %d', this._node.id, index)
     setTimeout(() => {
       this._commitIndex = index
@@ -66,6 +70,38 @@ class Log {
 
   setTerm (t) {
     this._lastLogTerm = t
+  }
+
+  lastIndexForTerm (term) {
+    let entry
+    for (let i = this._entries.length - 1; i >= 0; i--) {
+      entry = this._entries[i]
+      if (!entry) {
+        return
+      }
+      if (entry.t === term) {
+        return entry.i
+      }
+    }
+  }
+
+  entriesFrom (index) {
+    const entries = this._entries.slice(this._physicalIndexFor(index))
+    debug('entries from %d are %j', index, entries)
+    return entries
+  }
+
+  _physicalIndexFor (index) {
+    let entry
+    for (let i = this._entries.length - 1; i >= 0; i--) {
+      entry = this._entries[i]
+      if (entry.i === index) {
+        return i
+      } else if (entry.i < index) {
+        return i + 1
+      }
+    }
+    return 0
   }
 }
 

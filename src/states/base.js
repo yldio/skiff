@@ -178,7 +178,8 @@ class Base extends EventEmitter {
         message.id,
         {
           replyTo: 'AppendEntries',
-          term: self._node.state.term(),
+          term: currentTerm,
+          lastIndexForTerm: self._node.log.lastIndexForTerm(currentTerm),
           success,
           reason
         }, done)
