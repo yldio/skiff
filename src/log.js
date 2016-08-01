@@ -5,7 +5,8 @@ const debug = require('debug')('skiff.log')
 
 class Log {
 
-  constructor (lastLogIndex, lastLogTerm, persistedState) {
+  constructor (node, lastLogIndex, lastLogTerm, persistedState) {
+    this._node = node
     this._lastLogIndex = lastLogIndex || 0
     this._lastLogTerm = lastLogTerm || 0
     this._lastApplied = 0
@@ -13,15 +14,18 @@ class Log {
   }
 
   push (command) {
-    const logIndex = ++this._lastLogIndex
-
-    this._entries.push({
+    const newLogIndex = ++this._lastLogIndex
+    const newEntry = {
       t: this._lastLogTerm, // term
-      i: this._logIndex, //index
-      b: command, // body
-    })
+      i: newLogIndex, //index
+      c: command, // command
+    }
+    debug('%s: about to push new entry %j', this._node.id, newEntry)
 
-    return logIndex
+    this._entries.push(newEntry)
+    this._lastLogIndex = newLogIndex
+
+    return newLogIndex
   }
 
   head () {
@@ -36,12 +40,31 @@ class Log {
     return entry
   }
 
+  appendAfter (index, entries) {
+    debug('%s: append after %d: %j', this._node.id, index, entries)
+    // truncate
+    let head
+    while((head = this.head()) && head.i > index) {
+      this._entries.pop()
+    }
+
+    for(let i = 0; i < entries.length; i++) {
+      this._entries.push(entries[i])
+    }
+  }
+
   commit (index, done) {
-    debug('commit')
+    debug('%s: commit %d', this._node.id, index)
     setTimeout(() => {
+      this._node.commitIndex(index)
       this._lastApplied = index
+      debug('%s: done commiting index %d', this._node.id, index)
       done()
     }, 0)
+  }
+
+  setTerm (t) {
+    this._lastLogTerm = t
   }
 }
 

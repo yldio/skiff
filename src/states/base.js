@@ -143,17 +143,19 @@ class Base extends EventEmitter {
             'prev log term does not match. had %d and message contained %d',
             entry.t,
             message.params.prevLogIndex)
-        } else {
-          this._node.log.appendAfter(message.params.prevLogIndex, message.params.entries)
-          const leaderCommit = message.params.leaderCommit
-          const commitIndex = this._node.state.commitIndex()
-          if (leaderCommit > commitIndex) {
-            this._node.state.commitIndex(Math.min(leaderCommit, commitIndex))
-          }
         }
       } else {
-        reason = 'no entry at log index ' + message.params.prevLogIndex
-        debug('no entry at log index %d', message.params.prevLogIndex)
+        // TODO: what to do if there's not log entry matching?
+        prevLogMatches = true
+      }
+
+      if (prevLogMatches) {
+        this._node.log.appendAfter(message.params.prevLogIndex || 0, message.params.entries)
+        const leaderCommit = message.params.leaderCommit
+        const commitIndex = this._node.state.commitIndex()
+        if (leaderCommit > commitIndex) {
+          this._node.state.commitIndex(Math.min(leaderCommit, commitIndex))
+        }
       }
     }
 
@@ -162,7 +164,7 @@ class Base extends EventEmitter {
     debug('AppendEntries success? %j', success)
 
     if (success) {
-      this._node.log.commit(message.params.leaderCommit, (err) => {
+      this._node.log.commit(message.params.leaderCommit || 0, (err) => {
         if (err) {
           success = false
           reason = err.message

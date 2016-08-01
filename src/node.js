@@ -3,6 +3,7 @@
 const debug = require('debug')('skiff.node')
 const merge = require('deepmerge')
 const Multiaddr = require('multiaddr')
+const EventEmitter = require('events')
 
 const PassiveNetwork = require('./network/passive')
 const ActiveNetwork = require('./network/active')
@@ -14,14 +15,17 @@ const defaultOptions = {
   rpcTimeoutMS: 5000
 }
 
-class Node {
+class Node extends EventEmitter {
 
   constructor (id, _options) {
     debug('creating node %s with options %j', id, _options)
+    super()
     this.id = id
     this._options = merge(defaultOptions, _options || {})
     this._dispatcher = new IncomingDispatcher()
     this._state = new State(this.id, this._dispatcher, this._options)
+
+    this._state.on('warning', warn => this.emit('warinng', warn))
   }
 
   start (cb) {

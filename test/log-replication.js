@@ -24,6 +24,11 @@ describe('election', () => {
   const nodes = nodeAddresses.map(address => new Node(address))
 
   before(done => {
+    nodes.forEach(node => node.on('warning', err => { throw err }))
+    done()
+  })
+
+  before(done => {
     async.each(nodes, (node, cb) => node.start(cb), done)
   })
 
@@ -31,7 +36,7 @@ describe('election', () => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  it('can join another node', done => {
+  before(done => {
     nodes.forEach((node, index) => {
       const selfAddress = nodeAddresses[index]
       const peers = nodeAddresses.filter(address => address !== selfAddress)
@@ -40,9 +45,9 @@ describe('election', () => {
     done()
   })
 
-  it('waits a bit', done => setTimeout(done, A_BIT))
+  before(done => setTimeout(done, A_BIT))
 
-  it('one of the nodes gets elected', done => {
+  before(done => {
     leader = nodes.find(node => node.is('leader'))
     follower = nodes.find(node => node.is('follower'))
     expect(follower).to.not.be.undefined()
@@ -56,6 +61,13 @@ describe('election', () => {
       expect(err).to.not.be.null()
       expect(err.message).to.equal('not the leader')
       expect(err.code).to.equal('ENOTLEADER')
+      done()
+    })
+  })
+
+  it('leader accepts command', done => {
+    leader.command('COMMAND 1', err => {
+      expect(err).to.be.undefined()
       done()
     })
   })

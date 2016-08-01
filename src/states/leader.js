@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('skiff.states.candidate')
+const debug = require('debug')('skiff.states.leader')
 const timers = require('timers')
 
 const Base = require('./base')
@@ -17,14 +17,14 @@ class Leader extends Base {
     }
   }
 
-  command (command, _done) {
+  command (command, done) {
     let majorityVoted = false
-    let voteCount = 0
-    let commitCount = 0
+    let voteCount = 1
+    let commitCount = 1
 
     this._resetAppendEntriesTimeout()
 
-    const log = this._node.state.log
+    const log = this._node.log
     const prevEntry = log.head()
     const index = this._node.log.push(command)
 
@@ -43,22 +43,25 @@ class Leader extends Base {
         'AppendEntries', // action
         appendEntriesArgs, // params
         (err, reply) => { // callback
+          debug('got reply to AppendEntries from %s: %j', peer, reply)
           voteCount++
           if (err) {
             debug('error on AppendEntries reply:\n%s', err.stack)
-          }
-          if (!err && !majorityVoted) {
-            debug('reply for request vote from %s: err = %j, message = %j', peer, err, reply)
-            if (reply && reply.params.success) {
-              commitCount++
-            }
+          } else if (reply && reply.params.success) {
+            commitCount++
           }
 
           if (! majorityVoted) {
             majorityVoted = this._node.network.isMajority(voteCount)
             if (majorityVoted) {
+              debug('%s: majority has voted', this._node.state.id)
               if (this._node.network.isMajority(voteCount)) {
-                this._node.log.commit(index, done)
+                debug('%s: majority reached', this._node.state.id)
+                debug('%s: about to commit index %d', this._node.state.id, index)
+                this._node.log.commit(index, err => {
+                  debug('%s: done commiting index %d', this._node.state.id, index)
+                  done(err)
+                })
               } else {
                 const err = new Error('No majority reached')
                 err.code = 'ENOMAJORITY'

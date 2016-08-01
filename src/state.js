@@ -24,12 +24,16 @@ class State extends EventEmitter {
     this._stateName = undefined
 
     // state
-    this._term = -1
-    this._lastLogIndex = -1
-    this._lastLogTerm = -1
-    this._commitIndex = -1
+    this._term = 0
+    this._lastLogIndex = 0
+    this._lastLogTerm = 0
+    this._commitIndex = 0
     this._votedFor = null
-    this._log = new Log()
+
+    this._log = new Log({
+      id: this.id,
+      commitIndex: this._getOrSetCommitIndex.bind(this),
+    })
 
     this._stateServices = {
       id: id,
@@ -123,6 +127,8 @@ class State extends EventEmitter {
 
   _setTerm (term) {
     this._votedFor = null
+    this._term = term
+    this._log.setTerm(term)
     return this._term
   }
 
@@ -136,6 +142,7 @@ class State extends EventEmitter {
 
   _getOrSetCommitIndex (idx) {
     if (typeof idx === 'number') {
+      debug('%s: setting commit index to %d', this.id, idx)
       this._commitIndex = idx
     }
     return this._commitIndex
@@ -257,7 +264,9 @@ class State extends EventEmitter {
 
   _replyStream () {
     const self = this
-    return Through.obj(transform)
+    const stream = Through.obj(transform)
+    stream.setMaxListeners(Infinity)
+    return stream
 
     function transform (message, _, callback) {
       debug('%s: reply stream transform %j', self.id, message)
@@ -270,13 +279,16 @@ class State extends EventEmitter {
   // Commands
 
   command (command, done) {
-    if (this.stateName !== 'leader') {
+    if (this._stateName !== 'leader') {
       const err = new Error('not the leader')
       err.code = 'ENOTLEADER'
       err.leader = this._leaderId
       done(err)
     } else {
-      this._state.command(command, done)
+      this._state.command(command, err => {
+        debug('command %s finished, err = %j', command, err)
+        done(err)
+      })
     }
   }
 }
