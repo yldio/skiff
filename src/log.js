@@ -9,6 +9,7 @@ class Log {
     this._node = node
     this._lastLogIndex = lastLogIndex || 0
     this._lastLogTerm = lastLogTerm || 0
+    this._commitIndex = 0
     this._lastApplied = 0
     this._entries = []
   }
@@ -17,8 +18,8 @@ class Log {
     const newLogIndex = ++this._lastLogIndex
     const newEntry = {
       t: this._lastLogTerm, // term
-      i: newLogIndex, //index
-      c: command, // command
+      i: newLogIndex, // index
+      c: command // command
     }
     debug('%s: about to push new entry %j', this._node.id, newEntry)
 
@@ -44,11 +45,11 @@ class Log {
     debug('%s: append after %d: %j', this._node.id, index, entries)
     // truncate
     let head
-    while((head = this.head()) && head.i > index) {
+    while ((head = this.head()) && head.i > index) {
       this._entries.pop()
     }
 
-    for(let i = 0; i < entries.length; i++) {
+    for (let i = 0; i < entries.length; i++) {
       this._entries.push(entries[i])
     }
   }
@@ -56,8 +57,8 @@ class Log {
   commit (index, done) {
     debug('%s: commit %d', this._node.id, index)
     setTimeout(() => {
-      this._node.commitIndex(index)
-      this._lastApplied = index
+      this._commitIndex = index
+      this._lastApplied = index // TODO: ???
       debug('%s: done commiting index %d', this._node.id, index)
       done()
     }, 0)

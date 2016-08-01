@@ -25,23 +25,17 @@ class State extends EventEmitter {
 
     // state
     this._term = 0
-    this._lastLogIndex = 0
-    this._lastLogTerm = 0
     this._commitIndex = 0
     this._votedFor = null
 
     this._log = new Log({
-      id: this.id,
-      commitIndex: this._getOrSetCommitIndex.bind(this),
+      id: this.id
     })
 
     this._stateServices = {
       id: id,
       name: this._getStateName.bind(this),
       term: this._getTerm.bind(this),
-      lastLogIndex: this._getLastLogIndex.bind(this),
-      lastLogTerm: this._getLastLogTerm.bind(this),
-      commitIndex: this._getOrSetCommitIndex.bind(this),
       transition: this._transition.bind(this),
       incrementTerm: this._incrementTerm.bind(this),
       getVotedFor: this._getVotedFor.bind(this),
@@ -130,22 +124,6 @@ class State extends EventEmitter {
     this._term = term
     this._log.setTerm(term)
     return this._term
-  }
-
-  _getLastLogIndex () {
-    return this._lastLogIndex
-  }
-
-  _getLastLogTerm () {
-    return this._lastLogTerm
-  }
-
-  _getOrSetCommitIndex (idx) {
-    if (typeof idx === 'number') {
-      debug('%s: setting commit index to %d', this.id, idx)
-      this._commitIndex = idx
-    }
-    return this._commitIndex
   }
 
   _getVotedFor () {
@@ -275,7 +253,7 @@ class State extends EventEmitter {
     }
   }
 
-  //-------
+  // -------
   // Commands
 
   command (command, done) {

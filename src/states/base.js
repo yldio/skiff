@@ -108,7 +108,7 @@ class Base extends EventEmitter {
     const votedFor = this._node.state.getVotedFor()
     const termIsAcceptable = (message.params.term >= currentTerm)
     const votedForIsAcceptable = !votedFor || (votedFor === message.from)
-    const logIndexIsAcceptable = message.params.lastLogIndex >= this._node.state.lastLogIndex()
+    const logIndexIsAcceptable = message.params.lastLogIndex >= this._node.log._lastLogIndex
     const voteGranted = termIsAcceptable && votedForIsAcceptable && logIndexIsAcceptable
 
     if (!voteGranted) {
@@ -125,7 +125,7 @@ class Base extends EventEmitter {
 
     let success = false
     let reason
-    let prevLogMatches = false
+    let prevLogMatches = true
     const currentTerm = this._node.state.term()
     const termIsAcceptable = (message.params.term >= currentTerm)
     if (!termIsAcceptable) {
@@ -133,26 +133,23 @@ class Base extends EventEmitter {
       debug('term is not acceptable')
     }
 
-    if (termIsAcceptable) {
+    if (termIsAcceptable && message.params.prevLogIndex) {
       const entry = this._node.log.atLogIndex(message.params.prevLogIndex)
       if (entry) {
         prevLogMatches = entry.t === message.params.prevLogTerm
-        if (!prevLogMatches) {
-          reason = 'prev log term does not match'
-          debug(
-            'prev log term does not match. had %d and message contained %d',
-            entry.t,
-            message.params.prevLogIndex)
-        }
-      } else {
-        // TODO: what to do if there's not log entry matching?
-        prevLogMatches = true
+      }
+      if (!entry || !prevLogMatches) {
+        reason = 'prev log term does not match'
+        debug(
+          'prev log term does not match. had %d and message contained %d',
+          entry && entry.t,
+          message.params.prevLogIndex)
       }
 
       if (prevLogMatches) {
         this._node.log.appendAfter(message.params.prevLogIndex || 0, message.params.entries)
         const leaderCommit = message.params.leaderCommit
-        const commitIndex = this._node.state.commitIndex()
+        const commitIndex = this._node.log._commitIndex
         if (leaderCommit > commitIndex) {
           this._node.state.commitIndex(Math.min(leaderCommit, commitIndex))
         }
@@ -168,8 +165,6 @@ class Base extends EventEmitter {
         if (err) {
           success = false
           reason = err.message
-        } else {
-          this._node.state.commitIndex(message.params.leaderCommit)
         }
         reply()
       })
@@ -177,7 +172,7 @@ class Base extends EventEmitter {
       reply()
     }
 
-    function reply() {
+    function reply () {
       self._node.network.reply(
         message.from,
         message.id,

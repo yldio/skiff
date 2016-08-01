@@ -21,8 +21,8 @@ class Candidate extends Base {
       const requestVoteArgs = {
         term: this._node.state.term(),
         candidateId: this._node.state.id,
-        lastLogIndex: this._node.state.lastLogIndex(),
-        lastLogTerm: this._node.state.lastLogTerm()
+        lastLogIndex: this._node.log._lastLogIndex,
+        lastLogTerm: this._node.log._lastLogTerm
       }
 
       this._node.network.rpc(
