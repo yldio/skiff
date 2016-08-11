@@ -67,7 +67,7 @@ describe('log replication', () => {
 
   it('leader accepts command', done => {
     leader.command('COMMAND 1', err => {
-      expect(err).to.be.undefined()
+      expect(err).to.be.null()
       done()
     })
   })

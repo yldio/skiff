@@ -193,6 +193,13 @@ class State extends EventEmitter {
       debug('%s: got message from dispatcher: %j', this.id, message)
 
       if (message.params) {
+        if (message.params.term < this._term) {
+          // discard message if term is greater than current term
+          debug('%s: message discarded because term %d is smaller than my current term %d',
+            this.id, message.params.term, this._term)
+          return this._dispatch()
+        }
+
         if (message.params.leaderId) {
           this._leaderId = message.params.leaderId
         }
@@ -257,16 +264,16 @@ class State extends EventEmitter {
   // -------
   // Commands
 
-  command (command, done) {
+  command (transaction, command, done) {
     if (this._stateName !== 'leader') {
       const err = new Error('not the leader')
       err.code = 'ENOTLEADER'
       err.leader = this._leaderId
       done(err)
     } else {
-      this._state.command(command, err => {
-        debug('command %s finished, err = %j', command, err)
-        done(err)
+      this._state.command(transaction, command, (err, result) => {
+        debug('command %s finished, err = %j, result = %j', command, err, result)
+        done(err, result)
       })
     }
   }

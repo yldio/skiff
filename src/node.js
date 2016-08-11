@@ -9,6 +9,9 @@ const PassiveNetwork = require('./network/passive')
 const ActiveNetwork = require('./network/active')
 const IncomingDispatcher = require('./incoming-dispatcher')
 const State = require('./state')
+const CommandQueue = require('./command-queue')
+const Commands = require('./commands')
+const DB = require('./db')
 
 const defaultOptions = {
   server: {},
@@ -22,10 +25,16 @@ class Node extends EventEmitter {
     super()
     this.id = id
     this._options = merge(defaultOptions, _options || {})
-    this._dispatcher = new IncomingDispatcher()
-    this._state = new State(this.id, this._dispatcher, this._options)
 
-    this._state.on('warning', warn => this.emit('warinng', warn))
+    this._dispatcher = new IncomingDispatcher()
+
+    this._state = new State(this.id, this._dispatcher, this._options)
+    this._state.on('warning', warn => this.emit('warning', warn))
+
+    this._db = new DB(this.id, this._options.db)
+
+    this._commandQueue = new CommandQueue()
+    this._commands = new Commands(this.id, this._commandQueue, this._state, this._db)
   }
 
   start (cb) {
@@ -76,8 +85,8 @@ class Node extends EventEmitter {
     this._state.join(address)
   }
 
-  command (command, done) {
-    this._state.command(command, done)
+  command (command, callback) {
+    this._commandQueue.write({command, callback})
   }
 
   is (state) {
