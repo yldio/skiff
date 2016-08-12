@@ -79,7 +79,6 @@ describe('log replication', () => {
   })
 
   it('leader accepts query command', done => {
-    console.log('\n\n\n-------------------\n\n\n')
     leader.command({type: 'get', key: 'a'}, (err, result) => {
       expect(err).to.be.null()
       expect(result).to.equal('1')
