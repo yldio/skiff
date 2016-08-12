@@ -8,6 +8,8 @@ const it = lab.it
 const expect = require('code').expect
 
 const async = require('async')
+const levelup = require('levelup')
+const memdown = require('memdown')
 
 const Node = require('../')
 
@@ -20,8 +22,12 @@ describe('log replication', () => {
     '/ip4/127.0.0.1/tcp/9191',
     '/ip4/127.0.0.1/tcp/9192'
   ]
+  const databases = nodeAddresses.map(node => {
+    return levelup(node, { db: memdown })
+  })
 
-  const nodes = nodeAddresses.map(address => new Node(address))
+  const nodes = nodeAddresses.map((address, index) =>
+    new Node(address, { db: databases[index] }))
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))

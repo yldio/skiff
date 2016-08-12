@@ -8,6 +8,8 @@ const it = lab.it
 const expect = require('code').expect
 
 const async = require('async')
+const levelup = require('levelup')
+const memdown = require('memdown')
 
 const Node = require('../')
 
@@ -22,7 +24,9 @@ describe('election', () => {
     '/ip4/127.0.0.1/tcp/9092'
   ]
 
-  const nodes = nodeAddresses.map(address => new Node(address))
+  const nodes = nodeAddresses.map(address => new Node(address, {
+    db: levelup(address, { db: memdown })
+  }))
 
   before(done => {
     async.each(nodes, (node, cb) => node.start(cb), done)
