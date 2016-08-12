@@ -125,7 +125,7 @@ class Base extends EventEmitter {
 
     let success = false
     let reason
-    let prevLogMatches = true
+    let prevLogMatches = false
     let commitIndex = this._node.log._commitIndex
     const currentTerm = this._node.state.term()
     const termIsAcceptable = (message.params.term >= currentTerm)
@@ -134,36 +134,35 @@ class Base extends EventEmitter {
       debug('term is not acceptable')
     }
 
-    if (termIsAcceptable && message.params.prevLogIndex) {
+    if (termIsAcceptable) {
+      debug('%s: term is acceptable', this._node.state.id)
       const entry = this._node.log.atLogIndex(message.params.prevLogIndex)
       debug('%s: entry at previous log index: %j', this._node.state.id, entry)
-      if (entry) {
-        prevLogMatches = entry.t === message.params.prevLogTerm
-      }
-      if (!entry || !prevLogMatches) {
-        reason = 'prev log term does not match'
+      prevLogMatches =
+        (!message.params.prevLogIndex) ||
+        (entry && entry.t === message.params.prevLogTerm && entry.i === message.params.prevLogIndex)
+
+      debug('%s: previous log matches: %j', this._node.state.id, prevLogMatches)
+      if (!prevLogMatches) {
+        reason = 'prev log term or index does not match'
         debug(
-          'prev log term does not match. had %d and message contained %d',
+          'prev log term or index does not match. had %d and message contained %d',
           entry && entry.t,
           message.params.prevLogIndex)
-      }
-
-      if (prevLogMatches) {
+      } else {
+        success = true
         const newEntries = message.params.entries
-        const lastNewEntry = newEntries[newEntries.length - 1]
         this._node.log.appendAfter(message.params.prevLogIndex || 0, newEntries)
         const leaderCommit = message.params.leaderCommit
         if (leaderCommit > commitIndex) {
-          commitIndex = Math.min(leaderCommit, lastNewEntry && lastNewEntry.i || Infinity)
+          commitIndex = leaderCommit
         }
       }
     }
 
-    success = termIsAcceptable && prevLogMatches
+    debug('%s: AppendEntries success? %j', this._node.state.id, success)
 
-    debug('AppendEntries success? %j', success)
-
-    if (success) {
+    if (success && commitIndex > 0) {
       this._node.log.commit(commitIndex, (err) => {
         if (err) {
           success = false
@@ -182,7 +181,7 @@ class Base extends EventEmitter {
         {
           replyTo: 'AppendEntries',
           term: currentTerm,
-          lastIndexForTerm: self._node.log.lastIndexForTerm(currentTerm),
+          lastIndexForTerm: self._node.log.lastIndexForTerm(currentTerm) || 0,
           success,
           reason
         }, done)

@@ -65,6 +65,12 @@ class DB {
     })
   }
 
+  applyEntries (entries, done) {
+    const commands = entries.map(entry => Object.assign({}, entry.c, { prefix: this.state }))
+    debug('%s: applying entries %j', this.id, commands)
+    this.db.batch(commands, done)
+  }
+
   _getPersistBatch (state, done) {
     this._getPersistLog(state, (err, _batch) => {
       if (err) {

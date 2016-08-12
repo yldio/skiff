@@ -73,20 +73,22 @@ class Leader extends Base {
   _appendEntriesToPeer (peer, done) {
     debug('sending AppendEntries to %s', peer)
 
+    this._ensureFollower(peer)
+
     const log = this._node.log
     const currentTerm = this._node.state.term()
 
     const entries = this._entriesForFollower(peer)
     debug('entries for %s are: %j', peer, entries)
-    const firstEntry = entries.length && entries[0]
+    const previousEntry = this._previousEntryForFollower(peer)
     const lastEntry = entries[entries.length - 1]
     const leaderCommit = log._commitIndex
 
     const appendEntriesArgs = {
       term: currentTerm,
       leaderId: this._node.state.id,
-      prevLogIndex: firstEntry && (firstEntry.i - 1) || 0,
-      prevLogTerm: firstEntry && firstEntry.t || 0,
+      prevLogIndex: previousEntry && previousEntry.i || 0,
+      prevLogTerm: previousEntry && previousEntry.t || 0,
       entries,
       leaderCommit
     }
@@ -112,7 +114,7 @@ class Leader extends Base {
             }
             done()
           } else {
-            if (reply.params.lastIndexForTerm) {
+            if (reply.params.lastIndexForTerm !== undefined) {
               this._setNextIndex(peer, reply.params.lastIndexForTerm)
             } else {
               this._decrementNextIndex(peer)
@@ -147,16 +149,20 @@ class Leader extends Base {
   }
 
   _ensureFollowers () {
-    const nextIndex = this._node.log._lastLogIndex + 1
     this._node.network.peers.forEach(address => {
-      const follower = this._followers[address]
-      if (!follower) {
-        this._followers[address] = {
-          nextIndex,
-          matchIndex: 0
-        }
-      }
+      this._ensureFollower(address)
     })
+  }
+
+  _ensureFollower (address) {
+    const nextIndex = this._node.log._lastLogIndex + 1
+    const follower = this._followers[address]
+    if (!follower) {
+      this._followers[address] = {
+        nextIndex,
+        matchIndex: 0
+      }
+    }
   }
 
   _setNextIndex (address, nextIndex) {
@@ -176,6 +182,13 @@ class Leader extends Base {
     const follower = this._followers[address]
     debug('follower %s next index is %d', address, follower.nextIndex)
     return this._node.log.entriesFrom(follower.nextIndex)
+  }
+
+  _previousEntryForFollower (address) {
+    const follower = this._followers[address]
+    if (follower.nextIndex > 1) {
+      return this._node.log.atLogIndex(follower.nextIndex - 1)
+    }
   }
 
 }

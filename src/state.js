@@ -31,7 +31,8 @@ class State extends EventEmitter {
     this._term = 0
     this._votedFor = null
     this._log = new Log({
-      id: this.id
+      id: this.id,
+      applyEntries: this._applyEntries.bind(this)
     })
 
     this._stateServices = {
@@ -311,6 +312,10 @@ class State extends EventEmitter {
 
   _getLogEntries () {
     return this._log.all()
+  }
+
+  _applyEntries (entries, done) {
+    this._db.applyEntries(entries, done)
   }
 
   persist (done) {

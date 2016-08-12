@@ -65,11 +65,17 @@ class Log {
     }
     debug('%s: commit %d', this._node.id, index)
     this._commitIndex = index
-    setTimeout(() => {
-      this._lastApplied = index
-      debug('%s: done commiting index %d', this._node.id, index)
-      done()
-    }, 0)
+
+    const entriesToApply = this._entriesFromTo(this._lastApplied + 1, this._commitIndex)
+    this._node.applyEntries(entriesToApply, (err) => {
+      if (err) {
+        done(err)
+      } else {
+        debug('%s: done commiting index %d', this._node.id, index)
+        this._lastApplied = index
+        done()
+      }
+    })
   }
 
   setTerm (t) {
@@ -97,6 +103,11 @@ class Log {
     const entries = this._entries.slice(this._physicalIndexFor(index))
     debug('entries from %d are %j', index, entries)
     return entries
+  }
+
+  _entriesFromTo (from, to) {
+    const pFrom = this._physicalIndexFor(from)
+    return this._entries.slice(pFrom, (to - from) + 1)
   }
 
   _physicalIndexFor (index) {

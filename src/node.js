@@ -68,12 +68,14 @@ class Node extends EventEmitter {
   }
 
   stop (cb) {
-    if (cb) {
-      this._network.passive.once('closed', cb)
-    }
     if (this._network) {
+      if (cb) {
+        this._network.passive.once('closed', cb)
+      }
       this._network.passive.end()
       this._network.active.end()
+    } else if (cb) {
+      process.nextTick(cb)
     }
 
     this._state.stop()
