@@ -85,6 +85,10 @@ class Log {
     }
   }
 
+  all () {
+    return this._entries
+  }
+
   entriesFrom (index) {
     const entries = this._entries.slice(this._physicalIndexFor(index))
     debug('entries from %d are %j', index, entries)

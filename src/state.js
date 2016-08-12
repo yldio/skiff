@@ -6,22 +6,26 @@ const uuid = require('uuid').v4
 const timers = require('timers')
 const once = require('once')
 const EventEmitter = require('events')
+const assert = require('assert')
 
 const States = require('./states')
 const Log = require('./log')
 
 class State extends EventEmitter {
 
-  constructor (id, dispatcher, options) {
+  constructor (id, dispatcher, db, options) {
     super()
     this.id = id
     this._options = options
     this._dispatcher = dispatcher
+    this._db = db
     this.passive = this._outStream()
     this.active = this._outStream()
     this._replies = this._replyStream()
     this._peers = []
     this._stateName = undefined
+
+    this._handlingRequest = false // to detect race conditions
 
     // persisted state
     this._term = 0
@@ -48,6 +52,11 @@ class State extends EventEmitter {
       reply: this._reply.bind(this),
       isMajority: this._isMajority.bind(this),
       peers: this._peers
+    }
+
+    this._dbServices = {
+      snapshot: this._getPersistedState.bind(this),
+      logEntries: this._getLogEntries.bind(this)
     }
 
     this._transition('follower')
@@ -224,10 +233,25 @@ class State extends EventEmitter {
 
   _handleRequest (message, done) {
     debug('%s: handling message: %j', this.id, message)
+
+    assert(!this._handlingRequest, 'race: already handling request')
+    this._handlingRequest = true
+
     const from = message.from
     if (from) {
       this._ensurePeer(from)
-      this._state.handleRequest(message, done)
+      this._state.handleRequest(message, err => {
+        this.persist(persistError => {
+          debug('%s: persisted', this.id)
+          this._handlingRequest = false
+
+          if (err) {
+            done(err)
+          } else {
+            done(persistError)
+          }
+        })
+      })
     }
   }
 
@@ -264,19 +288,39 @@ class State extends EventEmitter {
   // -------
   // Commands
 
-  command (transaction, command, done) {
+  command (command, done) {
     if (this._stateName !== 'leader') {
       const err = new Error('not the leader')
       err.code = 'ENOTLEADER'
       err.leader = this._leaderId
       done(err)
     } else {
-      this._state.command(transaction, command, (err, result) => {
+      this._state.command(command, (err, result) => {
         debug('command %s finished, err = %j, result = %j', command, err, result)
         done(err, result)
       })
     }
   }
+
+  // -------
+  // Persistence
+
+  _getPersistedState () {
+    return {
+      currentTerm: this._term,
+      votedFor: this._votedFor
+    }
+  }
+
+  _getLogEntries () {
+    return this._log.all()
+  }
+
+  persist (done) {
+    debug('%s: persisting', this.id)
+    this._db.persist(this._dbServices, done)
+  }
+
 }
 
 module.exports = State

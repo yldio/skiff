@@ -26,15 +26,15 @@ class Node extends EventEmitter {
     this.id = id
     this._options = merge(defaultOptions, _options || {})
 
-    this._dispatcher = new IncomingDispatcher()
-
-    this._state = new State(this.id, this._dispatcher, this._options)
-    this._state.on('warning', warn => this.emit('warning', warn))
-
     this._db = new DB(this.id, this._options.db)
 
+    this._dispatcher = new IncomingDispatcher()
+
+    this._state = new State(this.id, this._dispatcher, this._db, this._options)
+    this._state.on('warning', warn => this.emit('warning', warn))
+
     this._commandQueue = new CommandQueue()
-    this._commands = new Commands(this.id, this._commandQueue, this._state, this._db)
+    this._commands = new Commands(this.id, this._commandQueue, this._state)
   }
 
   start (cb) {

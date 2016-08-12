@@ -4,11 +4,10 @@ const debug = require('debug')('skiff.commands')
 
 class Commands {
 
-  constructor (id, queue, state, db) {
+  constructor (id, queue, state) {
     this.id = id
     this._queue = queue
     this._state = state
-    this._db = db
     this._dispatch()
   }
 
@@ -30,19 +29,11 @@ class Commands {
   }
 
   _handleCommand (command, done) {
-    const transaction = this._db.transaction()
-
-    this._state.command(transaction, command, (err, result) => {
+    this._state.command(command, (err, result) => {
       if (err) {
         done(err)
       } else {
-        transaction.commit((err) => {
-          if (err) {
-            done(err)
-          } else {
-            done(null, result)
-          }
-        })
+        this._state.persist(done)
       }
     })
   }

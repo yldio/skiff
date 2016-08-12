@@ -19,7 +19,7 @@ class Leader extends Base {
     }
   }
 
-  command (transaction, command, done) {
+  command (command, done) {
     this._node.log.push(command)
     this._ensureFollowers()
     this.appendEntries(done)
