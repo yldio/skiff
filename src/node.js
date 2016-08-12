@@ -4,6 +4,7 @@ const debug = require('debug')('skiff.node')
 const merge = require('deepmerge')
 const Multiaddr = require('multiaddr')
 const EventEmitter = require('events')
+const async = require('async')
 
 const PassiveNetwork = require('./network/passive')
 const ActiveNetwork = require('./network/active')
@@ -39,6 +40,15 @@ class Node extends EventEmitter {
 
   start (cb) {
     debug('starting node %s', this.id)
+    async.parallel(
+      [
+        this._startNetwork.bind(this),
+        this._loadPersistedState.bind(this)
+      ],
+      cb)
+  }
+
+  _startNetwork (cb) {
     const address = Multiaddr(this.id).nodeAddress()
     const passiveNetworkOptions = {
       server: merge(
@@ -65,6 +75,23 @@ class Node extends EventEmitter {
 
     this._state.passive.pipe(this._network.passive, { end: false })
     this._state.active.pipe(this._network.active, { end: false })
+  }
+
+  _loadPersistedState (cb) {
+    this._db.load((err, results) => {
+      if (err) {
+        cb(err)
+      } else {
+        this._state._log.setEntries(results.log)
+        if (results.meta.currentTerm) {
+          this._state._setTerm(results.meta.currentTerm)
+        }
+        if (results.meta.votedFor) {
+          this._state._setVotedFor(results.meta.votedFor)
+        }
+        cb()
+      }
+    })
   }
 
   stop (cb) {

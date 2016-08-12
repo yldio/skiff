@@ -13,6 +13,10 @@ class Log {
     this._entries = []
   }
 
+  setEntries (entries) {
+    this._entries = entries
+  }
+
   push (command) {
     const newLogIndex = ++this._lastLogIndex
     const newEntry = {

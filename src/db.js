@@ -6,9 +6,11 @@ const join = require('path').join
 const Level = require('level')
 const Sublevel = require('level-sublevel')
 const Once = require('once')
+const async = require('async')
+const ConcatStream = require('concat-stream')
 
 const defaultDBOptions = {
-  keyEncoding: 'binary',
+  keyEncoding: 'ascii',
   valueEncoding: 'json'
 }
 
@@ -29,6 +31,50 @@ class DB {
     this.log.toJSON = function () { return 'log' }
     this.meta.toJSON = function () { return 'meta' }
     this.state.toJSON = function () { return 'state' }
+  }
+
+  load (done) {
+    async.parallel({
+      log: cb => {
+        const s = this.log.createReadStream()
+        s.once('error', cb)
+        s.pipe(ConcatStream(entries => {
+          cb(null, entries.sort(sortEntries))
+        }))
+      },
+      meta: cb => {
+        async.parallel({
+          currentTerm: cb => this.meta.get('currentTerm', notFoundIsOk(cb)),
+          votedFor: cb => this.meta.get('votedFor', notFoundIsOk(cb))
+        }, cb)
+      }
+    }, done)
+
+    function sortEntries (a, b) {
+      const keyA = a.key
+      const keyB = b.key
+      const keyAParts = keyA.split(':')
+      const keyBParts = keyB.split(':')
+      const aTerm = Number(keyAParts[0])
+      const bTerm = Number(keyBParts[0])
+      if (aTerm !== bTerm) {
+        return aTerm - bTerm
+      }
+      const aIndex = Number(keyAParts[1])
+      const bIndex = Number(keyBParts[1])
+
+      return aIndex - bIndex
+    }
+
+    function notFoundIsOk (cb) {
+      return function (err) {
+        if (err && err.message.match(/not found/i)) {
+          cb()
+        } else {
+          cb(err)
+        }
+      }
+    }
   }
 
   persist (state, done) {
