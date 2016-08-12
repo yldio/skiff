@@ -126,6 +126,7 @@ class Base extends EventEmitter {
     let success = false
     let reason
     let prevLogMatches = true
+    let commitIndex = this._node.log._commitIndex
     const currentTerm = this._node.state.term()
     const termIsAcceptable = (message.params.term >= currentTerm)
     if (!termIsAcceptable) {
@@ -135,6 +136,7 @@ class Base extends EventEmitter {
 
     if (termIsAcceptable && message.params.prevLogIndex) {
       const entry = this._node.log.atLogIndex(message.params.prevLogIndex)
+      debug('%s: entry at previous log index: %j', this._node.state.id, entry)
       if (entry) {
         prevLogMatches = entry.t === message.params.prevLogTerm
       }
@@ -147,11 +149,12 @@ class Base extends EventEmitter {
       }
 
       if (prevLogMatches) {
-        this._node.log.appendAfter(message.params.prevLogIndex || 0, message.params.entries)
+        const newEntries = message.params.entries
+        const lastNewEntry = newEntries[newEntries.length - 1]
+        this._node.log.appendAfter(message.params.prevLogIndex || 0, newEntries)
         const leaderCommit = message.params.leaderCommit
-        const commitIndex = this._node.log._commitIndex
         if (leaderCommit > commitIndex) {
-          this._node.state.commitIndex(Math.min(leaderCommit, commitIndex))
+          commitIndex = Math.min(leaderCommit, lastNewEntry && lastNewEntry.i || Infinity)
         }
       }
     }
@@ -161,7 +164,7 @@ class Base extends EventEmitter {
     debug('AppendEntries success? %j', success)
 
     if (success) {
-      this._node.log.commit(message.params.leaderCommit || 0, (err) => {
+      this._node.log.commit(commitIndex, (err) => {
         if (err) {
           success = false
           reason = err.message

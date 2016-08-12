@@ -24,6 +24,11 @@ class DB {
     this.log = this.db.sublevel('log')
     this.meta = this.db.sublevel('meta')
     this.state = this.db.sublevel('state')
+
+    // for debugging purposes
+    this.log.toJSON = function () { return 'log' }
+    this.meta.toJSON = function () { return 'meta' }
+    this.state.toJSON = function () { return 'state' }
   }
 
   persist (state, done) {
@@ -38,12 +43,24 @@ class DB {
   }
 
   command (state, command, done) {
-    this._getPersistBatch(state, (err, _batch) => {
+    this._getPersistBatch(state, (err, batch) => {
       if (err) {
         done(err)
       } else {
-        const batch = _batch.concat([Object.assign({}, command, { prefix: this.state })])
-        this.db.batch(batch, done)
+        const isQuery = (command.type === 'get')
+        debug('%s: applying command %j', this.id, command)
+        if (!isQuery) {
+          batch.push(Object.assign({}, command, { prefix: this.state }))
+        }
+        debug('%s: going to apply batch: %j', this.id, batch)
+        this.db.batch(batch, err => {
+          debug('%s: applied batch command err = %j', this.id, err)
+          if (!err && isQuery) {
+            this.state.get(command.key, done)
+          } else {
+            done(err)
+          }
+        })
       }
     })
   }

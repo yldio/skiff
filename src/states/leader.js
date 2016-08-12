@@ -133,9 +133,17 @@ class Leader extends Base {
       timers.clearTimeout(this._appendEntriesInterval)
     }
 
+    debug('%s: setting the append entries timeout to %d ms',
+      this._node.state.id, this._options.appendEntriesIntervalMS)
+
     this._appendEntriesTimeout = timers.setTimeout(
-      this.appendEntries.bind(this),
+      this._onAppendEntriesTimeout.bind(this),
       this._options.appendEntriesIntervalMS)
+  }
+
+  _onAppendEntriesTimeout () {
+    debug('%s: AppendEntries timedout', this._node.state.id)
+    this.appendEntries()
   }
 
   _ensureFollowers () {

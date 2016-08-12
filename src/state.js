@@ -34,9 +34,6 @@ class State extends EventEmitter {
       id: this.id
     })
 
-    // volatile state
-    this._commitIndex = 0
-
     this._stateServices = {
       id: id,
       name: this._getStateName.bind(this),
@@ -232,13 +229,12 @@ class State extends EventEmitter {
   }
 
   _handleRequest (message, done) {
-    debug('%s: handling message: %j', this.id, message)
-
     assert(!this._handlingRequest, 'race: already handling request')
     this._handlingRequest = true
 
     const from = message.from
     if (from) {
+      debug('%s: handling message: %j', this.id, message)
       this._ensurePeer(from)
       this._state.handleRequest(message, err => {
         this.persist(persistError => {
@@ -265,7 +261,6 @@ class State extends EventEmitter {
     return Through.obj(transform)
 
     function transform (message, _, callback) {
-      debug('%s: out stream transform %j', self.id, message)
       message.from = self.id
       this.push(message)
       callback()
@@ -273,13 +268,11 @@ class State extends EventEmitter {
   }
 
   _replyStream () {
-    const self = this
     const stream = Through.obj(transform)
     stream.setMaxListeners(Infinity)
     return stream
 
     function transform (message, _, callback) {
-      debug('%s: reply stream transform %j', self.id, message)
       this.push(message)
       callback()
     }

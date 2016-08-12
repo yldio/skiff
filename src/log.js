@@ -1,6 +1,5 @@
 'use strict'
 
-const assert = require('assert')
 const debug = require('debug')('skiff.log')
 
 class Log {
@@ -32,11 +31,16 @@ class Log {
   }
 
   atLogIndex (index) {
-    const entry = this._entries[index - 1]
-    if (entry) {
-      assert.equal(entry.i, index)
+    let entry
+    for (let i = this._entries.length - 1; i >= 0; i--) {
+      entry = this._entries[i]
+      if (!entry) {
+        return
+      }
+      if (entry.i === index) {
+        return entry
+      }
     }
-    return entry
   }
 
   appendAfter (index, entries) {
