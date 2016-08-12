@@ -49,20 +49,16 @@ class DB {
   }
 
   _getPersistBatch (state, done) {
-    this._persistLog(state, (err, _batch) => {
+    this._getPersistLog(state, (err, _batch) => {
       if (err) {
         done(err)
       } else {
-        debug('%s: have log persistence batch', this.id)
-        const batch = _batch.concat(this._persistMeta(state))
-
-        debug('%s: entire persistence batch: %j', this.id, batch)
-        done(null, batch)
+        done(null, _batch.concat(this._getPersistMeta(state)))
       }
     })
   }
 
-  _persistMeta (state) {
+  _getPersistMeta (state) {
     const snapshot = state.snapshot()
     return [
       {
@@ -78,7 +74,7 @@ class DB {
     ]
   }
 
-  _persistLog (state, _done) {
+  _getPersistLog (state, _done) {
     debug('%s: persisting log', this.id)
     const done = Once(_done)
     const entries = state.logEntries()
