@@ -29,13 +29,7 @@ class Commands {
   }
 
   _handleCommand (command, done) {
-    this._state.command(command, (err, result) => {
-      if (err) {
-        done(err)
-      } else {
-        this._state.persist(done)
-      }
-    })
+    this._state.command(command, done)
   }
 }
 

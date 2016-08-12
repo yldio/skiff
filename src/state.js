@@ -297,7 +297,11 @@ class State extends EventEmitter {
     } else {
       this._state.command(command, (err, result) => {
         debug('command %s finished, err = %j, result = %j', command, err, result)
-        done(err, result)
+        if (err) {
+          done(err)
+        } else {
+          this._db.command(this._dbServices, command, done)
+        }
       })
     }
   }

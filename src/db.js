@@ -28,6 +28,27 @@ class DB {
 
   persist (state, done) {
     debug('%s: persisting state', this.id)
+    this._getPersistBatch(state, (err, batch) => {
+      if (err) {
+        done(err)
+      } else {
+        this.db.batch(batch, done)
+      }
+    })
+  }
+
+  command (state, command, done) {
+    this._getPersistBatch(state, (err, _batch) => {
+      if (err) {
+        done(err)
+      } else {
+        const batch = _batch.concat([command])
+        this.db.batch(batch, done)
+      }
+    })
+  }
+
+  _getPersistBatch (state, done) {
     this._persistLog(state, (err, _batch) => {
       if (err) {
         done(err)
@@ -36,7 +57,7 @@ class DB {
         const batch = _batch.concat(this._persistMeta(state))
 
         debug('%s: entire persistence batch: %j', this.id, batch)
-        this.db.batch(batch, done)
+        done(null, batch)
       }
     })
   }
