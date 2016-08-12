@@ -42,7 +42,7 @@ class DB {
       if (err) {
         done(err)
       } else {
-        const batch = _batch.concat([command])
+        const batch = _batch.concat([Object.assign({}, command, { prefix: this.state })])
         this.db.batch(batch, done)
       }
     })
