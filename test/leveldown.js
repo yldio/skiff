@@ -15,7 +15,7 @@ const Node = require('../')
 
 const A_BIT = 1000
 
-describe('log replication', () => {
+describe('leveldown', () => {
   let follower, leader, leveldown
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9190',
@@ -59,12 +59,12 @@ describe('log replication', () => {
     done()
   })
 
-  it ('can create a leveldown instance', done => {
+  it ('can be created', done => {
     leveldown = leader.leveldown()
     done()
   })
 
-  it ('can use it to set bunch of keys', done => {
+  it ('can set bunch of keys', done => {
     async.each(
       ['a', 'b', 'c'],
       (key, cb) => {
@@ -73,7 +73,7 @@ describe('log replication', () => {
       done)
   })
 
-  it ('can use it to get a key', done => {
+  it ('can get a key', done => {
     async.each(['a', 'b', 'c'], (key, cb) => {
       leveldown.get(`key ${key}`, (err, values) => {
         expect(err).to.be.null()
@@ -81,5 +81,20 @@ describe('log replication', () => {
         cb()
       })
     }, done)
+  })
+
+  it('key is there', done => {
+    leveldown.get('key c', done)
+  })
+
+  it('can del a key', done => {
+    leveldown.del('key c', done)
+  })
+
+  it('deleted key is no longer found', done => {
+    leveldown.get('key c', err => {
+      expect(err.message).to.equal('Key not found in database')
+      done()
+    })
   })
 })
