@@ -97,4 +97,29 @@ describe('leveldown', () => {
       done()
     })
   })
+
+  it('accepts batch commands', done => {
+    const batch = [
+      {type: 'put', key: 'key d', value: 'value d'},
+      {type: 'put', key: 'key e', value: 'value e'},
+      {type: 'del', key: 'key b'},
+    ]
+    leveldown.batch(batch, done)
+  })
+
+  it('batch puts were effective', done => {
+    async.map(['key d', 'key e'], leveldown.get.bind(leveldown),
+      (err, results) => {
+        expect(err).to.be.null()
+        expect(results).to.equal(['value d', 'value e'])
+        done()
+      })
+  })
+
+  it('batch dels were effective', done => {
+    leveldown.get('key b', err => {
+      expect(err.message).to.equal('Key not found in database')
+      done()
+    })
+  })
 })
