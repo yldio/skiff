@@ -4,7 +4,7 @@
   "description": "Raft for Node.js",
   "main": "src/node.js",
   "scripts": {
-    "test": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js",
+    "test": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js && lab -vl test/log-replication-catchup.js && lab -vl test/leveldown.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
     "style": "eslint src"
   },
@@ -31,7 +31,6 @@
     "eslint-plugin-standard": "^2.0.0",
     "istanbul": "^0.4.4",
     "lab": "^10.9.0",
-    "levelup": "^1.3.2",
     "memdown": "^1.2.0",
     "pre-commit": "^1.1.3"
   },
@@ -40,12 +39,14 @@
     "test"
   ],
   "dependencies": {
+    "abstract-leveldown": "^2.6.0",
     "async": "^2.0.0",
     "concat-stream": "^1.5.1",
     "debug": "^2.2.0",
     "deepmerge": "^0.2.10",
-    "level": "^1.4.0",
     "level-sublevel": "^6.5.4",
+    "leveldown": "^1.4.6",
+    "levelup": "^1.3.2",
     "msgpack5": "^3.4.0",
     "multiaddr": "^2.0.2",
     "once": "^1.3.3",
