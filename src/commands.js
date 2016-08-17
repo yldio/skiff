@@ -18,8 +18,9 @@ class Commands {
     } else {
       const command = commandMessage.command
       const callback = commandMessage.callback
+      const options = commandMessage.options
       debug('%s: got command from queue: %j', this.id, command)
-      this._handleCommand(command, (err, result) => {
+      this._handleCommand(command, options, (err, result) => {
         if (callback) {
           callback(err, result)
         }
@@ -28,8 +29,8 @@ class Commands {
     }
   }
 
-  _handleCommand (command, done) {
-    this._state.command(command, done)
+  _handleCommand (command, options, done) {
+    this._state.command(command, options, done)
   }
 }
 

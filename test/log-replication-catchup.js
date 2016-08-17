@@ -8,9 +8,7 @@ const it = lab.it
 const expect = require('code').expect
 
 const async = require('async')
-const levelup = require('levelup')
 const memdown = require('memdown')
-const Sublevel = require('level-sublevel')
 
 const Node = require('../')
 
@@ -18,19 +16,16 @@ const A_BIT = 1000
 
 describe('log replication catchup', () => {
   let follower, leader
-  let newNode, newDB
+  let newNode
 
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9290',
     '/ip4/127.0.0.1/tcp/9291',
     '/ip4/127.0.0.1/tcp/9292'
   ]
-  const databases = nodeAddresses.map(node => {
-    return levelup(node, { db: memdown })
-  })
 
   const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, { db: databases[index] }))
+    new Node(address, { db: memdown }))
 
   const newAddress = '/ip4/127.0.0.1/tcp/9293'
 
@@ -78,8 +73,7 @@ describe('log replication catchup', () => {
   before(done => setTimeout(done, A_BIT))
 
   before(done => {
-    newDB = levelup(newAddress, { db: memdown })
-    newNode = new Node(newAddress, { db: newDB })
+    newNode = new Node(newAddress, { db: memdown })
     newNode.start(done)
   })
 
@@ -94,7 +88,7 @@ describe('log replication catchup', () => {
   before(done => setTimeout(done, A_BIT))
 
   it('new node gets updated', done => {
-    const db = Sublevel(newDB)
+    const db = newNode._db.db
     db.sublevel('state').get('a', (err, value) => {
       expect(err).to.be.null()
       expect(value).to.equal('1')

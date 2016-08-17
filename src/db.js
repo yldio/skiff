@@ -1,13 +1,12 @@
 'use strict'
 
 const debug = require('debug')('skiff.db')
-
-const join = require('path').join
-const Level = require('level')
 const Sublevel = require('level-sublevel')
 const Once = require('once')
 const async = require('async')
 const ConcatStream = require('concat-stream')
+const Leveldown = require('leveldown')
+const Levelup = require('levelup')
 
 const defaultDBOptions = {
   keyEncoding: 'ascii',
@@ -20,8 +19,9 @@ class DB {
     this.id = id
     const dbOptions = Object.assign({}, defaultDBOptions, _dbOptions)
     const dbName = id.replace(/\//g, '-')
-    this.db = Sublevel(
-      db || Level(join(__dirname, '..', '..', 'data', dbName), dbOptions))
+    this._leveldown = db || (new Leveldown(dbName))
+    this._levelup = new Levelup(id, Object.assign({}, dbOptions, {db: this._leveldown}))
+    this.db = Sublevel(this._levelup)
 
     this.log = this.db.sublevel('log')
     this.meta = this.db.sublevel('meta')
@@ -88,7 +88,7 @@ class DB {
     })
   }
 
-  command (state, command, done) {
+  command (state, command, options, done) {
     this._getPersistBatch(state, (err, batch) => {
       if (err) {
         done(err)
@@ -96,7 +96,7 @@ class DB {
         const isQuery = (command.type === 'get')
         debug('%s: applying command %j', this.id, command)
         if (!isQuery) {
-          batch.push(Object.assign({}, command, { prefix: this.state }))
+          batch = batch.concat(this._commandToBatch(command))
         }
         debug('%s: going to apply batch: %j', this.id, batch)
         this.db.batch(batch, err => {
@@ -187,6 +187,16 @@ class DB {
         done(null, operations)
       })
   }
+
+  _commandToBatch (command) {
+    return (Array.isArray(command) ? command : [command])
+      .map(this._transformCommand.bind(this))
+  }
+
+  _transformCommand (command) {
+    return Object.assign({}, command, { prefix: this.state })
+  }
+
 }
 
 module.exports = DB

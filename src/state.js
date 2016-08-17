@@ -282,21 +282,32 @@ class State extends EventEmitter {
   // -------
   // Commands
 
-  command (command, done) {
+  command (command, options, done) {
     if (this._stateName !== 'leader') {
       const err = new Error('not the leader')
       err.code = 'ENOTLEADER'
       err.leader = this._leaderId
       done(err)
     } else {
-      this._state.command(command, (err, result) => {
+      this._state.command(command, options, (err, result) => {
         debug('command %s finished, err = %j, result = %j', command, err, result)
         if (err) {
           done(err)
         } else {
-          this._db.command(this._dbServices, command, done)
+          this._db.command(this._dbServices, command, options, done)
         }
       })
+    }
+  }
+
+  readConsensus (callback) {
+    if (this._stateName !== 'leader') {
+      const err = new Error('not the leader')
+      err.code = 'ENOTLEADER'
+      err.leader = this._leaderId
+      callback(err)
+    } else {
+      this._state.readConsensus(callback)
     }
   }
 

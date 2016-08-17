@@ -19,10 +19,15 @@ class Leader extends Base {
     }
   }
 
-  command (command, done) {
+  command (command, options, done) {
     this._node.log.push(command)
     this._ensureFollowers()
     this.appendEntries(done)
+  }
+
+  readConsensus (callback) {
+    // TODO: grant consensus if timestamp for last consensus < minimium election timeout
+    this.appendEntries(callback)
   }
 
   appendEntries (_done) {

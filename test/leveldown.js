@@ -8,6 +8,7 @@ const it = lab.it
 const expect = require('code').expect
 
 const async = require('async')
+const levelup = require('levelup')
 const memdown = require('memdown')
 
 const Node = require('../')
@@ -15,7 +16,7 @@ const Node = require('../')
 const A_BIT = 1000
 
 describe('log replication', () => {
-  let follower, leader
+  let follower, leader, leveldown
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9190',
     '/ip4/127.0.0.1/tcp/9191',
@@ -58,29 +59,27 @@ describe('log replication', () => {
     done()
   })
 
-  it('follower does not accept command', done => {
-    follower.command('SHOULD NOT GET IN', err => {
-      expect(err).to.not.be.null()
-      expect(err.message).to.equal('not the leader')
-      expect(err.code).to.equal('ENOTLEADER')
-      done()
-    })
+  it ('can create a leveldown instance', done => {
+    leveldown = leader.leveldown()
+    done()
   })
 
-  it('leader accepts command', done => {
-    leader.command({type: 'put', key: 'a', value: '1'}, err => {
-      expect(err).to.be.null()
-      done()
-    })
+  it ('can use it to set bunch of keys', done => {
+    async.each(
+      ['a', 'b', 'c'],
+      (key, cb) => {
+        leveldown.put(`key ${key}`, `value ${key}`, cb)
+      },
+      done)
   })
 
-  it('leader accepts query command', done => {
-    leader.command({type: 'get', key: 'a'}, (err, result) => {
-      expect(err).to.be.null()
-      expect(result).to.equal('1')
-      done()
-    })
+  it ('can use it to get a key', done => {
+    async.each(['a', 'b', 'c'], (key, cb) => {
+      leveldown.get(`key ${key}`, (err, values) => {
+        expect(err).to.be.null()
+        expect(values).to.equal(`value ${key}`)
+        cb()
+      })
+    }, done)
   })
-
-  it('waits a bit', done => setTimeout(done, A_BIT))
 })

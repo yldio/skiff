@@ -13,6 +13,8 @@ const State = require('./state')
 const CommandQueue = require('./command-queue')
 const Commands = require('./commands')
 const DB = require('./db')
+const Leveldown = require('./leveldown')
+const Iterator = require('./iterator')
 
 const defaultOptions = {
   server: {},
@@ -114,14 +116,26 @@ class Node extends EventEmitter {
     this._state.join(address)
   }
 
-  command (command, callback) {
-    this._commandQueue.write({command, callback})
+  command (command, options, callback) {
+    if (typeof options === 'function') {
+      callback = options
+      options = {}
+    }
+    this._commandQueue.write({command, options, callback})
   }
 
   is (state) {
     const currentState = this._state._stateName
     debug('%s: current state is %s', this.id, currentState)
     return this._state._stateName === state
+  }
+
+  leveldown () {
+    return new Leveldown(this)
+  }
+
+  iterator (options) {
+    return new Iterator(this._db._leveldown, this._state, options)
   }
 }
 

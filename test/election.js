@@ -25,7 +25,7 @@ describe('election', () => {
   ]
 
   const nodes = nodeAddresses.map(address => new Node(address, {
-    db: levelup(address, { db: memdown })
+    db: memdown
   }))
 
   before(done => {
