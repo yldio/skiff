@@ -19,8 +19,9 @@ class DB {
     this.id = id
     const dbOptions = Object.assign({}, defaultDBOptions, _dbOptions)
     const dbName = id.replace(/\//g, '-')
-    this._leveldown = db || (new Leveldown(dbName))
-    this._levelup = new Levelup(id, Object.assign({}, dbOptions, {db: this._leveldown}))
+    const leveldown = db || Leveldown
+    this._levelup = new Levelup(dbName, Object.assign({}, dbOptions, {db: leveldown}))
+    this._leveldown = this._levelup.db
     this.db = Sublevel(this._levelup)
 
     this.log = this.db.sublevel('log')

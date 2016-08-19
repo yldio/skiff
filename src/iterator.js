@@ -10,7 +10,7 @@ class Iterator extends AbstractIterator {
   }
 
   _next (callback) {
-    this._state.consensus(err => {
+    this._state.readConsensus(err => {
       if (err) {
         callback(err)
       } else {

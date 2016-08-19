@@ -9,7 +9,7 @@ const expect = require('code').expect
 
 const async = require('async')
 const levelup = require('levelup')
-const memdown = require('memdown')
+const Memdown = require('memdown')
 
 const Node = require('../')
 
@@ -24,7 +24,7 @@ describe('leveldown', () => {
   ]
 
   const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, { db: memdown }))
+    new Node(address, { db: Memdown }))
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))
@@ -122,4 +122,46 @@ describe('leveldown', () => {
       done()
     })
   })
+
+  describe('iterator', () => {
+    let iterator
+
+    it('can be created', done => {
+      iterator = leveldown.iterator({
+        keyAsBuffer: false,
+        valueAsBuffer: false,
+        gte: '!state!',
+        lt: '!t',
+      })
+      done()
+    })
+
+    it('can iterate through all the keys', done => {
+      let stopped = false
+      const expecteds = [
+        {key: '!state!key a', value: '"value a"'},
+        {key: '!state!key d', value: '"value d"'},
+        {key: '!state!key e', value: '"value e"'}
+      ]
+      async.whilst(
+        () => !stopped,
+        (cb) => {
+          iterator.next((err, key, value) => {
+            if (!err && !key) {
+              stopped = true
+              return cb()
+            }
+            expect(err).to.be.null()
+            expect({key, value}).to.equal(expecteds.shift())
+            cb(err)
+          })
+        },
+      (err) => {
+        expect(err).to.be.null()
+        expect(expecteds.length).to.equal(0)
+        done()
+      })
+    })
+  })
+
 })
