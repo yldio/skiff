@@ -156,12 +156,12 @@ describe('leveldown', () => {
             cb(err)
           })
         },
-      (err) => {
-        expect(err).to.be.null()
-        expect(expecteds.length).to.equal(0)
-        done()
-      })
+        (err) => {
+          expect(err).to.be.null()
+          expect(expecteds.length).to.equal(0)
+          done()
+        }
+      )
     })
   })
-
 })
