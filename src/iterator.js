@@ -13,7 +13,7 @@ class Iterator extends AbstractIterator {
     this._rs.once('close', () => {
       this._finished = true
       if (this._callback) {
-        this._callback(null, null, null)
+        this._callback(this._error, null, null)
       }
     })
     this._rs.on('error', err => { this._error = err })
