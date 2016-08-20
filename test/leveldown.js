@@ -129,9 +129,7 @@ describe('leveldown', () => {
     it('can be created', done => {
       iterator = leveldown.iterator({
         keyAsBuffer: false,
-        valueAsBuffer: false,
-        gte: '!state!',
-        lt: '!t',
+        valueAsBuffer: false
       })
       done()
     })
@@ -139,9 +137,9 @@ describe('leveldown', () => {
     it('can iterate through all the keys', done => {
       let stopped = false
       const expecteds = [
-        {key: '!state!key a', value: '"value a"'},
-        {key: '!state!key d', value: '"value d"'},
-        {key: '!state!key e', value: '"value e"'}
+        {key: 'key a', value: 'value a'},
+        {key: 'key d', value: 'value d'},
+        {key: 'key e', value: 'value e'}
       ]
       async.whilst(
         () => !stopped,

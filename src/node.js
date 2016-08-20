@@ -135,7 +135,7 @@ class Node extends EventEmitter {
   }
 
   iterator (options) {
-    return new Iterator(this._db._leveldown, this._state, options)
+    return new Iterator(this._db.state, options)
   }
 }
 
