@@ -30,10 +30,12 @@ class State extends EventEmitter {
     // persisted state
     this._term = 0
     this._votedFor = null
-    this._log = new Log({
-      id: this.id,
-      applyEntries: this._applyEntries.bind(this)
-    })
+    this._log = new Log(
+      {
+        id: this.id,
+        applyEntries: this._applyEntries.bind(this)
+      },
+      options)
 
     this._stateServices = {
       id: id,
@@ -120,7 +122,9 @@ class State extends EventEmitter {
 
   _incrementTerm () {
     this._votedFor = null
-    return ++this._term
+    const term = ++this._term
+    this._log.setTerm(term)
+    return term
   }
 
   _getTerm () {

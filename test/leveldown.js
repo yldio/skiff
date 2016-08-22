@@ -18,9 +18,9 @@ const A_BIT = 1000
 describe('leveldown', () => {
   let follower, leader, leveldown
   const nodeAddresses = [
-    '/ip4/127.0.0.1/tcp/9190',
-    '/ip4/127.0.0.1/tcp/9191',
-    '/ip4/127.0.0.1/tcp/9192'
+    '/ip4/127.0.0.1/tcp/9390',
+    '/ip4/127.0.0.1/tcp/9391',
+    '/ip4/127.0.0.1/tcp/9392'
   ]
 
   const nodes = nodeAddresses.map((address, index) =>

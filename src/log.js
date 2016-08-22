@@ -2,12 +2,17 @@
 
 const debug = require('debug')('skiff.log')
 
+const defaultOptions = {
+  minLogRetention: 1000
+}
+
 class Log {
 
-  constructor (node, lastLogIndex, lastLogTerm, persistedState) {
+  constructor (node, options) {
+    this._options = Object.assign({}, defaultOptions, options)
     this._node = node
-    this._lastLogIndex = lastLogIndex || 0
-    this._lastLogTerm = lastLogTerm || 0
+    this._lastLogIndex = 0
+    this._lastLogTerm = 0
     this._commitIndex = 0
     this._lastApplied = 0
     this._entries = []
@@ -28,6 +33,7 @@ class Log {
 
     this._entries.push(newEntry)
     this._lastLogIndex = newLogIndex
+    this._compact()
   }
 
   head () {
@@ -77,6 +83,7 @@ class Log {
       } else {
         debug('%s: done commiting index %d', this._node.id, index)
         this._lastApplied = index
+        this._compact()
         done()
       }
     })
@@ -125,6 +132,18 @@ class Log {
       }
     }
     return 0
+  }
+
+  _compact () {
+    if (this._entries.length > this._options.minLogRetention) {
+      const maxPhysicalIndex = this._entries.length - this._options.minLogRetention
+      const maxIndex = this._entries[maxPhysicalIndex].i
+      let canRemove = maxPhysicalIndex
+      if (maxIndex > this._lastApplied) {
+        canRemove -= (maxIndex - this._lastApplied)
+      }
+      this._entries.splice(0, canRemove)
+    }
   }
 }
 
