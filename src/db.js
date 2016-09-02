@@ -7,6 +7,7 @@ const async = require('async')
 const ConcatStream = require('concat-stream')
 const Leveldown = require('leveldown')
 const Levelup = require('levelup')
+const clearDB = require('./lib/clear-db')
 
 const defaultDBOptions = {
   keyEncoding: 'ascii',
@@ -27,6 +28,7 @@ class DB {
     this.log = this.db.sublevel('log')
     this.meta = this.db.sublevel('meta')
     this.state = this.db.sublevel('state')
+    this.state.clear = clearDB
 
     // for debugging purposes
     this.log.toJSON = function () { return 'log' }

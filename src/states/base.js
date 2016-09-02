@@ -4,11 +4,13 @@ const debug = require('debug')('skiff.states.base')
 const merge = require('deepmerge')
 const timers = require('timers')
 const EventEmitter = require('events')
+const async = require('async')
 
 const defaultOptions = {
   appendEntriesIntervalMS: 100,
   electionTimeoutMinMS: 150,
-  electionTimeoutMaxMS: 300
+  electionTimeoutMaxMS: 300,
+  installSnapshotChunkSize: 10
 }
 
 class Base extends EventEmitter {
@@ -71,6 +73,10 @@ class Base extends EventEmitter {
       case 'RequestVote':
         this._requestVoteReceived(message)
         done()
+        break
+
+      case 'InstallSnapshot':
+        this._installSnapshotReceived(message, done)
         break
 
       default:
@@ -192,6 +198,52 @@ class Base extends EventEmitter {
       }
     }
   }
+
+  _installSnapshotReceived (message, done) {
+    debug('%s: _installSnapshotReceived %j', this._node.state.id, message)
+    const self = this
+    const tasks = []
+    const db = this._node.state.db.state
+
+    if (message.params.offset === 0) {
+      tasks.push(db.clear.bind(db))
+    }
+
+    if (message.params.done) {
+      this._node.state.setTerm(message.params.lastIncludedTerm)
+      const log = this._node.state.log
+      log._lastLogIndex = message.params.lastIncludedIndex
+      log._lastLogTerm = message.params.lastIncludedTerm
+      log._commitIndex = message.params.lastIncludedIndex
+      log._lastApplied = message.params.lastIncludedIndex
+    }
+
+    tasks.push(insertData)
+    tasks.push(reply)
+
+    async.series(tasks, done)
+
+    function insertData (cb) {
+      const data = message.params.data
+      if (!data || !data.length) {
+        cb()
+      } else {
+        db.batch(data, cb)
+      }
+    }
+
+    function reply (cb) {
+      self._node.network.reply(
+        message.from,
+        message.id,
+        {
+          replyTo: 'InstallSnapshot',
+          term: self._node.state.term()
+        },
+        cb)
+    }
+  }
+
 }
 
 module.exports = Base

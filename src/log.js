@@ -12,6 +12,7 @@ class Log {
     this._options = Object.assign({}, defaultOptions, options)
     this._node = node
     this._lastLogIndex = 0
+    this._firstLogIndex = 0
     this._lastLogTerm = 0
     this._commitIndex = 0
     this._lastApplied = 0
@@ -95,6 +96,9 @@ class Log {
 
   lastIndexForTerm (term) {
     let entry
+    if (this._lastLogTerm === term) {
+      return this._lastLogIndex
+    }
     for (let i = this._entries.length - 1; i >= 0; i--) {
       entry = this._entries[i]
       if (!entry) {
@@ -111,9 +115,18 @@ class Log {
   }
 
   entriesFrom (index) {
-    const entries = this._entries.slice(this._physicalIndexFor(index))
+    const physicalIndex = this._physicalIndexFor(index)
+    if (physicalIndex === -1) {
+      return null
+    }
+    debug('physical index for %d is %d', index, physicalIndex)
+    const entries = this._entries.slice(physicalIndex)
     debug('entries from %d are %j', index, entries)
     return entries
+  }
+
+  lastAppliedEntry () {
+    return this.atLogIndex(this._lastApplied)
   }
 
   _entriesFromTo (from, to) {
@@ -122,6 +135,15 @@ class Log {
   }
 
   _physicalIndexFor (index) {
+    debug('physical index for %d', index)
+    if (index < this._firstLogIndex) {
+      debug('index %d is smaller tham first index %d', index, this._firstLogIndex)
+      return -1
+    }
+    if (index === 0) {
+      return 0
+    }
+    debug('_firstLogIndex is %d', this._firstLogIndex)
     let entry
     for (let i = this._entries.length - 1; i >= 0; i--) {
       entry = this._entries[i]
@@ -143,6 +165,9 @@ class Log {
         canRemove -= (maxIndex - this._lastApplied)
       }
       this._entries.splice(0, canRemove)
+    }
+    if (this._entries.length) {
+      this._firstLogIndex = this._entries[0].i
     }
   }
 }

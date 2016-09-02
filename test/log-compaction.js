@@ -10,10 +10,11 @@ const expect = require('code').expect
 const async = require('async')
 const levelup = require('levelup')
 const Memdown = require('memdown')
+const leftPad = require('left-pad')
 
 const Node = require('../')
 
-const A_BIT = 1000
+const A_BIT = 1900
 
 describe('log compaction', () => {
   let follower, leader, leveldown
@@ -33,10 +34,6 @@ describe('log compaction', () => {
 
   before(done => {
     async.each(nodes, (node, cb) => node.start(cb), done)
-  })
-
-  after(done => {
-    async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
   before(done => {
@@ -60,10 +57,10 @@ describe('log compaction', () => {
     done()
   })
 
-  it ('can insert 50 items', done => {
+  it ('can insert 30 items', done => {
     const items = []
-    for(var i = 0 ; i < 50 ; i++) {
-      items.push(i)
+    for(var i = 0 ; i < 30 ; i++) {
+      items.push(leftPad(i.toString(), 3, '0'))
     }
     async.each(items, (item, cb) => {
       leveldown.put(item, item, cb)
@@ -73,7 +70,46 @@ describe('log compaction', () => {
 
   it ('log length was capped', done => {
     expect(leader._state._log._entries.length).to.equal(10)
-    console.log(leader._state._log._entries)
     done()
+  })
+
+  describe ('node that is late to the party', () => {
+    const newNode = new Node('/ip4/127.0.0.1/tcp/9493', { db: Memdown, minLogRetention: 10 })
+
+    before(done => newNode.start(done))
+
+    before(done => {
+      nodes.forEach(node => {
+        node.join(newNode.id)
+        newNode.join(node.id)
+      })
+      done()
+    })
+
+    after(done => {
+      async.each(nodes, (node, cb) => node.stop(cb), done)
+    })
+
+    after(done => {
+      newNode.stop(done)
+    })
+
+    before(done => setTimeout(done, A_BIT))
+
+    it('waits a bit', done => setTimeout(done, A_BIT))
+
+    it('catches up', done => {
+      let nextEntry = 0
+      newNode._db.state.createReadStream()
+        .on('data', (entry) => {
+          const expectedKey = leftPad(nextEntry, 3, '0')
+          expect(entry.key).to.equal(expectedKey)
+          nextEntry ++
+        })
+        .once('end', () => {
+          expect(nextEntry).to.equal(30)
+          done()
+        })
+    })
   })
 })

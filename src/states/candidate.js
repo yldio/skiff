@@ -26,9 +26,11 @@ class Candidate extends Base {
       }
 
       this._node.network.rpc(
-        peer, // to
-        'RequestVote', // action
-        requestVoteArgs, // params
+        {
+          to: peer,
+          action: 'RequestVote',
+          params: requestVoteArgs
+        },
         (err, reply) => { // callback
           if (!err && !majorityVoted) {
             debug('reply for request vote from %s: err = %j, message = %j', peer, err, reply)

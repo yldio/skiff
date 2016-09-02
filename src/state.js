@@ -38,13 +38,16 @@ class State extends EventEmitter {
       options)
 
     this._stateServices = {
-      id: id,
+      id,
       name: this._getStateName.bind(this),
       term: this._getTerm.bind(this),
+      setTerm: this._setTerm.bind(this),
       transition: this._transition.bind(this),
       incrementTerm: this._incrementTerm.bind(this),
       getVotedFor: this._getVotedFor.bind(this),
-      setVotedFor: this._setVotedFor.bind(this)
+      setVotedFor: this._setVotedFor.bind(this),
+      log: this._log,
+      db
     }
 
     this._networkingServices = {
@@ -107,7 +110,7 @@ class State extends EventEmitter {
         state: this._stateServices,
         network: this._networkingServices,
         log: this._log
-      })
+      }, this._options)
       this._stateName = state
       this._state.start()
 
@@ -150,25 +153,25 @@ class State extends EventEmitter {
   // -------------
   // Networking
 
-  _rpc (to, action, params, callback) {
-    debug('%s: rpc to: %s, action: %s, params: %j', this.id, to, action, params)
+  _rpc (options, callback) {
+    debug('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
     const self = this
     const done = once(callback)
     const id = uuid()
-    const timeout = timers.setTimeout(onTimeout, this._options.rpcTimeoutMS)
+    const timeout = timers.setTimeout(onTimeout, options.timeout || this._options.rpcTimeoutMS)
     this._replies.on('data', onReplyData)
     this.active.write({
       from: this.id,
       id,
       type: 'request',
-      to,
-      action,
-      params
+      to: options.to,
+      action: options.action,
+      params: options.params
     })
 
     function onReplyData (message) {
       debug('%s: reply data: %j', self.id, message)
-      if (message.type === 'reply' && message.from === to && message.id === id) {
+      if (message.type === 'reply' && message.from === options.to && message.id === id) {
         debug('%s: this is a reply I was expecting: %j', self.id, message)
         self._replies.removeListener('data', onReplyData)
         timers.clearTimeout(timeout)
@@ -179,7 +182,7 @@ class State extends EventEmitter {
     function onTimeout () {
       debug('RPC timeout')
       self._replies.removeListener('data', onReplyData)
-      const err = new Error('timeout RPC to ' + to)
+      const err = new Error('timeout RPC to ' + options.to)
       err.code = 'ETIMEOUT'
       done(err)
     }
