@@ -94,6 +94,12 @@ class Leader extends Base {
     const entries = this._entriesForFollower(peer)
     if (entries) {
       debug('%s: entries for %s are: %j', this._node.state.id, peer, entries)
+
+      if (peerInfo.appendingEntries) {
+        return done()
+      }
+
+      peerInfo.appendingEntries = true
       const previousEntry = this._previousEntryForFollower(peer)
       const lastEntry = entries[entries.length - 1]
       const leaderCommit = log._commitIndex
@@ -114,6 +120,7 @@ class Leader extends Base {
           params: appendEntriesArgs
         },
         (err, reply) => { // callback
+          peerInfo.appendingEntries = false
           debug('%s: got reply to AppendEntries from %s: %j', this._node.state.id, peer, reply)
           if (err) {
             debug('%s: error on AppendEntries reply:\n%s', this._node.state.id, err.stack)
@@ -137,6 +144,7 @@ class Leader extends Base {
               }
 
               // again
+
               this._appendEntriesToPeer(peer, done)
             }
           } else {
@@ -148,6 +156,7 @@ class Leader extends Base {
       // no log entries for peer that's lagging behind
       debug('%s: peer %s is lagging behind (next index is %d), going to install snapshot',
         this._node.state.id, peer, peerInfo.nextIndex)
+      peerInfo.appendingEntries = false
       this._installSnapshot(peer, done)
     }
   }
