@@ -155,6 +155,9 @@ class State extends EventEmitter {
 
   _rpc (options, callback) {
     debug('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
+    if (typeof options.to !== 'string') {
+      throw new Error('need options.to to be a string')
+    }
     const self = this
     const done = once(callback)
     const id = uuid()
@@ -296,12 +299,26 @@ class State extends EventEmitter {
       err.leader = this._leaderId
       done(err)
     } else {
-      this._state.command(command, options, (err, result) => {
+      const consensuses = [this._peers.slice()]
+
+      // joint consensus
+      if (command.type === 'join') {
+        consensuses.push(this._peers.concat(command.peer))
+      } else if (command.type === 'leave') {
+        consensuses.push(this._peers.filter(peer => peer !== command.peer))
+      }
+      this._state.command(consensuses, command, options, (err, result) => {
         debug('command %s finished, err = %j, result = %j', command, err, result)
         if (err) {
           done(err)
         } else {
-          this._db.command(this._dbServices, command, options, done)
+          if (command.type === 'join') {
+            this._peers.push(command.peer)
+          } else if (command.type === 'leave') {
+            this._peers = this._peers.filter(peer => peer !== command.peer)
+          } else {
+            this._db.command(this._dbServices, command, options, done)
+          }
         }
       })
     }

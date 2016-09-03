@@ -2,6 +2,7 @@
 
 const debug = require('debug')('skiff.states.leader')
 const timers = require('timers')
+const async = require('async')
 
 const Base = require('./base')
 const BatchTransformStream = require('../lib/batch-transform-stream')
@@ -10,8 +11,7 @@ class Leader extends Base {
 
   start () {
     this._followers = {}
-    this._ensureFollowers()
-    this.appendEntries()
+    this.appendEntries(this._node.network.peers)
   }
 
   stop () {
@@ -20,18 +20,20 @@ class Leader extends Base {
     }
   }
 
-  command (command, options, done) {
+  command (consensuses, command, options, done) {
     this._node.log.push(command)
-    this._ensureFollowers()
-    this.appendEntries(done)
+    async.eachSeries(consensuses, this.appendEntries.bind(this), done)
   }
 
   readConsensus (callback) {
     // TODO: grant consensus if timestamp for last consensus < minimium election timeout
-    this.appendEntries(callback)
+    this.appendEntries(this._node.network.peers, callback)
   }
 
-  appendEntries (_done) {
+  appendEntries (consensus, _done) {
+    if (!consensus || !consensus.length) {
+      throw new Error('no consensus group')
+    }
     const self = this
     let majorityVoted = false
     let voteCount = 1
@@ -43,7 +45,7 @@ class Leader extends Base {
     const log = this._node.log
     const lastEntry = log.head()
 
-    this._node.network.peers
+    consensus
       .map(this._ensureFollower.bind(this))
       .filter(peer => !peer.installingSnapshot)
       .forEach(peer => {
@@ -58,10 +60,10 @@ class Leader extends Base {
 
     function perhapsDone () {
       if (!majorityVoted) {
-        majorityVoted = self._node.network.isMajority(voteCount)
+        majorityVoted = isMajority(consensus, voteCount)
         if (majorityVoted) {
           debug('%s: majority has voted', self._node.state.id)
-          if (self._node.network.isMajority(commitCount)) {
+          if (isMajority(consensus, commitCount)) {
             debug('%s: majority reached', self._node.state.id)
             if (lastEntry) {
               debug('%s: about to commit index %d', self._node.state.id, lastEntry.i)
@@ -176,13 +178,7 @@ class Leader extends Base {
 
   _onAppendEntriesTimeout () {
     debug('%s: AppendEntries timedout', this._node.state.id)
-    this.appendEntries()
-  }
-
-  _ensureFollowers () {
-    this._node.network.peers.forEach(address => {
-      this._ensureFollower(address)
-    })
+    this.appendEntries(this._node.network.peers)
   }
 
   _ensureFollower (address) {
@@ -310,3 +306,9 @@ class Leader extends Base {
 module.exports = Leader
 
 function noop () {}
+
+function isMajority (consensus, count) {
+  const quorum = Math.ceil((consensus.length + 1) / 2)
+  const isMajority = consensus.length && count >= quorum
+  return isMajority
+}
