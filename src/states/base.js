@@ -10,7 +10,8 @@ const defaultOptions = {
   appendEntriesIntervalMS: 100,
   electionTimeoutMinMS: 150,
   electionTimeoutMaxMS: 300,
-  installSnapshotChunkSize: 10
+  installSnapshotChunkSize: 10,
+  batchEntriesLimit: 10
 }
 
 class Base extends EventEmitter {

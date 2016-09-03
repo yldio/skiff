@@ -214,7 +214,12 @@ class Leader extends Base {
   _entriesForFollower (address) {
     const follower = this._followers[address]
     debug('follower %s next index is %d', address, follower.nextIndex)
-    return this._node.log.entriesFrom(follower.nextIndex)
+    const start = follower.nextIndex
+    let entries = this._node.log.entriesFrom(start)
+    if (entries) {
+      entries = entries.slice(0, this._options.batchEntriesLimit)
+    }
+    return entries
   }
 
   _previousEntryForFollower (address) {

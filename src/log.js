@@ -77,7 +77,7 @@ class Log {
     debug('%s: commit %d', this._node.id, index)
     this._commitIndex = index
 
-    const entriesToApply = this._entriesFromTo(this._lastApplied + 1, this._commitIndex)
+    const entriesToApply = this.entriesFromTo(this._lastApplied + 1, this._commitIndex)
     this._node.applyEntries(entriesToApply, (err) => {
       if (err) {
         done(err)
@@ -129,7 +129,7 @@ class Log {
     return this.atLogIndex(this._lastApplied)
   }
 
-  _entriesFromTo (from, to) {
+  entriesFromTo (from, to) {
     const pFrom = this._physicalIndexFor(from)
     return this._entries.slice(pFrom, (to - from) + 1)
   }
