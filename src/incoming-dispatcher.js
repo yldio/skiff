@@ -18,8 +18,9 @@ class Dispatcher extends Writable {
     this._pending = []
   }
 
-  next (message) {
-    return this._pending.shift()
+  next () {
+    const message = this._pending.shift()
+    return message
   }
 
   _write (message, _, callback) {

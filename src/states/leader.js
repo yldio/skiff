@@ -58,7 +58,6 @@ class Leader extends Base {
   }
 
   _appendEntries (consensus, _done) {
-    console.log('%s: _appendEntries; consensus = %j', this._node.state.id, consensus)
     debug('%s: _appendEntries; consensus = %j', this._node.state.id, consensus)
     if (!consensus || !consensus.length) {
       throw new Error('no consensus group')
@@ -75,8 +74,8 @@ class Leader extends Base {
 
     consensus
       .map(address => {
-        const follower = this._followers[address]
-        if (! follower) {
+        let follower = this._followers[address]
+        if (!follower) {
           follower = this._followers[address] = new PeerLeader(address, this._node, this._options)
         }
         return follower
@@ -84,7 +83,6 @@ class Leader extends Base {
       .forEach(peer => {
         const cancel = peer.appendEntries((err, reply) => {
           debug('append entries from %s replied', peer._address, err, reply)
-          console.log('append entries from %s replied', peer._address, err, reply)
           voteCount++
           if (!err && reply && reply.success) {
             commitCount++
@@ -101,7 +99,6 @@ class Leader extends Base {
         if (majorityVoted) {
           debug('%s: majority has voted', self._node.state.id)
           if (isMajority(consensus, commitCount)) {
-            console.log('%s: majority reached', self._node.state.id)
             debug('%s: majority reached', self._node.state.id)
             cancelAll()
             if (lastEntry) {
@@ -119,7 +116,7 @@ class Leader extends Base {
       }
     }
 
-    function cancelAll() {
+    function cancelAll () {
       cancels.forEach(cancel => cancel())
     }
   }

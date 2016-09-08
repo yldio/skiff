@@ -57,7 +57,6 @@ describe('log replication catchup', () => {
   })
 
   before(done => {
-    console.log('haz leader', !!leader)
     done()
   })
 
@@ -66,14 +65,12 @@ describe('log replication catchup', () => {
   before(done => leader.command({type: 'put', key: 'b', value: '2'}, done))
 
   before(done => {
-    console.log('YAy 1')
     done()
   })
 
   before({timeout: 3000}, done => setTimeout(done, A_BIT))
 
   before(done => {
-    console.log('YAy 2')
     done()
   })
 
@@ -82,11 +79,13 @@ describe('log replication catchup', () => {
       db: memdown,
       peers: nodeAddresses
     })
+    newNode.on('warning', (err) => {
+      throw err
+    })
     newNode.start(done)
   })
 
   before(done => {
-    console.log('YAy 3\n\n\n\n\n\n')
     done()
   })
 
@@ -95,7 +94,6 @@ describe('log replication catchup', () => {
   })
 
   before(done => {
-    console.log('YAy 4')
     done()
   })
 

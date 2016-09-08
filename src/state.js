@@ -165,7 +165,6 @@ class State extends EventEmitter {
 
   _rpc (options, callback) {
     debug('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
-    console.log('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
     if (typeof options.to !== 'string') {
       throw new Error('need options.to to be a string')
     }
@@ -188,7 +187,6 @@ class State extends EventEmitter {
 
     function onReplyData (message) {
       debug('%s: reply data: %j', self.id, message)
-      console.log('%s: reply data: %j', self.id, message)
       if (self._term > term) {
         onTimeout()
       } else if (
@@ -197,7 +195,6 @@ class State extends EventEmitter {
         message.id === id)
       {
         debug('%s: this is a reply I was expecting: %j', self.id, message)
-        console.log('%s: this is a reply I was expecting: %j', self.id, message)
         cancel()
         done(null, message)
       }
@@ -229,6 +226,7 @@ class State extends EventEmitter {
   }
 
   _dispatch () {
+    debug('%s: _dispatch', this.id)
     const message = this._dispatcher.next()
     if (!message) {
       this._dispatcher.once('readable', this._dispatch.bind(this))
@@ -290,7 +288,8 @@ class State extends EventEmitter {
 
   _handleReply (message, done) {
     debug('%s: handling reply %j', this.id, message)
-    this._replies.write(message, done)
+    this._replies.write(message)
+    done()
   }
 
   _outStream () {
@@ -374,11 +373,11 @@ class State extends EventEmitter {
     this._db.applyEntries(entries, this._applyTopologyCommands.bind(this), done)
   }
 
-  _applyTopologyCommands(commands) {
+  _applyTopologyCommands (commands) {
     commands.forEach(this._applyTopologyCommand.bind(this))
   }
 
-  _applyTopologyCommand(command) {
+  _applyTopologyCommand (command) {
     if (command.type === 'join') {
       if ((command.peer !== this.id) && (this._peers.indexOf(command.peer) === -1)) {
         this._peers = this._peers.concat(command.peer)

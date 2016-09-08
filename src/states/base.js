@@ -257,7 +257,7 @@ class Base extends EventEmitter {
         },
         cb)
 
-      this._resetElectionTimeout()
+      self._resetElectionTimeout()
     }
   }
 

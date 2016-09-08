@@ -32,7 +32,7 @@ class Node extends EventEmitter {
 
     this._db = new DB(this.id, this._options.db)
 
-    this._dispatcher = new IncomingDispatcher()
+    this._dispatcher = new IncomingDispatcher({id})
 
     this._state = new State(this.id, this._dispatcher, this._db, this._options)
     this._state.on('warning', warn => this.emit('warning', warn))
@@ -113,7 +113,7 @@ class Node extends EventEmitter {
           this._state._setVotedFor(results.meta.votedFor)
         }
         if (results.meta.peers) {
-          this._state._peers = peers
+          this._state._peers = results.meta.peers
         }
         cb()
       }
