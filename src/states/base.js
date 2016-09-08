@@ -1,12 +1,12 @@
 'use strict'
 
 const debug = require('debug')('skiff.states.base')
-const merge = require('deepmerge')
 const timers = require('timers')
 const EventEmitter = require('events')
 const async = require('async')
 
 const defaultOptions = {
+  electionTimeout: true,
   appendEntriesIntervalMS: 100,
   electionTimeoutMinMS: 150,
   electionTimeoutMaxMS: 300,
@@ -19,32 +19,36 @@ class Base extends EventEmitter {
   constructor (node, options) {
     super()
     this._node = node
-    this._options = merge(options, defaultOptions)
+    this._options = Object.assign({}, defaultOptions, options)
   }
 
   start () {
     this._resetElectionTimeout()
-    if (this._start) {
-      this._start()
-    }
   }
 
   stop () {
-    timers.clearTimeout(this._electionTimeout)
-    if (this._stop) {
-      this._stop()
+    this._clearElectionTimeout()
+  }
+
+  _clearElectionTimeout () {
+    if (this._electionTimeout) {
+      timers.clearTimeout(this._electionTimeout)
+    }
+    this._electionTimeout = null
+  }
+
+  _setElectionTimeout () {
+    if (this._options.electionTimeout) {
+      this._electionTimeout = timers.setTimeout(
+        this._onElectionTimeout.bind(this),
+        this._randomElectionTimeout())
     }
   }
 
   _resetElectionTimeout () {
     debug('%s: resetting election timeout', this._node.state.id)
-    if (this._electionTimeout) {
-      timers.clearTimeout(this._electionTimeout)
-    }
-
-    this._electionTimeout = timers.setTimeout(
-      this._onElectionTimeout.bind(this),
-      this._randomElectionTimeout())
+    this._clearElectionTimeout()
+    this._setElectionTimeout()
   }
 
   _onElectionTimeout () {
@@ -59,7 +63,8 @@ class Base extends EventEmitter {
   _randomElectionTimeout () {
     const diff = this._options.electionTimeoutMaxMS - this._options.electionTimeoutMinMS
     const rnd = Math.floor(Math.random() * diff)
-    return this._options.electionTimeoutMinMS + rnd
+    const timeout = this._options.electionTimeoutMinMS + rnd
+    return timeout
   }
 
   handleRequest (message, done) {
@@ -97,6 +102,8 @@ class Base extends EventEmitter {
     if (voteGranted) {
       debug('vote granted')
       this._node.state.setVotedFor(message.from)
+      this._resetElectionTimeout()
+      this._node.state.transition('follower')
     }
 
     this._node.network.reply(
@@ -142,6 +149,7 @@ class Base extends EventEmitter {
     }
 
     if (termIsAcceptable) {
+      this._resetElectionTimeout()
       debug('%s: term is acceptable', this._node.state.id)
       const entry = this._node.log.atLogIndex(message.params.prevLogIndex)
       debug('%s: entry at previous log index: %j', this._node.state.id, entry)
@@ -193,8 +201,11 @@ class Base extends EventEmitter {
           reason
         }, done)
 
-      if (success) {
+      if (termIsAcceptable) {
         self._resetElectionTimeout()
+      }
+
+      if (success) {
         self._node.state.transition('follower')
       }
     }
@@ -202,6 +213,9 @@ class Base extends EventEmitter {
 
   _installSnapshotReceived (message, done) {
     debug('%s: _installSnapshotReceived %j', this._node.state.id, message)
+
+    this._resetElectionTimeout()
+
     const self = this
     const tasks = []
     const db = this._node.state.db.state
@@ -242,8 +256,13 @@ class Base extends EventEmitter {
           term: self._node.state.term()
         },
         cb)
+
+      this._resetElectionTimeout()
     }
   }
+
+  join () {}
+  leave () {}
 
 }
 

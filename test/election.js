@@ -13,7 +13,7 @@ const memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 1000
+const A_BIT = 2000
 
 describe('election', () => {
   let followers, leader
@@ -25,27 +25,26 @@ describe('election', () => {
   ]
 
   const nodes = nodeAddresses.map(address => new Node(address, {
-    db: memdown
+    db: memdown,
+    peers: nodeAddresses.filter(addr => addr !== address)
   }))
 
   before(done => {
     async.each(nodes, (node, cb) => node.start(cb), done)
   })
 
+  before(done => {
+    nodes.forEach(node => node.on('warning', (err) => {
+      throw err
+    }))
+    done()
+  })
+
   after(done => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  it('can join another node', done => {
-    nodes.forEach((node, index) => {
-      const selfAddress = nodeAddresses[index]
-      const peers = nodeAddresses.filter(address => address !== selfAddress)
-      peers.forEach(peer => node.join(peer))
-    })
-    done()
-  })
-
-  it('waits a bit', done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: 3000}, done => setTimeout(done, A_BIT))
 
   it('one of the nodes gets elected', done => {
     leader = nodes.find(node => node.is('leader'))
@@ -56,7 +55,7 @@ describe('election', () => {
     done()
   })
 
-  it('waits a bit', done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: 3000}, done => setTimeout(done, A_BIT))
 
   it('still the same', done => {
     const followers2 = nodes.filter(node => node.is('follower'))

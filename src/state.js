@@ -16,13 +16,13 @@ class State extends EventEmitter {
   constructor (id, dispatcher, db, options) {
     super()
     this.id = id
+
     this._options = options
     this._dispatcher = dispatcher
     this._db = db
     this.passive = this._outStream()
     this.active = this._outStream()
     this._replies = this._replyStream()
-    this._peers = []
     this._stateName = undefined
 
     this._handlingRequest = false // to detect race conditions
@@ -36,6 +36,7 @@ class State extends EventEmitter {
         applyEntries: this._applyEntries.bind(this)
       },
       options)
+    this._peers = options.peers
 
     this._stateServices = {
       id,
@@ -59,7 +60,8 @@ class State extends EventEmitter {
 
     this._dbServices = {
       snapshot: this._getPersistedState.bind(this),
-      logEntries: this._getLogEntries.bind(this)
+      logEntries: this._getLogEntries.bind(this),
+      applyTopologyCommand: this._applyTopologyCommand.bind(this)
     }
 
     this._transition('follower')
@@ -76,8 +78,12 @@ class State extends EventEmitter {
   // -------------
   // Peers
 
-  join (address) {
-    this._ensurePeer(address)
+  join (address, done) {
+    this.command({type: 'join', peer: address}, {}, done)
+  }
+
+  leave (address, done) {
+    this.command({type: 'leave', peer: address}, {}, done)
   }
 
   _ensurePeer (address) {
@@ -98,6 +104,7 @@ class State extends EventEmitter {
   // Internal state
 
   _transition (state, force) {
+    debug('%s: asked to transition to state %s', this.id, state)
     if (force || state !== this._stateName) {
       debug('node %s is transitioning to state %s', this.id, state)
       const oldState = this._state
@@ -135,6 +142,9 @@ class State extends EventEmitter {
   }
 
   _setTerm (term) {
+    if (typeof term !== 'number') {
+      throw new Error('term needs to be a number and was %j', term)
+    }
     this._votedFor = null
     this._term = term
     this._log.setTerm(term)
@@ -155,9 +165,11 @@ class State extends EventEmitter {
 
   _rpc (options, callback) {
     debug('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
+    console.log('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
     if (typeof options.to !== 'string') {
       throw new Error('need options.to to be a string')
     }
+    const term = this._term
     const self = this
     const done = once(callback)
     const id = uuid()
@@ -172,22 +184,36 @@ class State extends EventEmitter {
       params: options.params
     })
 
+    return cancel
+
     function onReplyData (message) {
       debug('%s: reply data: %j', self.id, message)
-      if (message.type === 'reply' && message.from === options.to && message.id === id) {
+      console.log('%s: reply data: %j', self.id, message)
+      if (self._term > term) {
+        onTimeout()
+      } else if (
+        message.type === 'reply' &&
+        message.from === options.to &&
+        message.id === id)
+      {
         debug('%s: this is a reply I was expecting: %j', self.id, message)
-        self._replies.removeListener('data', onReplyData)
-        timers.clearTimeout(timeout)
+        console.log('%s: this is a reply I was expecting: %j', self.id, message)
+        cancel()
         done(null, message)
       }
     }
 
     function onTimeout () {
       debug('RPC timeout')
-      self._replies.removeListener('data', onReplyData)
+      cancel()
       const err = new Error('timeout RPC to ' + options.to)
       err.code = 'ETIMEOUT'
       done(err)
+    }
+
+    function cancel () {
+      self._replies.removeListener('data', onReplyData)
+      timers.clearTimeout(timeout)
     }
   }
 
@@ -312,13 +338,7 @@ class State extends EventEmitter {
         if (err) {
           done(err)
         } else {
-          if (command.type === 'join') {
-            this._peers.push(command.peer)
-          } else if (command.type === 'leave') {
-            this._peers = this._peers.filter(peer => peer !== command.peer)
-          } else {
-            this._db.command(this._dbServices, command, options, done)
-          }
+          this._db.command(this._dbServices, command, options, done)
         }
       })
     }
@@ -341,7 +361,8 @@ class State extends EventEmitter {
   _getPersistedState () {
     return {
       currentTerm: this._term,
-      votedFor: this._votedFor
+      votedFor: this._votedFor,
+      peers: this._peers
     }
   }
 
@@ -350,7 +371,23 @@ class State extends EventEmitter {
   }
 
   _applyEntries (entries, done) {
-    this._db.applyEntries(entries, done)
+    this._db.applyEntries(entries, this._applyTopologyCommands.bind(this), done)
+  }
+
+  _applyTopologyCommands(commands) {
+    commands.forEach(this._applyTopologyCommand.bind(this))
+  }
+
+  _applyTopologyCommand(command) {
+    if (command.type === 'join') {
+      if ((command.peer !== this.id) && (this._peers.indexOf(command.peer) === -1)) {
+        this._peers = this._peers.concat(command.peer)
+        this._state.join(command.peer)
+      }
+    } else if (command.type === 'leave') {
+      this._peers = this._peers.filter(peer => peer !== command.peer)
+      this._state.leave(command.peer)
+    }
   }
 
   persist (done) {

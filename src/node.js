@@ -18,7 +18,8 @@ const Iterator = require('./iterator')
 
 const defaultOptions = {
   server: {},
-  rpcTimeoutMS: 5000
+  rpcTimeoutMS: 5000,
+  peers: []
 }
 
 class Node extends EventEmitter {
@@ -38,16 +39,36 @@ class Node extends EventEmitter {
 
     this._commandQueue = new CommandQueue()
     this._commands = new Commands(this.id, this._commandQueue, this._state)
+
+    this._startState = 'stopped'
   }
 
   start (cb) {
-    debug('starting node %s', this.id)
-    async.parallel(
-      [
-        this._startNetwork.bind(this),
-        this._loadPersistedState.bind(this)
-      ],
-      cb)
+    debug('%s: start state is %s', this.id, this._startState)
+    if (this._startState === 'stopped') {
+      this._startState = 'starting'
+      debug('starting node %s', this.id)
+      async.parallel(
+        [
+          this._startNetwork.bind(this),
+          this._loadPersistedState.bind(this)
+        ],
+        err => {
+          debug('%s: done starting', this.id)
+          if (err) {
+            this._startState = 'stopped'
+          } else {
+            this._startState = 'started'
+            this.emit('started')
+          }
+          cb(err)
+        })
+
+    } else if (this._startState === 'started') {
+      process.nextTick(cb)
+    } else if (this._startState === 'starting') {
+      this.once('started', cb)
+    }
   }
 
   _startNetwork (cb) {
@@ -91,6 +112,9 @@ class Node extends EventEmitter {
         if (results.meta.votedFor) {
           this._state._setVotedFor(results.meta.votedFor)
         }
+        if (results.meta.peers) {
+          this._state._peers = peers
+        }
         cb()
       }
     })
@@ -112,8 +136,26 @@ class Node extends EventEmitter {
     delete this._network
   }
 
-  join (address) {
-    this._state.join(address)
+  join (address, done) {
+    debug('%s: joining %s', this.id, address)
+    this.start(err=> {
+      if (err) {
+        done(err)
+      } else {
+        this._state.join(address, done)
+      }
+    })
+  }
+
+  leave (address, done) {
+    debug('%s: leaving %s', this.id, address)
+    this.start(err=> {
+      if (err) {
+        done(err)
+      } else {
+        this._state.leave(address, done)
+      }
+    })
   }
 
   command (command, options, callback) {

@@ -5,8 +5,10 @@ const Base = require('./base')
 
 class Candidate extends Base {
 
-  _start () {
+  start () {
+    debug('%s is candidate', this._node.state.id)
     this._gatherVotes()
+    super.start()
   }
 
   _gatherVotes () {

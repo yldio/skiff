@@ -48,7 +48,8 @@ class DB {
       meta: cb => {
         async.parallel({
           currentTerm: cb => this.meta.get('currentTerm', notFoundIsOk(cb)),
-          votedFor: cb => this.meta.get('votedFor', notFoundIsOk(cb))
+          votedFor: cb => this.meta.get('votedFor', notFoundIsOk(cb)),
+          peers: cb => this.meta.get('peers', notFoundIsOk(cb))
         }, cb)
       }
     }, done)
@@ -97,15 +98,23 @@ class DB {
         done(err)
       } else {
         const isQuery = (command.type === 'get')
+        const isTopology = (command.type === 'join' || command.type === 'leave')
         debug('%s: applying command %j', this.id, command)
-        if (!isQuery) {
+        if (!isQuery && !isTopology) {
           batch = batch.concat(this._commandToBatch(command))
         }
         debug('%s: going to apply batch: %j', this.id, batch)
         this.db.batch(batch, err => {
           debug('%s: applied batch command err = %j', this.id, err)
-          if (!err && isQuery) {
-            this.state.get(command.key, done)
+          if (! err) {
+            if (isQuery) {
+              this.state.get(command.key, done)
+            } else if (isTopology) {
+              state.applyTopologyCommand(command)
+              done()
+            } else {
+              done()
+            }
           } else {
             done(err)
           }
@@ -114,10 +123,27 @@ class DB {
     })
   }
 
-  applyEntries (entries, done) {
-    const commands = entries.map(entry => Object.assign({}, entry.c, { prefix: this.state }))
-    debug('%s: applying entries %j', this.id, commands)
-    this.db.batch(commands, done)
+  applyEntries (entries, applyTopology, done) {
+    if (entries.length) {
+      debug('%s: applying entries %j', this.id, entries)
+    }
+
+    const dbCommands = []
+    const topologyCommands = []
+    entries.forEach(command => {
+      if (command.type === 'join' || command.type === 'leave') {
+        topologyCommands.push(command)
+      } else {
+        dbCommands.push(command)
+      }
+    })
+    if (topologyCommands.length) {
+      applyTopology(topologyCommands)
+    }
+    this.db.batch(
+      dbCommands.map(
+        entry => Object.assign({}, entry.c, { prefix: this.state })),
+      done)
   }
 
   _getPersistBatch (state, done) {

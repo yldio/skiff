@@ -24,7 +24,10 @@ describe('leveldown', () => {
   ]
 
   const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, { db: Memdown }))
+    new Node(address, {
+      db: Memdown,
+      peers: nodeAddresses.filter(addr => addr !== address)
+    }))
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))
@@ -37,15 +40,6 @@ describe('leveldown', () => {
 
   after(done => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
-  })
-
-  before(done => {
-    nodes.forEach((node, index) => {
-      const selfAddress = nodeAddresses[index]
-      const peers = nodeAddresses.filter(address => address !== selfAddress)
-      peers.forEach(peer => node.join(peer))
-    })
-    done()
   })
 
   before(done => setTimeout(done, A_BIT))

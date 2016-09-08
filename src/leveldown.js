@@ -1,5 +1,6 @@
 'use strict'
 
+const debug = require('debug')('skiff.leveldown')
 const AbstractLevelDown = require('abstract-leveldown').AbstractLevelDOWN
 
 class LevelDown extends AbstractLevelDown {
@@ -14,18 +15,22 @@ class LevelDown extends AbstractLevelDown {
   }
 
   _get (key, options, callback) {
+    debug('get %j', key)
     this._node.command({type: 'get', key}, options, callback)
   }
 
   _put (key, value, options, callback) {
+    debug('put %j, %j', key, value)
     this._node.command({type: 'put', key, value}, options, callback)
   }
 
   _del (key, options, callback) {
+    debug('del %j', key)
     this._node.command({type: 'del', key}, options, callback)
   }
 
   _batch (array, options, callback) {
+    debug('batch %j', array)
     this._node.command(array, options, callback)
   }
 

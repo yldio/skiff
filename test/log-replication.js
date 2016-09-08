@@ -12,7 +12,7 @@ const memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 1000
+const A_BIT = 2000
 
 describe('log replication', () => {
   let follower, leader
@@ -23,7 +23,10 @@ describe('log replication', () => {
   ]
 
   const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, { db: memdown }))
+    new Node(address, {
+      db: memdown,
+      peers: nodeAddresses.filter(addr => addr !== address)
+    }))
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))
@@ -38,16 +41,7 @@ describe('log replication', () => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  before(done => {
-    nodes.forEach((node, index) => {
-      const selfAddress = nodeAddresses[index]
-      const peers = nodeAddresses.filter(address => address !== selfAddress)
-      peers.forEach(peer => node.join(peer))
-    })
-    done()
-  })
-
-  before(done => setTimeout(done, A_BIT))
+  before({timeout: 3000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     leader = nodes.find(node => node.is('leader'))
@@ -69,7 +63,7 @@ describe('log replication', () => {
 
   it('leader accepts command', done => {
     leader.command({type: 'put', key: 'a', value: '1'}, err => {
-      expect(err).to.be.null()
+      expect(err).to.be.undefined()
       done()
     })
   })
@@ -82,5 +76,5 @@ describe('log replication', () => {
     })
   })
 
-  it('waits a bit', done => setTimeout(done, A_BIT))
+  before({timeout: 3000}, done => setTimeout(done, A_BIT))
 })

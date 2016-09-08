@@ -12,7 +12,7 @@ const memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 1000
+const A_BIT = 2000
 
 describe('log replication catchup', () => {
   let follower, leader
@@ -25,7 +25,10 @@ describe('log replication catchup', () => {
   ]
 
   const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, { db: memdown }))
+    new Node(address, {
+      db: memdown,
+      peers: nodeAddresses.filter(addr => addr !== address)
+    }))
 
   const newAddress = '/ip4/127.0.0.1/tcp/9293'
 
@@ -39,23 +42,10 @@ describe('log replication catchup', () => {
   })
 
   after(done => {
-    async.each(nodes, (node, cb) => node.stop(cb), done)
+    async.each(nodes.concat(newNode), (node, cb) => node.stop(cb), done)
   })
 
-  after(done => {
-    newNode.stop(done)
-  })
-
-  before(done => {
-    nodes.forEach((node, index) => {
-      const selfAddress = nodeAddresses[index]
-      const peers = nodeAddresses.filter(address => address !== selfAddress)
-      peers.forEach(peer => node.join(peer))
-    })
-    done()
-  })
-
-  before(done => setTimeout(done, A_BIT))
+  before({timeout: 3000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     leader = nodes.find(node => node.is('leader'))
@@ -66,26 +56,52 @@ describe('log replication catchup', () => {
     done()
   })
 
+  before(done => {
+    console.log('haz leader', !!leader)
+    done()
+  })
+
   before(done => leader.command({type: 'put', key: 'a', value: '1'}, done))
 
   before(done => leader.command({type: 'put', key: 'b', value: '2'}, done))
 
-  before(done => setTimeout(done, A_BIT))
+  before(done => {
+    console.log('YAy 1')
+    done()
+  })
+
+  before({timeout: 3000}, done => setTimeout(done, A_BIT))
 
   before(done => {
-    newNode = new Node(newAddress, { db: memdown })
+    console.log('YAy 2')
+    done()
+  })
+
+  before(done => {
+    newNode = new Node(newAddress, {
+      db: memdown,
+      peers: nodeAddresses
+    })
     newNode.start(done)
   })
 
   before(done => {
-    nodes.forEach(node => {
-      newNode.join(node.id)
-      node.join(newAddress)
-    })
+    console.log('YAy 3\n\n\n\n\n\n')
     done()
   })
 
-  before(done => setTimeout(done, A_BIT))
+  before(done => {
+    leader.join(newAddress, done)
+  })
+
+  before(done => {
+    console.log('YAy 4')
+    done()
+  })
+
+
+
+  before({timeout: 3000}, done => setTimeout(done, A_BIT))
 
   it('new node gets updated', done => {
     const db = newNode._db.db
