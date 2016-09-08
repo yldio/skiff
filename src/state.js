@@ -187,13 +187,14 @@ class State extends EventEmitter {
 
     function onReplyData (message) {
       debug('%s: reply data: %j', self.id, message)
-      if (self._term > term) {
-        onTimeout()
-      } else if (
+      const accept = (
         message.type === 'reply' &&
         message.from === options.to &&
         message.id === id)
-      {
+
+      if (self._term > term) {
+        onTimeout()
+      } else if (accept) {
         debug('%s: this is a reply I was expecting: %j', self.id, message)
         cancel()
         done(null, message)

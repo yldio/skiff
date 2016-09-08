@@ -63,7 +63,6 @@ class Node extends EventEmitter {
           }
           cb(err)
         })
-
     } else if (this._startState === 'started') {
       process.nextTick(cb)
     } else if (this._startState === 'starting') {
@@ -138,7 +137,7 @@ class Node extends EventEmitter {
 
   join (address, done) {
     debug('%s: joining %s', this.id, address)
-    this.start(err=> {
+    this.start(err => {
       if (err) {
         done(err)
       } else {
@@ -149,7 +148,7 @@ class Node extends EventEmitter {
 
   leave (address, done) {
     debug('%s: leaving %s', this.id, address)
-    this.start(err=> {
+    this.start(err => {
       if (err) {
         done(err)
       } else {

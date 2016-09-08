@@ -106,7 +106,7 @@ class DB {
         debug('%s: going to apply batch: %j', this.id, batch)
         this.db.batch(batch, err => {
           debug('%s: applied batch command err = %j', this.id, err)
-          if (! err) {
+          if (!err) {
             if (isQuery) {
               this.state.get(command.key, done)
             } else if (isTopology) {
