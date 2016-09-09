@@ -4,7 +4,7 @@
   "description": "Raft for Node.js",
   "main": "src/node.js",
   "scripts": {
-    "test": "lab -vl",
+    "test": "lab -vl test/*.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
     "style": "eslint src"
   },
@@ -34,7 +34,8 @@
     "lab": "^10.9.0",
     "left-pad": "^1.1.1",
     "memdown": "^1.2.0",
-    "pre-commit": "^1.1.3"
+    "pre-commit": "^1.1.3",
+    "split": "^1.0.0"
   },
   "pre-commit": [
     "style",
