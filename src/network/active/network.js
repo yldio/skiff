@@ -30,6 +30,7 @@ class Network extends Duplex {
     const peer = this._peers[address]
     if (peer) {
       peer.end()
+      delete this._peers[address]
     }
   }
 

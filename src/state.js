@@ -387,6 +387,7 @@ class State extends EventEmitter {
     } else if (command.type === 'leave') {
       this._peers = this._peers.filter(peer => peer !== command.peer)
       this._state.leave(command.peer)
+      this._network.active.disconnect(command.peer)
     }
   }
 
