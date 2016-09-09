@@ -15,7 +15,8 @@
   "keywords": [
     "raft",
     "distributed",
-    "consensus"
+    "consensus",
+    "leveldb"
   ],
   "author": "pgte",
   "license": "ISC",
