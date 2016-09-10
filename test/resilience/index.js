@@ -10,6 +10,7 @@ const expect = require('code').expect
 const timers = require('timers')
 
 const Setup = require('./setup')
+const Client = require('./client')
 
 describe('resilience', () => {
   const setup = Setup()
@@ -17,6 +18,7 @@ describe('resilience', () => {
   after(setup.after)
 
   it ('works', {timeout: 61000}, done => {
-    timers.setTimeout(done, 60000)
+    const client = Client(setup.addresses)
+    client(done)
   })
 })

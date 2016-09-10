@@ -12,12 +12,13 @@ const defaultOptions = {
 }
 
 function Setup(_options) {
-  let killer, liveNodes, allAddresses
+  let killer, liveNodes
   const deadNodes = []
+  const allAddresses = []
   const options = Object.assign({}, defaultOptions, _options)
   const maxDeadNodes = Math.ceil(options.nodeCount / 2) - 1
 
-  return { before, after}
+  return { before, after, addresses: allAddresses}
 
   function before (done) {
     async.series([createNodes, startNodes, startKiller], done)
@@ -30,10 +31,10 @@ function Setup(_options) {
   function createNodes (done) {
     const ports = []
     for (var i=0; i < options.nodeCount ; i++) {
-      ports.push(9590 + i*2)
+      ports.push(5300 + i*2)
     }
 
-    allAddresses = ports.map(portToAddress)
+    ports.map(portToAddress).forEach(address => allAddresses.push(address))
 
     liveNodes = ports.map(port => new Node(port, {
       peers: ports.filter(p => p !== port).map(portToAddress)

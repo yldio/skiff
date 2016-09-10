@@ -25,7 +25,8 @@ const defaultOptions = {
 const importantStateEvents = [
   'warning',
   'new state',
-  'election timeout'
+  'election timeout',
+  'leader'
 ]
 
 class Node extends EventEmitter {

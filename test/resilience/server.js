@@ -3,6 +3,7 @@
 const http = require('http')
 const async = require('async')
 const Memdown = require('memdown')
+const Multiaddr = require('multiaddr')
 const Node = require('../../')
 
 const port = Number(process.argv[2])
@@ -15,40 +16,32 @@ const node = new Node(address, options)
 const db = node.leveldown()
 
 node.on('new state', state => console.log('new state: %s', state))
-node.on('election timeout', () => console.log('election timeout'))
+// node.on('election timeout', () => console.log('election timeout'))
 
 const server = http.createServer(function(req, res) {
-  if (req.method === 'POST') {
-    console.log(req.path)
+  const key = req.url.substring(1)
+  if (req.method === 'PUT') {
+    let body = ''
     req.setEncoding('utf8')
     req
       .on('data', d => body += d)
       .once('end', () => {
-        handleWriteRequest(req.path, Number(body), res)
+        handleWriteRequest(key, Number(body), res)
       })
-  } else if (method === 'GET') {
-    handleReadRequest(req.path, res)
+  } else if (req.method === 'GET') {
+    handleReadRequest(key, res)
+  } else {
+    res.statusCode = 404
+    res.end(encodeError(new Error('Not found')))
   }
 })
 
 function handleWriteRequest(key, value, res) {
-  db.put(key, value, err => {
-    if (err) {
-      res.end(JSON.stringify({error: err}))
-    } else {
-      res.end(JSON.stringify({ok: true}))
-    }
-  })
+  db.put(key, value, handlingError(key, res, 201))
 }
 
 function handleReadRequest (key, res) {
-  db.get(key, (err, value) => {
-    if (err) {
-      res.end(JSON.stringify({error: err}))
-    } else {
-      res.end(JSON.stringify({ok: true, value}))
-    }
-  })
+  db.get(key, handlingError(key, res))
 }
 
 async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], err => {
@@ -58,3 +51,27 @@ async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], er
     console.log(`server ${address} started with options %j`, options)
   }
 })
+
+function encodeError (err) {
+  return JSON.stringify({ error: { message: err.message, code: err.code, leader: err.leader }})
+}
+function handlingError (key, res, code) {
+  return function (err, value) {
+    if (err) {
+      if (err.message.match(/not found/)) {
+        res.statusCode = code || 200
+        res.end(JSON.stringify({ok: true}))
+      } else {
+        res.statusCode = 500
+        res.end(encodeError(err))
+      }
+    } else {
+      res.statusCode = code || 200
+      if (value) {
+        res.end(value.toString())
+      } else {
+        res.end(JSON.stringify({ok: true}))
+      }
+    }
+  }
+}
