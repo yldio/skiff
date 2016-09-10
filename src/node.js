@@ -22,6 +22,12 @@ const defaultOptions = {
   peers: []
 }
 
+const importantStateEvents = [
+  'warning',
+  'new state',
+  'election timeout'
+]
+
 class Node extends EventEmitter {
 
   constructor (id, _options) {
@@ -35,7 +41,11 @@ class Node extends EventEmitter {
     this._dispatcher = new IncomingDispatcher({id})
 
     this._state = new State(this.id, this._dispatcher, this._db, this._options)
-    this._state.on('warning', warn => this.emit('warning', warn))
+
+    // propagate important events
+    importantStateEvents.forEach(event => {
+      this._state.on(event, arg => this.emit(event, arg))
+    })
 
     this._commandQueue = new CommandQueue()
     this._commands = new Commands(this.id, this._commandQueue, this._state)

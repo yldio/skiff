@@ -7,6 +7,8 @@ const after = lab.after
 const it = lab.it
 const expect = require('code').expect
 
+const timers = require('timers')
+
 const Setup = require('./setup')
 
 describe('resilience', () => {
@@ -14,7 +16,7 @@ describe('resilience', () => {
   before(setup.before)
   after(setup.after)
 
-  it ('works', done => {
-    done()
+  it ('works', {timeout: 61000}, done => {
+    timers.setTimeout(done, 60000)
   })
 })

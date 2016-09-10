@@ -14,6 +14,9 @@ const options = Object.assign({}, JSON.parse(process.argv[3]), {
 const node = new Node(address, options)
 const db = node.leveldown()
 
+node.on('new state', state => console.log('new state: %s', state))
+node.on('election timeout', () => console.log('election timeout'))
+
 const server = http.createServer(function(req, res) {
   if (req.method === 'POST') {
     console.log(req.path)
@@ -52,6 +55,6 @@ async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], er
   if (err) {
     throw err
   } else {
-    console.log(`server ${address} started`)
+    console.log(`server ${address} started with options %j`, options)
   }
 })

@@ -53,6 +53,7 @@ class Base extends EventEmitter {
 
   _onElectionTimeout () {
     debug('%s: election timeout', this._node.state.id)
+    this.emit('election timeout')
     this._electionTimeout = undefined
     if (this._node.network.peers.length) {
       this._node.state.incrementTerm()

@@ -12,7 +12,7 @@ const defaultOptions = {
 }
 
 function Setup(_options) {
-  let killer, liveNodes
+  let killer, liveNodes, allAddresses
   const deadNodes = []
   const options = Object.assign({}, defaultOptions, _options)
   const maxDeadNodes = Math.ceil(options.nodeCount / 2) - 1
@@ -33,8 +33,10 @@ function Setup(_options) {
       ports.push(9590 + i*2)
     }
 
+    allAddresses = ports.map(portToAddress)
+
     liveNodes = ports.map(port => new Node(port, {
-      peers: ports.filter(p => p !== port).map(port => `/ip4/127.0.0.1/tcp/${port}`)
+      peers: ports.filter(p => p !== port).map(portToAddress)
     }))
 
     done()
@@ -54,11 +56,13 @@ function Setup(_options) {
         }
       })
     }, options.killerIntervalMS)
-    done()
+    if (done) {
+      done()
+    }
   }
 
   function killAndRevive (cb) {
-    if (deadNodes.length < this._options.maxDeadNodes) {
+    if (deadNodes.length < maxDeadNodes) {
       killOne(cb)
     } else {
       reviveOne(cb)
@@ -72,15 +76,15 @@ function Setup(_options) {
   }
 
   function reviveOne (cb) {
-    const address = randomLiveNode()
+    const address = randomDeadNode()
     const node = new Node(address, {
-      peers: ports.filter(addr => addr !== address)
+      peers: allAddresses.filter(addr => addr !== address)
     })
     liveNodes.push(node)
     node.start(cb)
   }
 
-  function randomLiveNode () {
+  function popRandomLiveNode () {
     const index = Math.floor(Math.random() * liveNodes.length)
     const node = liveNodes[index]
     liveNodes.splice(index, 1)
@@ -102,6 +106,10 @@ function Setup(_options) {
   function stopNodes (done) {
     async.each(liveNodes, (node, cb) => node.stop(cb), done)
   }
+}
+
+function portToAddress (port) {
+  return `/ip4/127.0.0.1/tcp/${port}`
 }
 
 module.exports = Setup

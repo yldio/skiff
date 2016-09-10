@@ -22,7 +22,10 @@ class Node {
     channels.forEach(channel => {
       this._child[channel].pipe(split())
         .on('data', line => {
-          process[channel].write(`${this._address}: ${line}\n`)
+          line = line.trim()
+          if (line) {
+            process[channel].write(`${this._address}: ${line}\n`)
+          }
         })
     })
 
@@ -46,7 +49,7 @@ class Node {
     this._child.once('exit', () => {
       done()
     })
-    this._child.kill('SIGTERM')
+    this._child.kill()
   }
 }
 

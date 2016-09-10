@@ -11,6 +11,8 @@ const assert = require('assert')
 const States = require('./states')
 const Log = require('./log')
 
+const importantStateEvents = ['election timeout']
+
 class State extends EventEmitter {
 
   constructor (id, dispatcher, db, options) {
@@ -36,7 +38,7 @@ class State extends EventEmitter {
         applyEntries: this._applyEntries.bind(this)
       },
       options)
-    this._peers = options.peers
+    this._peers = options.peers.filter(address => address !== this.id)
 
     this._stateServices = {
       id,
@@ -118,12 +120,17 @@ class State extends EventEmitter {
         network: this._networkingServices,
         log: this._log
       }, this._options)
+
+      importantStateEvents.forEach(event => {
+        this._state.on(event, arg => this.emit(event, arg))
+      })
       this._stateName = state
       this._state.start()
 
       this.emit('new state', state)
       this.emit(state)
     }
+    this._votedFor = null
   }
 
   _getStateName () {
@@ -234,6 +241,11 @@ class State extends EventEmitter {
     } else {
       debug('%s: got message from dispatcher: %j', this.id, message)
 
+      if (message.from === this.id) {
+        this.emit('error', new Error(`Got message from self: ${JSON.stringify(message)}`))
+        return
+      }
+
       if (message.params) {
         if (message.params.term < this._term) {
           // discard message if term is greater than current term
@@ -247,7 +259,7 @@ class State extends EventEmitter {
         }
 
         debug('%s: current term: %d', this.id, this._term)
-        if (message.params.term > this._term) {
+        if ((message.params.term > this._term)) {
           debug('%s is going to transition to state follower because of outdated term', this.id)
           this._setTerm(message.params.term)
           this._transition('follower')
