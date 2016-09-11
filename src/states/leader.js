@@ -11,6 +11,7 @@ class Leader extends Base {
   constructor (node, _options) {
     const options = Object.assign({}, _options || {}, { electionTimeout: false })
     super(node, options)
+    this.name = 'leader'
   }
 
   start () {
@@ -71,6 +72,7 @@ class Leader extends Base {
     const log = this._node.log
     const lastEntry = log.head()
     const cancels = []
+    let unanswered = consensus.slice()
 
     consensus
       .map(address => {
@@ -83,6 +85,7 @@ class Leader extends Base {
       .forEach(peer => {
         const cancel = peer.appendEntries((err, reply) => {
           debug('append entries from %s replied', peer._address, err, reply)
+          unanswered = unanswered.filter(addr => peer._address !== addr)
           voteCount++
           if (!err && reply && reply.success) {
             commitCount++
@@ -108,7 +111,7 @@ class Leader extends Base {
               done()
             }
           } else {
-            const err = new Error('No majority reached')
+            const err = new Error(`No majority reached in leader ${self._node.state.id}, ${unanswered.join(',')} didn't answer`)
             err.code = 'ENOMAJORITY'
             done(err)
           }
@@ -132,6 +135,5 @@ function noop () {}
 
 function isMajority (consensus, count) {
   const quorum = Math.ceil((consensus.length + 1) / 2)
-  const isMajority = consensus.length && count >= quorum
-  return isMajority
+  return consensus.length && count >= quorum
 }

@@ -108,6 +108,10 @@ class Node extends EventEmitter {
 
     this._state.passive.pipe(this._network.passive, { end: false })
     this._state.active.pipe(this._network.active, { end: false })
+
+    this._network.active.on('connect', peer => {
+      this.emit('connect', peer)
+    })
   }
 
   _loadPersistedState (cb) {

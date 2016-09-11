@@ -61,6 +61,12 @@ class Network extends Duplex {
           debug('have message from peer: %j', message)
           this.push(message)
         })
+        .on('connect', () => {
+          this.emit('connect', address)
+        })
+        .on('disconnect', () => {
+          this.emit('disconnect', address)
+        })
     }
 
     return peer

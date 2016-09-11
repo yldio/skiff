@@ -165,7 +165,8 @@ class PeerLeader {
 
     this._installingSnapshot = true
 
-    const lastIncluded = this._node.state.log.lastAppliedEntry()
+    const lastIncludedIndex = this._node.state.log._lastLogIndex
+    const lastIncludedTerm = this._node.state.log._lastLogTerm
 
     const rs = this._node.state.db.state.createReadStream()
     const stream = rs.pipe(
@@ -185,8 +186,8 @@ class PeerLeader {
       const installSnapshotArgs = {
         term: self._node.state.term(),
         leaderId: self._node.id,
-        lastIncludedIndex: lastIncluded.i,
-        lastIncludedTerm: lastIncluded.t,
+        lastIncludedIndex,
+        lastIncludedTerm,
         offset,
         data: data.chunks,
         done: data.finished
@@ -207,8 +208,8 @@ class PeerLeader {
           } else {
             if (data.finished) {
               debug('%s: data finished, setting next index of %j to %d',
-                self._node.state.id, self._address, lastIncluded.i)
-              self._nextIndex = self._matchIndex = lastIncluded.i
+                self._node.state.id, self._address, lastIncludedIndex)
+              self._nextIndex = self._matchIndex = lastIncludedIndex
               done()
             } else {
               debug('resuming stream...')

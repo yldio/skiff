@@ -18,7 +18,7 @@ describe('resilience', () => {
   after(setup.after)
 
   it ('works', {timeout: 61000}, done => {
-    const client = Client(setup.addresses)
+    const client = Client(setup.addresses, 60000)
     client(done)
   })
 })

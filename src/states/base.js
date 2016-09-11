@@ -123,7 +123,8 @@ class Base extends EventEmitter {
     const votedFor = this._node.state.getVotedFor()
     const termIsAcceptable = (message.params.term >= currentTerm)
     const votedForIsAcceptable = !votedFor || (votedFor === message.from)
-    const logIndexIsAcceptable = message.params.lastLogIndex >= this._node.log._lastLogIndex
+    const logIndexIsAcceptable = (message.params.lastLogIndex >= this._node.log._lastLogIndex)
+
     const voteGranted = termIsAcceptable && votedForIsAcceptable && logIndexIsAcceptable
 
     if (!voteGranted) {

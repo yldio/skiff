@@ -17,6 +17,7 @@ function Setup(_options) {
   const allAddresses = []
   const options = Object.assign({}, defaultOptions, _options)
   const maxDeadNodes = Math.ceil(options.nodeCount / 2) - 1
+  let killing = true
 
   return { before, after, addresses: allAddresses}
 
@@ -63,7 +64,12 @@ function Setup(_options) {
   }
 
   function killAndRevive (cb) {
-    if (deadNodes.length < maxDeadNodes) {
+    if (deadNodes.length >= maxDeadNodes) {
+      killing = false
+    } else if (!deadNodes.length) {
+      killing = true
+    }
+    if (killing) {
       killOne(cb)
     } else {
       reviveOne(cb)

@@ -7,6 +7,7 @@ class Follower extends Base {
 
   start () {
     debug('%s is follower', this._node.state.id)
+    this.name = 'follower'
     super.start()
   }
 

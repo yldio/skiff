@@ -4,13 +4,14 @@ const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', '
 const Multiaddr = require('multiaddr')
 const wreck = require('wreck')
 const timers = require('timers')
+const once = require('once')
 
-const reqOptions = {
-  // redirects: 1
-}
+const reqOptions = {}
 
-function Client (nodes) {
+function Client (nodes, duration) {
 
+  let timeout
+  const started = Date.now()
   const endpoints = nodes.map(multiAddrToUrl)
 
   const values = {}
@@ -19,26 +20,36 @@ function Client (nodes) {
   }
   let leader = undefined
 
-  return function client (done) {
+  return function client (_done) {
+    const done = once(_done)
+    timeout = timers.setTimeout(done, duration)
     work(done)
   }
 
   function work (done) {
     makeOneRequest (err => {
       if (err) {
+        clearTimeout(timeout)
         done(err)
       } else {
-        work(done)
+        const elapsed = Date.now() - started
+        if (elapsed < duration) {
+          work(done)
+        } else {
+          clearTimeout(timeout)
+          done()
+        }
       }
     })
   }
 
   function makeOneRequest (done) {
-    if (Math.random() > 0.8) {
-      makeOnePutRequest(done)
-    } else {
-      makeOneGetRequest(done)
-    }
+    makeOnePutRequest(done)
+    // if (Math.random() > 0.8) {
+    //   makeOnePutRequest(done)
+    // } else {
+    //   makeOneGetRequest(done)
+    // }
   }
 
   function makeOnePutRequest (done) {
@@ -98,7 +109,11 @@ function Client (nodes) {
   function parsingWreckReply (expectedCode, retry, done) {
     return function (err, res, payload) {
       if (err) {
-        done(err)
+        if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') {
+          timers.setTimeout(retry, 1000)
+        } else {
+          done(err)
+        }
       } else {
         if (res.statusCode !== expectedCode) {
           let error
@@ -107,7 +122,7 @@ function Client (nodes) {
           } catch (er) {
             error = {}
           }
-          if (error && error.code === 'ENOTLEADER') {
+          if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY')) {
             if (error.leader) {
               leader = multiAddrToUrl(error.leader)
             } else {

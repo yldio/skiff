@@ -24,7 +24,7 @@ class Node {
         .on('data', line => {
           line = line.trim()
           if (line) {
-            process[channel].write(`${this._address}: ${line}\n`)
+            process[channel].write(`${this._address} (${this._child.pid}): ${line}\n`)
           }
         })
     })

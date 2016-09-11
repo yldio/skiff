@@ -7,6 +7,7 @@ class Candidate extends Base {
 
   start () {
     debug('%s is candidate', this._node.state.id)
+    this.name = 'candidate'
     this._gatherVotes()
     super.start()
   }

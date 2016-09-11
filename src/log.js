@@ -65,6 +65,13 @@ class Log {
     for (let i = 0; i < entries.length; i++) {
       this._entries.push(entries[i])
     }
+    const last = entries[entries.length - 1]
+    if (last) {
+      this._lastLogIndex = last.i
+      this._lastLogTerm = last.t
+    }
+
+    this._compact()
   }
 
   commit (index, done) {

@@ -21,7 +21,8 @@ const interestingEvents = [
 ]
 
 const reconnectOptions = {
-  immediate: true
+  immediate: true,
+  maxDelay: 5000
 }
 
 class Peer extends Duplex {
@@ -63,11 +64,14 @@ class Peer extends Duplex {
 
       peerRawConn.on('error', handlePeerError)
       fromPeer.on('error', handlePeerError)
+
+      this.emit('connect')
     })
     .on('error', handlePeerError)
     .on('disconnect', () => {
       debug('disconnected from %s', this._address)
       this._out = undefined
+      this.emit('disconnect')
     })
 
     interestingEvents.forEach((event) => {
