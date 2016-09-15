@@ -1,6 +1,7 @@
 'use strict'
 
-const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z']
+//const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z']
+const keys = ['a']
 const Multiaddr = require('multiaddr')
 const wreck = require('wreck')
 const timers = require('timers')
@@ -12,6 +13,10 @@ function Client (nodes, duration) {
 
   let timeout
   const started = Date.now()
+  const stats = {
+    writes: 0,
+    reads: 0
+  }
   const endpoints = nodes.map(multiAddrToUrl)
 
   const values = {}
@@ -21,9 +26,19 @@ function Client (nodes, duration) {
   let leader = undefined
 
   return function client (_done) {
-    const done = once(_done)
+    const done = once(callback)
     timeout = timers.setTimeout(done, duration)
     work(done)
+
+    function callback (err) {
+      if (err) {
+        console.log('stats: %j', stats)
+        console.log('values: %j', values)
+        _done(err)
+      } else {
+        _done(null, stats)
+      }
+    }
   }
 
   function work (done) {
@@ -44,12 +59,11 @@ function Client (nodes, duration) {
   }
 
   function makeOneRequest (done) {
-    makeOnePutRequest(done)
-    // if (Math.random() > 0.8) {
-    //   makeOnePutRequest(done)
-    // } else {
-    //   makeOneGetRequest(done)
-    // }
+    if (Math.random() > 0.8) {
+      makeOnePutRequest(done)
+    } else {
+      makeOneGetRequest(done)
+    }
   }
 
   function makeOnePutRequest (done) {
@@ -63,7 +77,14 @@ function Client (nodes, duration) {
     function tryPut () {
       const endpoint = pickEndpoint()
       const options = Object.assign({}, reqOptions, {payload: value.toString()})
-      wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(201, tryPut, done))
+      wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(201, tryPut, err => {
+        if (err) {
+          done(err)
+        } else {
+          stats.writes ++
+          done()
+        }
+      }))
     }
   }
 
@@ -79,9 +100,10 @@ function Client (nodes, duration) {
         if (err) {
           done(err)
         } else {
+          stats.reads ++
           const value = Number(payload) || 0
           if (value !== expectedValue) {
-            done(new Error(`GET request returned unexpected value for key ${key}. Expected ${expectedValue} and returned ${value}`))
+            done(new Error(`GET request to ${endpoint} returned unexpected value for key ${key}. Expected ${expectedValue} and returned ${value}`))
           } else {
             done()
           }

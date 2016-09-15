@@ -8,8 +8,11 @@ class Candidate extends Base {
   start () {
     debug('%s is candidate', this._node.state.id)
     this.name = 'candidate'
-    this._gatherVotes()
     super.start()
+    this._node.state.incrementTerm()
+    // vote for self
+    this._node.state.setVotedFor(this._node.state.id)
+    process.nextTick(this._gatherVotes.bind(this))
   }
 
   _gatherVotes () {
@@ -17,10 +20,8 @@ class Candidate extends Base {
     let votedForMe = 1
     let voteCount = 1
 
-    this._node.state.setVotedFor(this._node.state.id)
-
     this._node.network.peers.forEach(peer => {
-      debug('requesting vote from %s', peer)
+      debug('candidate requesting vote from %s', peer)
       const requestVoteArgs = {
         term: this._node.state.term(),
         candidateId: this._node.state.id,

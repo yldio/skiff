@@ -9,6 +9,8 @@ const Leveldown = require('leveldown')
 const Levelup = require('levelup')
 const clearDB = require('./lib/clear-db')
 
+const ALLOWED_TYPES = ['put', 'del']
+
 const defaultDBOptions = {
   keyEncoding: 'ascii',
   valueEncoding: 'json'
@@ -140,10 +142,17 @@ class DB {
     if (topologyCommands.length) {
       applyTopology(topologyCommands)
     }
-    this.db.batch(
-      dbCommands.map(
-        entry => Object.assign({}, entry.c, { prefix: this.state })),
-      done)
+
+    const batch = dbCommands
+      .filter(entry => ALLOWED_TYPES.indexOf(entry.type) >= 0)
+      .map(entry => Object.assign(entry, { prefix: this.state }))
+    if (batch.length) {
+      this.db.batch(
+        batch,
+        done)
+    } else {
+      process.nextTick(done)
+    }
   }
 
   _getPersistBatch (state, done) {

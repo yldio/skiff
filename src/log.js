@@ -1,6 +1,7 @@
 'use strict'
 
 const debug = require('debug')('skiff.log')
+const assert = require('assert')
 
 const defaultOptions = {
   minLogRetention: 1000
@@ -85,6 +86,7 @@ class Log {
     this._commitIndex = index
 
     const entriesToApply = this.entriesFromTo(this._lastApplied + 1, this._commitIndex)
+      .map(entry => entry.c)
     this._node.applyEntries(entriesToApply, (err) => {
       if (err) {
         done(err)
@@ -138,7 +140,12 @@ class Log {
 
   entriesFromTo (from, to) {
     const pFrom = this._physicalIndexFor(from)
-    return this._entries.slice(pFrom, (to - from) + 1)
+    const entries = this._entries.slice(pFrom, pFrom + to - from + 1)
+    if (entries.length) {
+      assert(entries[0].i === from)
+      assert(entries[entries.length - 1].i === to)
+    }
+    return entries
   }
 
   _physicalIndexFor (index) {

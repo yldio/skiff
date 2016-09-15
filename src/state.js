@@ -130,7 +130,6 @@ class State extends EventEmitter {
       this.emit('new state', state)
       this.emit(state)
     }
-    this._votedFor = null
   }
 
   _getStateName () {
@@ -259,7 +258,8 @@ class State extends EventEmitter {
         }
 
         debug('%s: current term: %d', this.id, this._term)
-        if ((message.params.term > this._term)) {
+
+        if (message.params.term > this._term) {
           debug('%s is going to transition to state follower because of outdated term', this.id)
           this._setTerm(message.params.term)
           this._transition('follower')

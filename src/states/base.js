@@ -56,7 +56,6 @@ class Base extends EventEmitter {
     this.emit('election timeout')
     this._electionTimeout = undefined
     if (this._node.network.peers.length) {
-      this._node.state.incrementTerm()
       this._node.state.transition('candidate', true)
     }
   }
@@ -98,6 +97,7 @@ class Base extends EventEmitter {
 
   _requestVoteReceived (message, done) {
     debug('%s: request vote received: %j', this._node.state.id, message)
+
     const voteGranted = this._perhapsGrantVote(message)
 
     if (voteGranted) {
@@ -122,7 +122,7 @@ class Base extends EventEmitter {
     debug('%s: current term is: %d', this._node.state.id, currentTerm)
     const votedFor = this._node.state.getVotedFor()
     const termIsAcceptable = (message.params.term >= currentTerm)
-    const votedForIsAcceptable = !votedFor || (votedFor === message.from)
+    const votedForIsAcceptable = (currentTerm < message.params.term) || !votedFor || (votedFor === message.from)
     const logIndexIsAcceptable = (message.params.lastLogIndex >= this._node.log._lastLogIndex)
 
     const voteGranted = termIsAcceptable && votedForIsAcceptable && logIndexIsAcceptable

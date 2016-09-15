@@ -78,6 +78,7 @@ function Setup(_options) {
 
   function killOne (cb) {
     const node = popRandomLiveNode()
+    console.log('killing %s...', node._address)
     deadNodes.push(node._address)
     node.stop(cb)
   }
