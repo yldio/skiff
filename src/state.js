@@ -189,6 +189,9 @@ class State extends EventEmitter {
       params: options.params
     })
 
+    this.emit('message sent')
+    this.emit('rpc sent', options.action)
+
     return cancel
 
     function onReplyData (message) {
@@ -245,6 +248,8 @@ class State extends EventEmitter {
         return
       }
 
+      this.emit('message received')
+
       if (message.params) {
         if (message.params.term < this._term) {
           // discard message if term is greater than current term
@@ -278,6 +283,7 @@ class State extends EventEmitter {
 
   _handleRequest (message, done) {
     assert(!this._handlingRequest, 'race: already handling request')
+    this.emit('rpc received', message.action)
     this._handlingRequest = true
 
     const from = message.from

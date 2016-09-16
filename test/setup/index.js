@@ -8,7 +8,7 @@ const Node = require('./node')
 
 const defaultOptions = {
   nodeCount: 5,
-  killerIntervalMS: 5000
+  killerIntervalMS: 10000
 }
 
 function Setup(_options) {

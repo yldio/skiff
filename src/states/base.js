@@ -104,7 +104,7 @@ class Base extends EventEmitter {
       debug('vote granted')
       this._node.state.setVotedFor(message.from)
       this._resetElectionTimeout()
-      this._node.state.transition('follower')
+      this._node.state.transition('follower', true)
     }
 
     this._node.network.reply(

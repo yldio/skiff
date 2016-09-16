@@ -4,7 +4,7 @@
   "description": "Raft for Node.js",
   "main": "src/node.js",
   "scripts": {
-    "test": "lab -vl test/*.js test/resilience/index.js",
+    "test": "lab -vl test/*.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
     "style": "eslint src"
   },

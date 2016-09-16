@@ -32,8 +32,10 @@ class Node {
     this._child.stdout.pipe(split()).once('data', (line) => {
       if (line.match(/started/)) {
         done()
-      } else {
+      } else if (!this._exiting) {
         done(new Error('Could not start child'))
+      } else {
+        done()
       }
     })
 

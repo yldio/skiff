@@ -19,6 +19,10 @@ node.on('new state', state => console.log('new state: %s', state))
 // node.on('connect', peer => console.log('connected to %s', peer))
 // node.on('election timeout', () => console.log('election timeout'))
 
+// setInterval(function() {
+//   console.log('%d: stats: %j', Date.now(), node.stats())
+// }, 1000)
+
 const server = http.createServer(function(req, res) {
   const key = req.url.substring(1)
   if (req.method === 'PUT') {

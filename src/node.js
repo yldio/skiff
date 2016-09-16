@@ -52,6 +52,38 @@ class Node extends EventEmitter {
     this._commands = new Commands(this.id, this._commandQueue, this._state)
 
     this._startState = 'stopped'
+
+    // stats
+    this._stats = {
+      messagesReceived: 0,
+      messagesSent: 0,
+      rpcSent: 0,
+      rpcReceived: 0,
+      rpcReceivedByType: {
+        'AppendEntries': 0,
+        'RequestVote': 0,
+        'InstallSnapshot': 0
+      },
+      rpcSentByType: {
+        'AppendEntries': 0,
+        'RequestVote': 0,
+        'InstallSnapshot': 0
+      }
+    }
+    this._state.on('message received', () => {
+      this._stats.messagesReceived ++
+    })
+    this._state.on('message sent', () => {
+      this._stats.messagesSent ++
+    })
+    this._state.on('rpc sent', (type) => {
+      this._stats.rpcSent ++
+      this._stats.rpcSentByType[type] ++
+    })
+    this._state.on('rpc received', (type) => {
+      this._stats.rpcReceived ++
+      this._stats.rpcReceivedByType[type] ++
+    })
   }
 
   start (cb) {
@@ -192,6 +224,10 @@ class Node extends EventEmitter {
 
   iterator (options) {
     return new Iterator(this._db.state, options)
+  }
+
+  stats () {
+    return this._stats
   }
 }
 

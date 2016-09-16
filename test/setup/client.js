@@ -1,22 +1,30 @@
 'use strict'
 
-//const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z']
+// const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z']
 const keys = ['a']
 const Multiaddr = require('multiaddr')
 const wreck = require('wreck')
 const timers = require('timers')
 const once = require('once')
+const EventEmitter = require('events')
 
-const reqOptions = {}
+const defaultOptions = {
+  duration: 60000,
+  retryTimeout: 500
+}
 
-function Client (nodes, duration) {
+function Client (nodes, _options) {
+
+  const emitter = new EventEmitter()
+  emitter.stats = {
+    operationsStarted: 0,
+    operationsCompleted: 0
+  }
+
+  const options = Object.assign({}, defaultOptions, _options)
 
   let timeout
   const started = Date.now()
-  const stats = {
-    writes: 0,
-    reads: 0
-  }
   const endpoints = nodes.map(multiAddrToUrl)
 
   const values = {}
@@ -27,28 +35,30 @@ function Client (nodes, duration) {
 
   return function client (_done) {
     const done = once(callback)
-    timeout = timers.setTimeout(done, duration)
+    timeout = timers.setTimeout(done, options.duration)
     work(done)
+    return emitter
 
     function callback (err) {
       if (err) {
-        console.log('stats: %j', stats)
-        console.log('values: %j', values)
         _done(err)
       } else {
-        _done(null, stats)
+        _done(null)
       }
     }
   }
 
   function work (done) {
+    emitter.stats.operationsStarted ++
     makeOneRequest (err => {
+      emitter.stats.operationsCompleted ++
       if (err) {
         clearTimeout(timeout)
         done(err)
       } else {
+        emitter.emit('operation')
         const elapsed = Date.now() - started
-        if (elapsed < duration) {
+        if (elapsed < options.duration) {
           work(done)
         } else {
           clearTimeout(timeout)
@@ -76,12 +86,11 @@ function Client (nodes, duration) {
 
     function tryPut () {
       const endpoint = pickEndpoint()
-      const options = Object.assign({}, reqOptions, {payload: value.toString()})
-      wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(201, tryPut, err => {
+      const options = { payload: value.toString() }
+      wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(endpoint, 201, tryPut, err => {
         if (err) {
           done(err)
         } else {
-          stats.writes ++
           done()
         }
       }))
@@ -96,11 +105,10 @@ function Client (nodes, duration) {
 
     function tryGet () {
       const endpoint = pickEndpoint()
-      wreck.get(`${endpoint}/${key}`, reqOptions, parsingWreckReply(200, tryGet, (err, payload) => {
+      wreck.get(`${endpoint}/${key}`, parsingWreckReply(endpoint, 200, tryGet, (err, payload) => {
         if (err) {
           done(err)
         } else {
-          stats.reads ++
           const value = Number(payload) || 0
           if (value !== expectedValue) {
             done(new Error(`GET request to ${endpoint} returned unexpected value for key ${key}. Expected ${expectedValue} and returned ${value}`))
@@ -128,11 +136,13 @@ function Client (nodes, duration) {
     return keys[Math.floor(Math.random() * keys.length)]
   }
 
-  function parsingWreckReply (expectedCode, retry, done) {
+  function parsingWreckReply (address, expectedCode, retry, done) {
     return function (err, res, payload) {
       if (err) {
         if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') {
-          timers.setTimeout(retry, 1000)
+          // console.log('%s replied %s', address, err.code)
+          leader = null
+          timers.setTimeout(retry, 100)
         } else {
           done(err)
         }
@@ -145,12 +155,13 @@ function Client (nodes, duration) {
             error = {}
           }
           if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY')) {
-            if (error.leader) {
+            // console.log('%s replied %s', address, error.code)
+            if (error.leader && leader !== address) {
               leader = multiAddrToUrl(error.leader)
             } else {
               leader = undefined
             }
-            timers.setTimeout(retry, 1000)
+            timers.setImmediate(retry)
           } else {
             done (new Error(`response status code was ${res.statusCode}, response: ${payload}`))
           }

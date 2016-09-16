@@ -17,6 +17,9 @@ class PeerLeader {
     this._nextIndex = this._node.log._lastLogIndex + 1
     this._matchIndex = 0
     this._installingSnapshot = false
+    this._lastSent = 0
+    this._halfAppendEntriesIntervalMS = Math.round(
+      this._options.appendEntriesIntervalMS / 2)
 
     this._setAppendEntriesTimeout()
   }
@@ -31,10 +34,9 @@ class PeerLeader {
     const done = _done || noop
 
     if (this._installingSnapshot) {
+      this._resetAppendEntriesTimeout()
       return done()
     }
-
-    this._resetAppendEntriesTimeout()
 
     const log = this._node.log
     const currentTerm = this._node.state.term()
@@ -44,6 +46,11 @@ class PeerLeader {
     const capped = entriesReply.capped
     if (entries) {
       debug('%s: entries for %s are: %j', this._node.state.id, this._address, entries)
+
+      const timeSinceLastSent = Date.now() - this._lastSent
+      if (entries.length === 0 && timeSinceLastSent < this._halfAppendEntriesIntervalMS) {
+        return done(null, {success: true})
+      }
 
       const previousEntry = this._previousEntry()
       const lastEntry = entries[entries.length - 1]
@@ -57,6 +64,10 @@ class PeerLeader {
         entries,
         leaderCommit
       }
+
+      this._lastSent = Date.now()
+
+      this._resetAppendEntriesTimeout()
 
       return this._node.network.rpc(
         {
@@ -83,7 +94,11 @@ class PeerLeader {
               if (capped) {
                 this.appendEntries(done)
               } else {
-                done(null, reply.params)
+                if (entries.length) {
+                  this.appendEntries(done)
+                } else {
+                  done(null, reply.params)
+                }
               }
             } else {
               if (reply.params.lastIndexForTerm !== undefined) {
@@ -107,6 +122,8 @@ class PeerLeader {
       // no log entries for peer that's lagging behind
       debug('%s: peer %s is lagging behind (next index is %d), going to install snapshot',
         this._node.state.id, this._address, this._nextIndex)
+
+      this._resetAppendEntriesTimeout()
       return this._installSnapshot(done)
     }
   }
@@ -141,7 +158,7 @@ class PeerLeader {
     debug('follower %s next index is %d', this._address, this._nextIndex)
     const start = this._nextIndex
     let entries = this._node.log.entriesFrom(start)
-    const cap = entries && entries.length > this._options.batchEntriesLimit
+    const cap = entries && (entries.length > this._options.batchEntriesLimit)
     if (cap) {
       entries = entries.slice(0, this._options.batchEntriesLimit)
     }
