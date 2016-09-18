@@ -2,23 +2,21 @@
 
 const debug = require('debug')('skiff.state')
 const Through = require('through2')
-const uuid = require('uuid').v4
-const timers = require('timers')
-const once = require('once')
 const EventEmitter = require('events')
 const assert = require('assert')
 
 const States = require('./states')
 const Log = require('./log')
+const RPC = require('./rpc')
 
 const importantStateEvents = ['election timeout']
 
 class State extends EventEmitter {
 
-  constructor (id, dispatcher, db, options) {
+  constructor (id, connections, dispatcher, db, options) {
     super()
     this.id = id
-
+    this._connections = connections
     this._options = options
     this._dispatcher = dispatcher
     this._db = db
@@ -53,8 +51,10 @@ class State extends EventEmitter {
       db
     }
 
+    this._rpc = RPC(this._stateServices, this.active, this._replies, this, this._options)
+
     this._networkingServices = {
-      rpc: this._rpc.bind(this),
+      rpc: this._rpc,
       reply: this._reply.bind(this),
       isMajority: this._isMajority.bind(this),
       peers: this._peers
@@ -168,61 +168,6 @@ class State extends EventEmitter {
 
   // -------------
   // Networking
-
-  _rpc (options, callback) {
-    debug('%s: rpc to: %s, action: %s, params: %j', this.id, options.to, options.action, options.params)
-    if (typeof options.to !== 'string') {
-      throw new Error('need options.to to be a string')
-    }
-    const term = this._term
-    const self = this
-    const done = once(callback)
-    const id = uuid()
-    const timeout = timers.setTimeout(onTimeout, options.timeout || this._options.rpcTimeoutMS)
-    this._replies.on('data', onReplyData)
-    this.active.write({
-      from: this.id,
-      id,
-      type: 'request',
-      to: options.to,
-      action: options.action,
-      params: options.params
-    })
-
-    this.emit('message sent')
-    this.emit('rpc sent', options.action)
-
-    return cancel
-
-    function onReplyData (message) {
-      debug('%s: reply data: %j', self.id, message)
-      const accept = (
-        message.type === 'reply' &&
-        message.from === options.to &&
-        message.id === id)
-
-      if (self._term > term) {
-        onTimeout()
-      } else if (accept) {
-        debug('%s: this is a reply I was expecting: %j', self.id, message)
-        cancel()
-        done(null, message)
-      }
-    }
-
-    function onTimeout () {
-      debug('RPC timeout')
-      cancel()
-      const err = new Error('timeout RPC to ' + options.to)
-      err.code = 'ETIMEOUT'
-      done(err)
-    }
-
-    function cancel () {
-      self._replies.removeListener('data', onReplyData)
-      timers.clearTimeout(timeout)
-    }
-  }
 
   _reply (to, messageId, params, callback) {
     debug('%s: replying to: %s, messageId: %s, params: %j', this.id, to, messageId, params)

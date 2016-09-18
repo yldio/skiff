@@ -161,7 +161,12 @@ class Base extends EventEmitter {
 
       debug('%s: previous log matches: %j', this._node.state.id, prevLogMatches)
       if (!prevLogMatches) {
-        reason = 'prev log term or index does not match'
+        reason = `prev log term or index does not match: ${
+          entry
+            ? `prevLogIndex was ${entry.i} and prevLogTerm was ${entry.t}`
+            : 'prev log term or index does not match: no existing last entry'
+          }`
+
         debug(
           'prev log term or index does not match. had %d and message contained %d',
           entry && entry.t,
@@ -203,6 +208,8 @@ class Base extends EventEmitter {
           reason
         }, done)
 
+      debug('AppendEntries replied with success = %j to %s', success, message.from)
+
       if (termIsAcceptable) {
         self._resetElectionTimeout()
       }
@@ -216,6 +223,7 @@ class Base extends EventEmitter {
   _installSnapshotReceived (message, done) {
     debug('%s: _installSnapshotReceived %j', this._node.state.id, message)
 
+    console.log('Having remote image installed...')
     this._resetElectionTimeout()
 
     const self = this

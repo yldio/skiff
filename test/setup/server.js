@@ -14,9 +14,24 @@ const options = Object.assign({}, JSON.parse(process.argv[3]), {
 
 const node = new Node(address, options)
 const db = node.leveldown()
+let isLeader = false
 
-node.on('new state', state => console.log('new state: %s', state))
-// node.on('connect', peer => console.log('connected to %s', peer))
+node.on('new state', state => {
+  console.log('new state: %s', state)
+  isLeader = (state === 'leader')
+})
+// node.on('connect', peer => {
+//   if (isLeader) {
+//     console.log('+ %j', peer)
+//     console.log('connected to %j', node.connections())
+//   }
+// })
+// node.on('disconnect', peer => {
+//   if (isLeader) {
+//     console.log('- %s', peer)
+//     console.log('connected to %j', node.connections())
+//   }
+// })
 // node.on('election timeout', () => console.log('election timeout'))
 
 // setInterval(function() {
@@ -24,6 +39,7 @@ node.on('new state', state => console.log('new state: %s', state))
 // }, 1000)
 
 const server = http.createServer(function(req, res) {
+  console.log('request to node connected to %j', node.connections())
   const key = req.url.substring(1)
   if (req.method === 'PUT') {
     let body = ''

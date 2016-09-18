@@ -22,9 +22,11 @@ class PeerLeader {
       this._options.appendEntriesIntervalMS / 2)
 
     this._setAppendEntriesTimeout()
+    this._stopped = false
   }
 
   stop () {
+    this._stopped = true
     this._clearAppendEntriesTimeout()
   }
 
@@ -32,6 +34,10 @@ class PeerLeader {
     debug('sending AppendEntries to %s', this._address)
 
     const done = _done || noop
+
+    if (this._stopped) {
+      return done(new Error('stopped'))
+    }
 
     if (this._installingSnapshot) {
       this._resetAppendEntriesTimeout()
@@ -73,8 +79,7 @@ class PeerLeader {
         {
           to: this._address,
           action: 'AppendEntries',
-          params: appendEntriesArgs,
-          timeout: 10000
+          params: appendEntriesArgs
         },
         (err, reply) => { // callback
           debug('%s: got reply to AppendEntries from %s: %j', this._node.state.id, this._address, reply)
@@ -94,24 +99,18 @@ class PeerLeader {
               if (capped) {
                 this.appendEntries(done)
               } else {
-                if (entries.length) {
-                  this.appendEntries(done)
-                } else {
-                  done(null, reply.params)
-                }
+                done(null, reply.params)
               }
             } else {
               if (reply.params.lastIndexForTerm !== undefined) {
-                this._nextIndex = reply.params.lastIndexForTerm
+                this._nextIndex = reply.params.lastIndexForTerm + 1
               } else {
                 this._nextIndex --
               }
 
               // again
 
-              process.nextTick(() => {
-                this.appendEntries(done)
-              })
+              timers.setImmediate(this.appendEntries.bind(this, done))
             }
           } else {
             done(new Error('No reply params from peer'))
@@ -173,6 +172,10 @@ class PeerLeader {
 
   _installSnapshot (_done) {
     debug('%s: _installSnapshot on %s', this._node.state.id, this._address)
+
+    if (this._stopped) {
+      return done(new Error('stopped'))
+    }
 
     const self = this
 

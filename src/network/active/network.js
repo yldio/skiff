@@ -30,6 +30,7 @@ class Network extends Duplex {
     const peer = this._peers[address]
     if (peer) {
       peer.end()
+      peer.removeAllListeners()
       delete this._peers[address]
     }
   }
@@ -66,6 +67,9 @@ class Network extends Duplex {
         })
         .on('disconnect', () => {
           this.emit('disconnect', address)
+        })
+        .on('innactivity timeout', () => {
+          this.disconnect(address)
         })
     }
 

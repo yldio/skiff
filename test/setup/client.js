@@ -3,7 +3,7 @@
 // const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z']
 const keys = ['a']
 const Multiaddr = require('multiaddr')
-const wreck = require('wreck')
+const Wreck = require('wreck')
 const timers = require('timers')
 const once = require('once')
 const EventEmitter = require('events')
@@ -12,6 +12,10 @@ const defaultOptions = {
   duration: 60000,
   retryTimeout: 500
 }
+
+const wreck = Wreck.defaults({
+  timeout: 5000
+})
 
 function Client (nodes, _options) {
 
@@ -66,6 +70,7 @@ function Client (nodes, _options) {
         }
       }
     })
+    emitter.emit('operation started')
   }
 
   function makeOneRequest (done) {
@@ -86,6 +91,7 @@ function Client (nodes, _options) {
 
     function tryPut () {
       const endpoint = pickEndpoint()
+      console.log('trying %s', endpoint)
       const options = { payload: value.toString() }
       wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(endpoint, 201, tryPut, err => {
         if (err) {
@@ -105,6 +111,7 @@ function Client (nodes, _options) {
 
     function tryGet () {
       const endpoint = pickEndpoint()
+      console.log('trying %s', endpoint)
       wreck.get(`${endpoint}/${key}`, parsingWreckReply(endpoint, 200, tryGet, (err, payload) => {
         if (err) {
           done(err)
@@ -140,7 +147,7 @@ function Client (nodes, _options) {
     return function (err, res, payload) {
       if (err) {
         if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') {
-          // console.log('%s replied %s', address, err.code)
+          console.log('%s replied %s', address, err.code)
           leader = null
           timers.setTimeout(retry, 100)
         } else {
@@ -155,7 +162,7 @@ function Client (nodes, _options) {
             error = {}
           }
           if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY')) {
-            // console.log('%s replied %s', address, error.code)
+            console.log('%s replied %s', address, error.code)
             if (error.leader && leader !== address) {
               leader = multiAddrToUrl(error.leader)
             } else {

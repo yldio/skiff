@@ -33,7 +33,7 @@ class Node {
       if (line.match(/started/)) {
         done()
       } else if (!this._exiting) {
-        done(new Error('Could not start child'))
+        done(new Error('Could not start child, first line of output was %j', line))
       } else {
         done()
       }

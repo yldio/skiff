@@ -18,7 +18,7 @@ const Iterator = require('./iterator')
 
 const defaultOptions = {
   server: {},
-  rpcTimeoutMS: 5000,
+  rpcTimeoutMS: 2000,
   peers: []
 }
 
@@ -41,7 +41,23 @@ class Node extends EventEmitter {
 
     this._dispatcher = new IncomingDispatcher({id})
 
-    this._state = new State(this.id, this._dispatcher, this._db, this._options)
+    const connections = {
+      isConnectedTo: (addr) => this._connections.indexOf(addr) >= 0
+    }
+    // connections
+    this._connections = this._options.peers.filter(addr => addr !== id)
+
+    this.on('connect', peer => {
+      if (this._connections.indexOf(peer) < 0) {
+        this._connections.push(peer)
+      }
+    })
+
+    this.on('disconnect', peer => {
+      this._connections = this._connections.filter(c => c !== peer)
+    })
+
+    this._state = new State(this.id, connections, this._dispatcher, this._db, this._options)
 
     // propagate important events
     importantStateEvents.forEach(event => {
@@ -127,7 +143,9 @@ class Node extends EventEmitter {
     const passiveNetwork = new PassiveNetwork(passiveNetworkOptions)
 
     if (cb) {
-      passiveNetwork.once('listening', () => cb()) // do not carry event args into callback
+      passiveNetwork.once('listening', () => {
+        cb()
+      }) // do not carry event args into callback
     }
 
     this._network = {
@@ -143,6 +161,9 @@ class Node extends EventEmitter {
 
     this._network.active.on('connect', peer => {
       this.emit('connect', peer)
+    })
+    this._network.active.on('disconnect', peer => {
+      this.emit('disconnect', peer)
     })
   }
 
@@ -228,6 +249,10 @@ class Node extends EventEmitter {
 
   stats () {
     return this._stats
+  }
+
+  connections () {
+    return this._connections
   }
 }
 

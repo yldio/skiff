@@ -2,6 +2,7 @@
 
 const debug = require('debug')('skiff.peer')
 const Duplex = require('stream').Duplex
+const timers = require('timers')
 const Multiaddr = require('multiaddr')
 const Msgpack = require('msgpack5')
 
@@ -10,7 +11,8 @@ const OK_ERRORS = require('./errors').OK_ERRORS
 
 const defaultOptions = {
   objectMode: true,
-  highWaterMark: 50
+  highWaterMark: 50,
+  innactivityTimeout: 5000
 }
 
 const interestingEvents = [
@@ -27,12 +29,15 @@ const reconnectOptions = {
 
 class Peer extends Duplex {
 
-  constructor (address, options) {
+  constructor (address, _options) {
     debug('constructing peer from address %j', address)
-    super(Object.assign({}, options, defaultOptions))
+    const options = Object.assign({}, defaultOptions, _options)
+    super(options)
+    this._options = options
     this._address = Multiaddr(address)
 
     this.once('finish', this._finish.bind(this))
+
     this._connect()
   }
 
@@ -43,10 +48,12 @@ class Peer extends Duplex {
 
   _connect () {
     debug('connecting to %s', this._address)
-
     const peer = this
     this._reconnect = reconnect(reconnectOptions, (peerRawConn) => {
       debug('connected to peer %s', this._address)
+      let innactivityTimeout
+      resetInnactivityTimeout()
+
       const msgpack = Msgpack()
 
       // to peer
@@ -58,6 +65,7 @@ class Peer extends Duplex {
       peerRawConn.pipe(fromPeer)
 
       fromPeer.on('data', (data) => {
+        resetInnactivityTimeout()
         debug('some data from peer: %j', data)
         peer.push(data)
       })
@@ -65,7 +73,24 @@ class Peer extends Duplex {
       peerRawConn.on('error', handlePeerError)
       fromPeer.on('error', handlePeerError)
 
-      this.emit('connect')
+      peerRawConn.on('close', () => {
+        this._out = undefined
+        timers.clearTimeout(innactivityTimeout)
+      })
+
+      process.nextTick(() => peer.emit('connect'))
+
+      function resetInnactivityTimeout () {
+        if (innactivityTimeout) {
+          timers.clearTimeout(innactivityTimeout)
+        }
+        innactivityTimeout = timers.setTimeout(
+          onInnactivityTimeout, peer._options.innactivityTimeout)
+      }
+
+      function onInnactivityTimeout () {
+        peer.emit('innactivity timeout')
+      }
     })
     .on('error', handlePeerError)
     .on('disconnect', () => {

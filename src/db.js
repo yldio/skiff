@@ -101,10 +101,6 @@ class DB {
       } else {
         const isQuery = (command.type === 'get')
         const isTopology = (command.type === 'join' || command.type === 'leave')
-        debug('%s: applying command %j', this.id, command)
-        if (!isQuery && !isTopology) {
-          batch = batch.concat(this._commandToBatch(command))
-        }
         debug('%s: going to apply batch: %j', this.id, batch)
         this.db.batch(batch, err => {
           debug('%s: applied batch command err = %j', this.id, err)
@@ -130,7 +126,7 @@ class DB {
       debug('%s: applying entries %j', this.id, entries)
     }
 
-    const dbCommands = []
+    let dbCommands = []
     const topologyCommands = []
     entries.forEach(command => {
       if (command.type === 'join' || command.type === 'leave') {
@@ -142,6 +138,8 @@ class DB {
     if (topologyCommands.length) {
       applyTopology(topologyCommands)
     }
+
+    dbCommands = dbCommands.reduce((acc, command) => acc.concat(command), [])
 
     const batch = dbCommands
       .filter(entry => ALLOWED_TYPES.indexOf(entry.type) >= 0)

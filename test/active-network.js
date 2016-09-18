@@ -6,6 +6,7 @@ const before = lab.before
 const it = lab.it
 const expect = require('code').expect
 
+const async = require('async')
 const Multiaddr = require('multiaddr')
 const net = require('net')
 const timers = require('timers')
@@ -43,26 +44,31 @@ describe('active network', () => {
 
   before(done => {
     let listening = 0
+    let lindex = -1
 
-    servers = serverAddresses.map((addr, index) => {
+    async.mapSeries(serverAddresses, (addr, cb) => {
+      const index = ++lindex
       const maddr = Multiaddr(addr)
       const server = net.createServer(onServerConnection)
       const listenAddr = maddr.nodeAddress()
-      server.listen({port: listenAddr.port, host: listenAddr.address}, onceListening)
-      return server
+      server.listen({port: listenAddr.port, host: listenAddr.address}, () => {
+        cb(null, server)
+      })
 
       function onServerConnection (conn) {
         serverConns[index] = conn
         serverHandlers[index](conn)
         conn.once('finish', () => { serverConns[index] = undefined })
       }
-    })
 
-    function onceListening () {
-      if (++listening === servers.length) {
+    }, (err, _servers) => {
+      if (err) {
+        done(err)
+      } else {
+        servers = _servers
         done()
       }
-    }
+    })
   })
 
   it('can be created', done => {

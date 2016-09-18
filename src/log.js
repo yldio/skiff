@@ -4,7 +4,7 @@ const debug = require('debug')('skiff.log')
 const assert = require('assert')
 
 const defaultOptions = {
-  minLogRetention: 1000
+  minLogRetention: 100
 }
 
 class Log {
@@ -57,6 +57,7 @@ class Log {
 
   appendAfter (index, entries) {
     debug('%s: append after %d: %j', this._node.id, index, entries)
+
     // truncate
     let head
     while ((head = this.head()) && head.i > index) {
@@ -83,16 +84,23 @@ class Log {
       throw new Error('done needs to be a function')
     }
     debug('%s: commit %d', this._node.id, index)
-    this._commitIndex = index
 
-    const entriesToApply = this.entriesFromTo(this._lastApplied + 1, this._commitIndex)
-      .map(entry => entry.c)
-    this._node.applyEntries(entriesToApply, (err) => {
+    const entriesToApply = this.entriesFromTo(this._lastApplied + 1, index)
+
+    if (!entriesToApply.length) {
+      return done()
+    }
+    const lastEntryIndex = entriesToApply[entriesToApply.length - 1].i
+    debug('%s: lastEntryIndex: %j', this._node.id, entriesToApply[entriesToApply.length - 1])
+
+    this._commitIndex = lastEntryIndex
+    this._node.applyEntries(entriesToApply.map(entry => entry.c), (err) => {
       if (err) {
         done(err)
       } else {
-        debug('%s: done commiting index %d', this._node.id, index)
-        this._lastApplied = index
+        debug('%s: done commiting index %d', this._node.id, lastEntryIndex)
+        console.log('%s: done commiting index %d', this._node.id, lastEntryIndex)
+        this._lastApplied = lastEntryIndex
         this._compact()
         done()
       }
@@ -130,6 +138,9 @@ class Log {
     }
     debug('physical index for %d is %d', index, physicalIndex)
     const entries = this._entries.slice(physicalIndex)
+    if (entries.length) {
+      assert.equal(entries[0].i, index)
+    }
     debug('entries from %d are %j', index, entries)
     return entries
   }
@@ -142,8 +153,7 @@ class Log {
     const pFrom = this._physicalIndexFor(from)
     const entries = this._entries.slice(pFrom, pFrom + to - from + 1)
     if (entries.length) {
-      assert(entries[0].i === from)
-      assert(entries[entries.length - 1].i === to)
+      assert(entries[0].i === from, `expected first entry to be index ${from} and was ${entries[0].i}`)
     }
     return entries
   }
