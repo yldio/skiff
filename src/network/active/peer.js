@@ -138,15 +138,17 @@ class Peer extends Duplex {
       debug('have message, but not connected to peer %s', this._address)
       // if we're not connected we discard the message
       // and reply with error
-      this.push({
-        type: 'reply',
-        from: message.to,
-        id: message.id,
-        error: 'not connected',
-        params: {
-          success: false,
-          reason: 'not connected'
-        }
+      timers.setImmediate(() => {
+        this.push({
+          type: 'reply',
+          from: message.to,
+          id: message.id,
+          error: 'not connected',
+          params: {
+            success: false,
+            reason: 'not connected'
+          }
+        })
       })
       callback()
     }

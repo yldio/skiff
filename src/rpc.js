@@ -33,8 +33,6 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
       }
     })
 
-    return cancel
-
     function onReplyData (message) {
       debug('%s: reply data: %j', node.id, message)
       const accept = (

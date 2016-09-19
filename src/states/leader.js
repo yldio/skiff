@@ -6,8 +6,6 @@ const async = require('async')
 const Base = require('./base')
 const PeerLeader = require('../peer-leader')
 
-let counter = 0
-
 class Leader extends Base {
 
   constructor (node, _options) {
@@ -79,12 +77,8 @@ class Leader extends Base {
 
     const log = this._node.log
     const lastEntry = log.head()
-    const cancels = []
 
-    const _counter = ++ counter;
-    console.log('append entries #%d', _counter)
-
-    consensus
+    const cancels = consensus
       .map(address => {
         let follower = this._followers[address]
         if (!follower) {
@@ -92,16 +86,16 @@ class Leader extends Base {
         }
         return follower
       })
-      .forEach(peer => {
-        console.log('%d: appending entries to %s', _counter, peer._address)
-        cancels[peer._address] = peer.appendEntries((err, success, reason) => {
-          debug('append entries from %s replied', peer._address, err, success)
+      .map(peer => {
+        const expiresAt = Date.now() + this._options.rpcTimeoutMS
+        return peer.waitForEntryAppended(lastEntry && lastEntry.i || 0, expiresAt, err => {
+          debug('append entries from %s replied', peer._address, err)
           voteCount++
-          if (success) {
-            console.log('%d OK from %s', _counter, peer._address)
+          if (!err) {
+            // console.log('%d OK from %s', _counter, peer._address)
             commitCount++
           } else {
-            console.log('%d NOT OK from %s because %s', _counter, peer._address, reason || err && err.message)
+            // console.log('%d NOT OK from %s because %s', _counter, peer._address, err.message)
           }
           perhapsDone()
         })
@@ -112,7 +106,7 @@ class Leader extends Base {
         if (isMajority(consensus, commitCount)) {
           majorityReached = true
           debug('%s: majority reached', self._node.state.id)
-          console.log('majority reached')
+          // console.log('majority reached')
           cancelAll()
           if (lastEntry) {
             debug('%s: about to commit index %d', self._node.state.id, lastEntry.i)
@@ -124,7 +118,6 @@ class Leader extends Base {
           majorityReached = true
           const err = new Error(`No majority reached in leader ${self._node.state.id}`)
           err.code = 'ENOMAJORITY'
-          cancelAll()
           done(err)
         }
       }

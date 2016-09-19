@@ -84,6 +84,7 @@ class Log {
       throw new Error('done needs to be a function')
     }
     debug('%s: commit %d', this._node.id, index)
+    // console.log('commit until %d', index)
 
     const entriesToApply = this.entriesFromTo(this._lastApplied + 1, index)
 

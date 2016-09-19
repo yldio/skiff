@@ -35,6 +35,7 @@ class Candidate extends Base {
           action: 'RequestVote',
           params: requestVoteArgs
         },
+        // eslint-disable-next-line handle-callback-err
         (err, reply) => { // callback
           if (!majorityReached) {
             voteCount++
