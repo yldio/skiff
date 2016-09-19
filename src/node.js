@@ -254,6 +254,23 @@ class Node extends EventEmitter {
   connections () {
     return this._connections
   }
+
+  peers () {
+    const peers = this._state.peers()
+    if (peers && this._network && this._network.active) {
+      peers.forEach(peer => {
+        peer.stats = this._network.active.peerStats(peer.address)
+        if (peer.stats) {
+          peer.stats.lastReceivedAgo = Date.now() - peer.stats.lastReceived
+          peer.stats.lastSentAgo = Date.now() - peer.stats.lastSent
+          delete peer.stats.lastReceived
+          delete peer.stats.lastSent
+        }
+        peer.connected = this._connections.indexOf(peer.address) >= 0
+      })
+    }
+    return peers
+  }
 }
 
 module.exports = Node

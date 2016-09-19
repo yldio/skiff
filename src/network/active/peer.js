@@ -36,6 +36,13 @@ class Peer extends Duplex {
     this._options = options
     this._address = Multiaddr(address)
 
+    this._stats = {
+      receivedMessageCount: 0,
+      sentMessageCount: 0,
+      lastReceived: 0,
+      lastSent: 0
+    }
+
     this.once('finish', this._finish.bind(this))
 
     this._connect()
@@ -65,6 +72,8 @@ class Peer extends Duplex {
       peerRawConn.pipe(fromPeer)
 
       fromPeer.on('data', (data) => {
+        this._stats.lastReceived = Date.now()
+        this._stats.receivedMessageCount ++
         resetInnactivityTimeout()
         debug('some data from peer: %j', data)
         peer.push(data)
@@ -122,10 +131,23 @@ class Peer extends Duplex {
   _write (message, encoding, callback) {
     debug('writing %j to %s', message, this._address)
     if (this._out) {
+      this._stats.lastSent = Date.now()
+      this._stats.sentMessageCount ++
       this._out.write(message, callback)
     } else {
-      debug('not connected yet to peer %s', this._address)
+      debug('have message, but not connected to peer %s', this._address)
       // if we're not connected we discard the message
+      // and reply with error
+      this.push({
+        type: 'reply',
+        from: message.to,
+        id: message.id,
+        error: 'not connected',
+        params: {
+          success: false,
+          reason: 'not connected'
+        }
+      })
       callback()
     }
   }
@@ -133,6 +155,10 @@ class Peer extends Duplex {
   _finish () {
     debug('finishing connection to peer %s', this._address)
     this._reconnect.disconnect()
+  }
+
+  stats () {
+    return this._stats
   }
 
 }

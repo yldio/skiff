@@ -88,6 +88,12 @@ class State extends EventEmitter {
     this.command({type: 'leave', peer: address}, {}, done)
   }
 
+  peers () {
+    if (typeof this._state.peers === 'function') {
+      return this._state.peers()
+    }
+  }
+
   _ensurePeer (address) {
     if ((this._peers.indexOf(address) < 0) && address !== this.id) {
       debug('%s is joining %s', this.id, address)

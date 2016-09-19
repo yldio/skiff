@@ -6,6 +6,8 @@ const async = require('async')
 const Base = require('./base')
 const PeerLeader = require('../peer-leader')
 
+let counter = 0
+
 class Leader extends Base {
 
   constructor (node, _options) {
@@ -46,6 +48,12 @@ class Leader extends Base {
     }
   }
 
+  peers () {
+    return Object.keys(this._followers)
+      .map(addr => this._followers[addr])
+      .map(peer => peer.state())
+  }
+
   command (consensuses, command, options, done) {
     this._node.log.push(command)
     process.nextTick(() => {
@@ -64,7 +72,7 @@ class Leader extends Base {
       throw new Error('no consensus group')
     }
     const self = this
-    let majorityVoted = false
+    let majorityReached = false
     let voteCount = 1
     let commitCount = 1
     const done = _done || noop
@@ -72,6 +80,9 @@ class Leader extends Base {
     const log = this._node.log
     const lastEntry = log.head()
     const cancels = []
+
+    const _counter = ++ counter;
+    console.log('append entries #%d', _counter)
 
     consensus
       .map(address => {
@@ -82,37 +93,39 @@ class Leader extends Base {
         return follower
       })
       .forEach(peer => {
-        const cancel = peer.appendEntries((err, reply) => {
-          debug('append entries from %s replied', peer._address, err, reply)
+        console.log('%d: appending entries to %s', _counter, peer._address)
+        cancels[peer._address] = peer.appendEntries((err, success, reason) => {
+          debug('append entries from %s replied', peer._address, err, success)
           voteCount++
-          if (!err && reply && reply.success) {
+          if (success) {
+            console.log('%d OK from %s', _counter, peer._address)
             commitCount++
+          } else {
+            console.log('%d NOT OK from %s because %s', _counter, peer._address, reason || err && err.message)
           }
           perhapsDone()
         })
-
-        cancels[peer._address] = cancel
       })
 
     function perhapsDone () {
-      if (!majorityVoted) {
-        majorityVoted = isMajority(consensus, voteCount)
-        if (majorityVoted) {
-          debug('%s: majority has voted', self._node.state.id)
-          if (isMajority(consensus, commitCount)) {
-            debug('%s: majority reached', self._node.state.id)
-            cancelAll()
-            if (lastEntry) {
-              debug('%s: about to commit index %d', self._node.state.id, lastEntry.i)
-              log.commit(lastEntry.i, done)
-            } else {
-              done()
-            }
+      if (!majorityReached) {
+        if (isMajority(consensus, commitCount)) {
+          majorityReached = true
+          debug('%s: majority reached', self._node.state.id)
+          console.log('majority reached')
+          cancelAll()
+          if (lastEntry) {
+            debug('%s: about to commit index %d', self._node.state.id, lastEntry.i)
+            log.commit(lastEntry.i, done)
           } else {
-            const err = new Error(`No majority reached in leader ${self._node.state.id}`)
-            err.code = 'ENOMAJORITY'
-            done(err)
+            done()
           }
+        } else if (isMajority(consensus, voteCount - commitCount)) {
+          majorityReached = true
+          const err = new Error(`No majority reached in leader ${self._node.state.id}`)
+          err.code = 'ENOMAJORITY'
+          cancelAll()
+          done(err)
         }
       }
     }

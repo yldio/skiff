@@ -20,6 +20,14 @@ node.on('new state', state => {
   console.log('new state: %s', state)
   isLeader = (state === 'leader')
 })
+
+setInterval(() => {
+  const peers = node.peers()
+  if (peers) {
+    console.log('peers: %s', JSON.stringify(peers, null, '\t'))
+  }
+}, 1000)
+
 // node.on('connect', peer => {
 //   if (isLeader) {
 //     console.log('+ %j', peer)
@@ -39,7 +47,7 @@ node.on('new state', state => {
 // }, 1000)
 
 const server = http.createServer(function(req, res) {
-  console.log('request to node connected to %j', node.connections())
+  // console.log('request to node connected to %j', node.connections())
   const key = req.url.substring(1)
   if (req.method === 'PUT') {
     let body = ''

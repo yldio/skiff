@@ -2,6 +2,7 @@
 
 const debug = require('debug')('skiff.peer-leader')
 const timers = require('timers')
+const once = require('once')
 
 const BatchTransformStream = require('./lib/batch-transform-stream')
 
@@ -33,7 +34,7 @@ class PeerLeader {
   appendEntries (_done) {
     debug('sending AppendEntries to %s', this._address)
 
-    const done = _done || noop
+    const done = once(_done || noop)
 
     if (this._stopped) {
       return done(new Error('stopped'))
@@ -54,9 +55,6 @@ class PeerLeader {
       debug('%s: entries for %s are: %j', this._node.state.id, this._address, entries)
 
       const timeSinceLastSent = Date.now() - this._lastSent
-      if (entries.length === 0 && timeSinceLastSent < this._halfAppendEntriesIntervalMS) {
-        return done(null, {success: true})
-      }
 
       const previousEntry = this._previousEntry()
       const lastEntry = entries[entries.length - 1]
@@ -99,7 +97,7 @@ class PeerLeader {
               if (capped) {
                 this.appendEntries(done)
               } else {
-                done(null, reply.params)
+                done(null, reply.params.success, reply.params.reason)
               }
             } else {
               if (reply.params.lastIndexForTerm !== undefined) {
@@ -113,7 +111,7 @@ class PeerLeader {
               timers.setImmediate(this.appendEntries.bind(this, done))
             }
           } else {
-            done(new Error('No reply params from peer'))
+            done(new Error('No reply params from peer'), false, 'no reply')
           }
         }
       )
@@ -254,6 +252,17 @@ class PeerLeader {
       self._installingSnapshot = false
       self._resetAppendEntriesTimeout()
       rs.destroy()
+    }
+  }
+
+  state () {
+    return {
+      address: this._address,
+      stopped: this._stopped,
+      nextIndex: this._nextIndex,
+      matchIndex: this._matchIndex,
+      installingSnapshot: this._installingSnapshot,
+      sentAppendEntriesAgoMS: Date.now() - this._lastSent
     }
   }
 }

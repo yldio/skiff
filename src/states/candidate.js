@@ -16,7 +16,7 @@ class Candidate extends Base {
   }
 
   _gatherVotes () {
-    let majorityVoted = false
+    let majorityReached = false
     let votedForMe = 1
     let voteCount = 1
 
@@ -36,27 +36,27 @@ class Candidate extends Base {
           params: requestVoteArgs
         },
         (err, reply) => { // callback
-          if (!err && !majorityVoted) {
-            debug('reply for request vote from %s: err = %j, message = %j', peer, err, reply)
+          if (!majorityReached) {
             voteCount++
-            majorityVoted = this._node.network.isMajority(voteCount)
             if (reply && reply.params.voteGranted) {
               votedForMe++
               if (this._node.network.isMajority(votedForMe)) {
-                this._electionWon()
+                // won
+                majorityReached = true
+                debug('%s: election won', this._node.state.id)
+                this._node.state.transition('leader')
               }
-            } else if (majorityVoted) {
+            }
+            if (this._node.network.isMajority(voteCount - votedForMe)) {
+              // lost
+              debug('%s: election lost', this._node.state.id)
+              majorityReached = true
               this._resetElectionTimeout()
             }
           }
         }
       )
     })
-  }
-
-  _electionWon () {
-    debug('%s: election won', this._node.state.id)
-    this._node.state.transition('leader')
   }
 }
 

@@ -91,7 +91,7 @@ function Client (nodes, _options) {
 
     function tryPut () {
       const endpoint = pickEndpoint()
-      console.log('trying %s', endpoint)
+      // console.log('trying %s', endpoint)
       const options = { payload: value.toString() }
       wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(endpoint, 201, tryPut, err => {
         if (err) {
@@ -111,7 +111,7 @@ function Client (nodes, _options) {
 
     function tryGet () {
       const endpoint = pickEndpoint()
-      console.log('trying %s', endpoint)
+      // console.log('trying %s', endpoint)
       wreck.get(`${endpoint}/${key}`, parsingWreckReply(endpoint, 200, tryGet, (err, payload) => {
         if (err) {
           done(err)

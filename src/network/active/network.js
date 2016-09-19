@@ -76,6 +76,13 @@ class Network extends Duplex {
     return peer
   }
 
+  peerStats (address) {
+    const peer = this._peers[address]
+    if (peer) {
+      return peer.stats()
+    }
+  }
+
 }
 
 module.exports = Network

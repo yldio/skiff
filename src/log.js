@@ -99,7 +99,7 @@ class Log {
         done(err)
       } else {
         debug('%s: done commiting index %d', this._node.id, lastEntryIndex)
-        console.log('%s: done commiting index %d', this._node.id, lastEntryIndex)
+        // console.log('%s: done commiting index %d', this._node.id, lastEntryIndex)
         this._lastApplied = lastEntryIndex
         this._compact()
         done()

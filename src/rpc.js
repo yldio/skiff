@@ -47,7 +47,8 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
       } else if (accept) {
         debug('%s: this is a reply I was expecting: %j', node.id, message)
         cancel()
-        done(null, message)
+        const error = message.error
+        done(error, !error && message)
       }
     }
 

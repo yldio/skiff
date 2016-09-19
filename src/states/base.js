@@ -235,6 +235,7 @@ class Base extends EventEmitter {
     }
 
     if (message.params.done) {
+      console.log('done installing remote image')
       this._node.state.setTerm(message.params.lastIncludedTerm)
       const log = this._node.state.log
       log._lastLogIndex = message.params.lastIncludedIndex
