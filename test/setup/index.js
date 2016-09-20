@@ -7,6 +7,7 @@ const fork = require('child_process').fork
 const Node = require('./node')
 
 const defaultOptions = {
+  caos: true,
   nodeCount: 5,
   killerIntervalMS: 10000
 }
@@ -49,15 +50,18 @@ function Setup(_options) {
   }
 
   function startKiller (done) {
-    killer = timers.setTimeout(() => {
-      killAndRevive(err => {
-        if (err) {
-          throw err
-        } else {
-          startKiller()
-        }
-      })
-    }, options.killerIntervalMS)
+    if (options.caos) {
+      killer = timers.setTimeout(() => {
+        killAndRevive(err => {
+          if (err) {
+            throw err
+          } else {
+            startKiller()
+          }
+        })
+      }, options.killerIntervalMS)
+    }
+
     if (done) {
       done()
     }
