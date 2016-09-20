@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('skiff.passive-network')
+const debug = require('debug')('skiff.network.passive')
 const Duplex = require('stream').Duplex
 const merge = require('deepmerge')
 

@@ -2,30 +2,30 @@
 
 const debug = require('debug')('skiff.peer-leader')
 const timers = require('timers')
+const EventEmitter = require('events')
 
 const BatchTransformStream = require('./lib/batch-transform-stream')
 
-class PeerLeader {
+class PeerLeader extends EventEmitter {
 
   constructor (address, node, options) {
     if (typeof address !== 'string') {
       throw new Error('need address to be a string')
     }
 
+    super()
+
     this._address = address
     this._node = node
     this._options = options
     this._nextIndex = this._node.log._lastLogIndex + 1
     this._matchIndex = 0
-    this._appendingEntries = false
-    this._needsMore = true
+    this._needsIndex = 0
     this._installingSnapshot = false
     this._lastSent = 0
     this._stopped = false
 
-    this._waiting = []
-
-    this._schedule()
+    this._appendEntries()
   }
 
   stop () {
@@ -33,35 +33,17 @@ class PeerLeader {
     this._clearAppendEntriesTimeout()
   }
 
-  waitForEntryAppended (index, maxTime, callback) {
-    const wait = {index, maxTime, notified: false, callback}
-    this._waiting.push(wait)
-    this._appendEntries()
-
-    return () => {
-      this._waiting = this._waiting.filter(waiting => waiting !== wait)
+  needsIndex (index) {
+    if (index > this._needsIndex) {
+      this._needsIndex = index
+    }
+    if (this._needsMore) {
+      timers.setImmediate(this._appendEntries.bind(this))
     }
   }
 
-  _notifyWaiting (index) {
-    const now = Date.now()
-    this._waiting
-      .filter(waiting => ((waiting.index <= index) && (!waiting.notified)))
-      .forEach(waiting => {
-        let err
-        waiting.notified = true
-        if (waiting.maxTime < now) {
-          err = new Error('timed out')
-          err.code = 'ETIMEOUT'
-        }
-        waiting.callback.call(null, err)
-      })
-
-    timers.setImmediate(this._cleanNotifiedWaiting.bind(this))
-  }
-
-  _cleanNotifiedWaiting () {
-    this._waiting = this._waiting.filter(waiting => !waiting.notified)
+  _needsMore () {
+    return this._nextIndex <= this._needsIndex
   }
 
   _appendEntries () {
@@ -75,13 +57,6 @@ class PeerLeader {
       this._resetAppendEntriesTimeout()
       return
     }
-
-    if (this._appendingEntries) {
-      this._needsMore = true
-      return
-    }
-
-    this._appendingEntries = true
 
     const log = this._node.log
     const currentTerm = this._node.state.term()
@@ -116,7 +91,6 @@ class PeerLeader {
           params: appendEntriesArgs
         },
         (err, reply) => { // callback
-          this._appendingEntries = false
           debug('%s: got reply to AppendEntries from %s: %j', this._node.state.id, this._address, reply)
           if (err) {
             debug('%s: error on AppendEntries reply:\n%s', this._node.state.id, err.stack)
@@ -131,20 +105,17 @@ class PeerLeader {
               }
               const commitedEntry = lastEntry || previousEntry
               const commitedIndex = commitedEntry && commitedEntry.i || 0
-              if (commitedIndex) {
-                this._notifyWaiting(commitedIndex)
-              }
+              this.emit('committed', this, commitedIndex)
             } else {
               if (reply.params.lastIndexForTerm !== undefined) {
                 this._nextIndex = reply.params.lastIndexForTerm + 1
               } else {
                 this._nextIndex --
               }
-
-              this._needsMore = true
             }
-            if (this._needsMore) {
-              this._schedule()
+
+            if (this._needsMore()) {
+              timers.setImmediate(this._appendEntries.bind(this))
             }
           }
         }
@@ -154,7 +125,6 @@ class PeerLeader {
       debug('%s: peer %s is lagging behind (next index is %d), going to install snapshot',
         this._node.state.id, this._address, this._nextIndex)
 
-      this._appendingEntries = false
       this._resetAppendEntriesTimeout()
       return this._installSnapshot()
     }
@@ -179,15 +149,6 @@ class PeerLeader {
   _resetAppendEntriesTimeout () {
     this._clearAppendEntriesTimeout()
     this._setAppendEntriesTimeout()
-  }
-
-  _schedule () {
-    if (this._needsMore) {
-      this._needsMore = false
-      timers.setImmediate(this._appendEntries.bind(this))
-    } else {
-      this._resetAppendEntriesTimeout()
-    }
   }
 
   _onAppendEntriesTimeout () {
@@ -220,6 +181,7 @@ class PeerLeader {
     }
 
     const self = this
+    const log = this._node.state.log
 
     this._clearAppendEntriesTimeout()
     let finished = false
@@ -227,8 +189,8 @@ class PeerLeader {
 
     this._installingSnapshot = true
 
-    const lastIncludedIndex = this._node.state.log._lastLogIndex
-    const lastIncludedTerm = this._node.state.log._lastLogTerm
+    const lastIncludedIndex = log._lastApplied
+    const lastIncludedTerm = log._lastAppliedTerm
 
     const rs = this._node.state.db.state.createReadStream()
     const stream = rs.pipe(
@@ -241,6 +203,7 @@ class PeerLeader {
 
     function installSnapshot (data) {
       debug('%s: have chunks %j, finished = %j', self._node.state.id, data.chunks, data.finished)
+      debug('%s: installSnapshot on leader: have chunks %j, finished = %j', self._node.state.id, data.chunks, data.finished)
       stream.pause()
 
       const installSnapshotArgs = {
@@ -271,7 +234,7 @@ class PeerLeader {
                 self._node.state.id, self._address, lastIncludedIndex)
               self._nextIndex = self._matchIndex = lastIncludedIndex
               cleanup()
-              this._notifyWaiting(lastIncludedIndex)
+              this.emit('committed', self, lastIncludedIndex)
             } else {
               debug('resuming stream...')
               stream.resume()

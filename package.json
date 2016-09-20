@@ -5,6 +5,7 @@
   "main": "src/node.js",
   "scripts": {
     "test": "lab -vl test/*.js",
+    "test-some": "lab -vl test/active-network.js test/election.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
     "style": "eslint src"
   },

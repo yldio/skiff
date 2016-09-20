@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('skiff.active-network')
+const debug = require('debug')('skiff.network.active')
 const Duplex = require('stream').Duplex
 
 const Peer = require('./peer')
@@ -18,6 +18,7 @@ class Network extends Duplex {
     super(options)
     this._peers = {}
     this._options = options
+    this._ended = false
 
     this.once('finish', () => {
       debug('network finished')
@@ -41,8 +42,15 @@ class Network extends Duplex {
 
   _write (message, _, callback) {
     debug('writing %j', message)
-    const peer = this._ensurePeer(message.to)
-    peer.write(message, callback)
+    if (!this._ended) {
+      const peer = this._ensurePeer(message.to)
+      peer.write(message, callback)
+    }
+  }
+
+  end (buf) {
+    this._ended = true
+    return super.end(buf)
   }
 
   _ensurePeer (address) {

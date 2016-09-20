@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('skiff.passive-network.server')
+const debug = require('debug')('skiff.network.passive.server')
 const net = require('net')
 const Duplex = require('stream').Duplex
 const Msgpack = require('msgpack5')

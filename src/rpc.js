@@ -15,7 +15,8 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
     const done = once(callback)
     const id = uuid()
 
-    const timeout = timers.setTimeout(onTimeout, options.timeout || defaults.rpcTimeoutMS)
+    const timeoutMS = options.timeout || defaults.rpcTimeoutMS
+    const timeout = timers.setTimeout(onTimeout, timeoutMS)
     network.write({
       from: this.id,
       id,
@@ -25,13 +26,14 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
       params: options.params
     }, err => {
       if (err) {
-        callback(err)
+        cancel()
+        done(err)
       } else {
         emitter.emit('message sent')
         emitter.emit('rpc sent', options.action)
-        replies.on('data', onReplyData)
       }
     })
+    replies.on('data', onReplyData)
 
     function onReplyData (message) {
       debug('%s: reply data: %j', node.id, message)
@@ -41,7 +43,7 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
         message.id === id)
 
       if (node.term() > term) {
-        onTimeout()
+        onOutdatedTerm()
       } else if (accept) {
         debug('%s: this is a reply I was expecting: %j', node.id, message)
         cancel()
@@ -54,6 +56,14 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
       debug('RPC timeout')
       cancel()
       const err = new Error('timeout RPC to ' + options.to)
+      err.code = 'ETIMEOUT'
+      done(err)
+    }
+
+    function onOutdatedTerm () {
+      debug('Outdated term')
+      cancel()
+      const err = new Error('outdated term')
       err.code = 'ETIMEOUT'
       done(err)
     }

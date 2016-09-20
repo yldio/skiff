@@ -74,7 +74,8 @@ function Client (nodes, _options) {
   }
 
   function makeOneRequest (done) {
-    if (Math.random() > 0.8) {
+    //if (Math.random() > 0.8) {
+    if (Math.random() > 0.5) {
       makeOnePutRequest(done)
     } else {
       makeOneGetRequest(done)
@@ -91,7 +92,6 @@ function Client (nodes, _options) {
 
     function tryPut () {
       const endpoint = pickEndpoint()
-      // console.log('trying %s', endpoint)
       const options = { payload: value.toString() }
       wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(endpoint, 201, tryPut, err => {
         if (err) {
@@ -111,7 +111,6 @@ function Client (nodes, _options) {
 
     function tryGet () {
       const endpoint = pickEndpoint()
-      // console.log('trying %s', endpoint)
       wreck.get(`${endpoint}/${key}`, parsingWreckReply(endpoint, 200, tryGet, (err, payload) => {
         if (err) {
           done(err)
@@ -147,7 +146,6 @@ function Client (nodes, _options) {
     return function (err, res, payload) {
       if (err) {
         if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') {
-          console.log('%s replied %s', address, err.code)
           leader = null
           timers.setTimeout(retry, 100)
         } else {
@@ -162,7 +160,6 @@ function Client (nodes, _options) {
             error = {}
           }
           if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY')) {
-            console.log('%s replied %s', address, error.code)
             if (error.leader && leader !== address) {
               leader = multiAddrToUrl(error.leader)
             } else {

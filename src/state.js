@@ -66,8 +66,6 @@ class State extends EventEmitter {
       applyTopologyCommand: this._applyTopologyCommand.bind(this)
     }
 
-    this._transition('follower')
-
     this._dispatch()
   }
 

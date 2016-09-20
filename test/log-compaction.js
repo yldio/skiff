@@ -23,12 +23,13 @@ describe('log compaction', () => {
     '/ip4/127.0.0.1/tcp/9491',
     '/ip4/127.0.0.1/tcp/9492'
   ]
+  const newNodeAddress = '/ip4/127.0.0.1/tcp/9493'
 
   const nodes = nodeAddresses.map((address, index) =>
     new Node(address, {
       db: Memdown,
       minLogRetention: 10,
-      peers: nodeAddresses.filter(addr => addr !== address)
+      peers: nodeAddresses.filter(addr => addr !== address).concat(newNodeAddress)
     }))
 
   before(done => {
@@ -68,23 +69,22 @@ describe('log compaction', () => {
     done()
   })
 
-  return;
+  it('waits a bit', done => setTimeout(done, A_BIT))
 
   describe ('node that is late to the party', () => {
-    const newNode = new Node('/ip4/127.0.0.1/tcp/9493', {
-      db: Memdown,
-      minLogRetention: 10,
-      peers: nodeAddresses
+    let newNode
+
+    before(done => {
+      newNode = new Node(newNodeAddress, {
+        db: Memdown,
+        minLogRetention: 10,
+        peers: nodeAddresses
+      })
+      newNode.start(done)
     })
 
-    before(done => newNode.start(done))
-
     after(done => {
-      async.each(nodes, (node, cb) => node.stop(cb), done)
-    })
-
-    after(done => {
-      newNode.stop(done)
+      async.each(nodes.concat(newNode), (node, cb) => node.stop(cb), done)
     })
 
     before(done => setTimeout(done, A_BIT))
@@ -95,12 +95,43 @@ describe('log compaction', () => {
       let nextEntry = 0
       newNode._db.state.createReadStream()
         .on('data', (entry) => {
+          process.stdout.write(newNode.id + ' HAZ ENTRY ' + JSON.stringify(entry) + '\n')
           const expectedKey = leftPad(nextEntry, 3, '0')
           expect(entry.key).to.equal(expectedKey)
           nextEntry ++
         })
         .once('end', () => {
           expect(nextEntry).to.equal(30)
+          done()
+        })
+    })
+
+    it('accepts more entries', {timeout: 10000}, done => {
+      leader = nodes.concat(newNode).find(node => node.is('leader'))
+      leveldown = leader.leveldown()
+
+      const items = []
+      for(var i = 30 ; i < 60 ; i++) {
+        items.push(leftPad(i.toString(), 3, '0'))
+      }
+      async.each(items, (item, cb) => {
+        leveldown.put(item, item, cb)
+      },
+      done)
+    })
+
+    it('waits a bit', done => setTimeout(done, A_BIT))
+
+    it('new node catches up', done => {
+      let nextEntry = 0
+      newNode._db.state.createReadStream()
+        .on('data', (entry) => {
+          const expectedKey = leftPad(nextEntry, 3, '0')
+          expect(entry.key).to.equal(expectedKey)
+          nextEntry ++
+        })
+        .once('end', () => {
+          expect(nextEntry).to.equal(60)
           done()
         })
     })

@@ -85,6 +85,7 @@ function Setup(_options) {
 
   function reviveOne (cb) {
     const address = randomDeadNode()
+    console.log('reviving %s...', address)
     const node = new Node(address, {
       peers: allAddresses.filter(addr => addr !== address)
     })

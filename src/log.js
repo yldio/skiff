@@ -2,6 +2,7 @@
 
 const debug = require('debug')('skiff.log')
 const assert = require('assert')
+const timers = require('timers')
 
 const defaultOptions = {
   minLogRetention: 100
@@ -17,6 +18,7 @@ class Log {
     this._lastLogTerm = 0
     this._commitIndex = 0
     this._lastApplied = 0
+    this._lastAppliedTerm = 0
     this._entries = []
   }
 
@@ -36,6 +38,8 @@ class Log {
     this._entries.push(newEntry)
     this._lastLogIndex = newLogIndex
     this._compact()
+
+    return newLogIndex
   }
 
   head () {
@@ -57,6 +61,10 @@ class Log {
 
   appendAfter (index, entries) {
     debug('%s: append after %d: %j', this._node.id, index, entries)
+
+    if (entries.length) {
+      console.log('%s: appending %j after %d', this._node.id, entries, index)
+    }
 
     // truncate
     let head
@@ -84,24 +92,26 @@ class Log {
       throw new Error('done needs to be a function')
     }
     debug('%s: commit %d', this._node.id, index)
+    console.log('%s: commit %d', this._node.id, index)
     // console.log('commit until %d', index)
 
     const entriesToApply = this.entriesFromTo(this._lastApplied + 1, index)
 
     if (!entriesToApply.length) {
-      return done()
+      return timers.setImmediate(done)
     }
-    const lastEntryIndex = entriesToApply[entriesToApply.length - 1].i
-    debug('%s: lastEntryIndex: %j', this._node.id, entriesToApply[entriesToApply.length - 1])
+    const lastEntry = entriesToApply[entriesToApply.length - 1]
+    debug('%s: lastEntry: %j', this._node.id, lastEntry)
 
-    this._commitIndex = lastEntryIndex
+    this._commitIndex = lastEntry.i
     this._node.applyEntries(entriesToApply.map(entry => entry.c), (err) => {
       if (err) {
         done(err)
       } else {
-        debug('%s: done commiting index %d', this._node.id, lastEntryIndex)
-        // console.log('%s: done commiting index %d', this._node.id, lastEntryIndex)
-        this._lastApplied = lastEntryIndex
+        debug('%s: done commiting index %d', this._node.id, lastEntry.i)
+        console.log('%s: done commiting last entry %j', this._node.id, lastEntry)
+        this._lastApplied = lastEntry.i
+        this._lastAppliedTerm = lastEntry.t
         this._compact()
         done()
       }

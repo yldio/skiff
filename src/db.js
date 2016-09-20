@@ -1,6 +1,7 @@
 'use strict'
 
 const debug = require('debug')('skiff.db')
+const timers = require('timers')
 const Sublevel = require('level-sublevel')
 const Once = require('once')
 const async = require('async')
@@ -144,12 +145,15 @@ class DB {
     const batch = dbCommands
       .filter(entry => ALLOWED_TYPES.indexOf(entry.type) >= 0)
       .map(entry => Object.assign(entry, { prefix: this.state }))
+
+    console.log('%s: applying batch %j', this.id, batch)
+
     if (batch.length) {
       this.db.batch(
         batch,
         done)
     } else {
-      process.nextTick(done)
+      timers.setImmediate(done)
     }
   }
 

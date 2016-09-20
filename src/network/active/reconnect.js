@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('skiff.reconnect')
+const debug = require('debug')('skiff.network.reconnect')
 const Reconnect = require('reconnect-core')
 const net = require('net')
 

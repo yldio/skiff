@@ -16,11 +16,6 @@ const node = new Node(address, options)
 const db = node.leveldown()
 let isLeader = false
 
-node.on('new state', state => {
-  console.log('new state: %s', state)
-  isLeader = (state === 'leader')
-})
-
 setInterval(() => {
   const peers = node.peers()
   if (peers) {
@@ -66,10 +61,12 @@ const server = http.createServer(function(req, res) {
 })
 
 function handleWriteRequest(key, value, res) {
+  console.log('  server request: write')
   db.put(key, value, handlingError(key, res, 201))
 }
 
 function handleReadRequest (key, res) {
+  console.log('  server request: read')
   db.get(key, handlingError(key, res))
 }
 
@@ -78,6 +75,12 @@ async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], er
     throw err
   } else {
     console.log(`server ${address} started`)
+
+    node.on('new state', state => {
+      console.log('new state: %s', state)
+      isLeader = (state === 'leader')
+    })
+
   }
 })
 
@@ -86,6 +89,7 @@ function encodeError (err) {
 }
 function handlingError (key, res, code) {
   return function (err, value) {
+    console.log('  server reply %j', err && err.message)
     if (err) {
       if (err.message.match(/not found/)) {
         res.statusCode = code || 200

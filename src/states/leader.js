@@ -2,6 +2,7 @@
 
 const debug = require('debug')('skiff.states.leader')
 const async = require('async')
+const timers = require('timers')
 
 const Base = require('./base')
 const PeerLeader = require('../peer-leader')
@@ -20,14 +21,18 @@ class Leader extends Base {
       followers[address] = new PeerLeader(address, this._node, this._options)
       return followers
     }, {})
-    this._appendEntries(this._node.network.peers)
     super.start()
+    this._waitForConsensus(this._node.state.log._commitIndex, this._node.network.peers)
   }
 
   stop () {
-    Object.keys(this._followers).forEach(address => {
-      this._followers[address].stop()
-    })
+    Object.keys(this._followers)
+      .map(address => this._followers[address])
+      .forEach(follower => {
+        follower.stop()
+        follower.removeAllListeners()
+      })
+
     super.stop()
   }
 
@@ -53,78 +58,64 @@ class Leader extends Base {
   }
 
   command (consensuses, command, options, done) {
-    this._node.log.push(command)
+    const index = this._node.log.push(command)
+
     process.nextTick(() => {
-      async.eachSeries(consensuses, this._appendEntries.bind(this), done)
+      async.eachSeries(consensuses, this._waitForConsensus.bind(this, index), done)
     })
   }
 
   readConsensus (callback) {
     // TODO: grant consensus if timestamp for last consensus < minimium election timeout
-    this._appendEntries(this._node.network.peers, callback)
+    this._waitForConsensus(this._node.state.log._lastLogIndex, this._node.network.peers, callback)
   }
 
-  _appendEntries (consensus, _done) {
-    debug('%s: _appendEntries; consensus = %j', this._node.state.id, consensus)
-    if (!consensus || !consensus.length) {
-      throw new Error('no consensus group')
-    }
-    const self = this
-    let majorityReached = false
-    let voteCount = 1
-    let commitCount = 1
+  _waitForConsensus (waitingForIndex, consensus, _done) {
+    debug('_waitForConsensus %d', waitingForIndex)
     const done = _done || noop
 
-    const log = this._node.log
-    const lastEntry = log.head()
+    // vote for self
+    let votes = 1
 
-    const cancels = consensus
-      .map(address => {
-        let follower = this._followers[address]
-        if (!follower) {
-          follower = this._followers[address] = new PeerLeader(address, this._node, this._options)
-        }
-        return follower
-      })
-      .map(peer => {
-        const expiresAt = Date.now() + this._options.rpcTimeoutMS
-        return peer.waitForEntryAppended(lastEntry && lastEntry.i || 0, expiresAt, err => {
-          debug('append entries from %s replied', peer._address, err)
-          voteCount++
-          if (!err) {
-            // console.log('%d OK from %s', _counter, peer._address)
-            commitCount++
-          } else {
-            // console.log('%d NOT OK from %s because %s', _counter, peer._address, err.message)
-          }
-          perhapsDone()
-        })
-      })
+    // TODO: consider using another options as timeout value (waitForConsensusTimeout?)
+    const timeout = timers.setTimeout(onTimeout, this._options.rpcTimeoutMS)
+    const peers = consensus.map(address => {
+      let follower = this._followers[address]
+      if (!follower) {
+        follower = this._followers[address] = new PeerLeader(address, this._node, this._options)
+      }
+      return follower
+    })
 
-    function perhapsDone () {
-      if (!majorityReached) {
-        if (isMajority(consensus, commitCount)) {
-          majorityReached = true
-          debug('%s: majority reached', self._node.state.id)
-          // console.log('majority reached')
-          cancelAll()
-          if (lastEntry) {
-            debug('%s: about to commit index %d', self._node.state.id, lastEntry.i)
-            log.commit(lastEntry.i, done)
-          } else {
-            done()
-          }
-        } else if (isMajority(consensus, voteCount - commitCount)) {
-          majorityReached = true
-          const err = new Error(`No majority reached in leader ${self._node.state.id}`)
-          err.code = 'ENOMAJORITY'
-          done(err)
-        }
+    peers.forEach(peer => {
+      peer.on('committed', onPeerCommit)
+      peer.needsIndex(waitingForIndex)
+    })
+
+    function onPeerCommit (peer, peerIndex) {
+      if (peerIndex >= waitingForIndex) {
+        votes++
+        peer.removeListener('committed', onPeerCommit)
+      }
+      if (isMajority(consensus, votes)) {
+        debug('have consensus for index %d', waitingForIndex)
+        cleanup()
+        this._node.state.log.commit(waitingForIndex, done)
       }
     }
 
-    function cancelAll () {
-      cancels.forEach(cancel => cancel())
+    function onTimeout () {
+      cleanup()
+      const err = new Error('timedout waiting for consensus')
+      err.code = 'ENOMAJORITY'
+      done(err)
+    }
+
+    function cleanup () {
+      timers.clearTimeout(timeout)
+      peers.forEach(peer => {
+        peer.removeListener('committed', onPeerCommit)
+      })
     }
   }
 

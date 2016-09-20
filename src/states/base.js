@@ -138,13 +138,15 @@ class Base extends EventEmitter {
 
   _appendEntriesReceived (message, done) {
     const self = this
+    const log = this._node.log
+    const params = message.params || {}
 
     let success = false
     let reason
     let prevLogMatches = false
     let commitIndex = this._node.log._commitIndex
     const currentTerm = this._node.state.term()
-    const termIsAcceptable = (message.params.term >= currentTerm)
+    const termIsAcceptable = (params.term >= currentTerm)
     if (!termIsAcceptable) {
       reason = 'term is not acceptable'
       debug('term is not acceptable')
@@ -153,11 +155,12 @@ class Base extends EventEmitter {
     if (termIsAcceptable) {
       this._resetElectionTimeout()
       debug('%s: term is acceptable', this._node.state.id)
-      const entry = this._node.log.atLogIndex(message.params.prevLogIndex)
+      const entry = log.atLogIndex(params.prevLogIndex)
       debug('%s: entry at previous log index: %j', this._node.state.id, entry)
       prevLogMatches =
-        (!message.params.prevLogIndex) ||
-        (entry && entry.t === message.params.prevLogTerm && entry.i === message.params.prevLogIndex)
+        (!params.prevLogIndex) ||
+        (!entry && (log._lastLogIndex === params.prevLogIndex && log._lastLogTerm === params.prevLogTerm)) ||
+        (entry && entry.t === params.prevLogTerm && entry.i === params.prevLogIndex)
 
       debug('%s: previous log matches: %j', this._node.state.id, prevLogMatches)
       if (!prevLogMatches) {
@@ -223,7 +226,6 @@ class Base extends EventEmitter {
   _installSnapshotReceived (message, done) {
     debug('%s: _installSnapshotReceived %j', this._node.state.id, message)
 
-    console.log('Having remote image installed...')
     this._resetElectionTimeout()
 
     const self = this
@@ -235,7 +237,6 @@ class Base extends EventEmitter {
     }
 
     if (message.params.done) {
-      console.log('done installing remote image')
       this._node.state.setTerm(message.params.lastIncludedTerm)
       const log = this._node.state.log
       log._lastLogIndex = message.params.lastIncludedIndex

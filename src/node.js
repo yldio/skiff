@@ -120,6 +120,7 @@ class Node extends EventEmitter {
             this._startState = 'started'
             this.emit('started')
           }
+          this._state._transition('follower')
           cb(err)
         })
     } else if (this._startState === 'started') {

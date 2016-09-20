@@ -45,6 +45,7 @@ class Candidate extends Base {
                 // won
                 majorityReached = true
                 debug('%s: election won', this._node.state.id)
+                console.log('%s is now leader', this._node.state.id)
                 this._node.state.transition('leader')
               }
             }
