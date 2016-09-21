@@ -16,13 +16,12 @@ const node = new Node(address, options)
 const db = node.leveldown()
 let isLeader = false
 
-setInterval(() => {
-  const peers = node.peers()
-  if (peers) {
-    console.log('peers: %s', JSON.stringify(peers, null, '\t'))
-  }
-}, 1000)
-
+// setInterval(() => {
+//   const peers = node.peers()
+//   if (peers) {
+//     console.log('peers: %s', JSON.stringify(peers, null, '\t'))
+//   }
+// }, 1000)
 // node.on('connect', peer => {
 //   if (isLeader) {
 //     console.log('+ %j', peer)
@@ -61,12 +60,12 @@ const server = http.createServer(function(req, res) {
 })
 
 function handleWriteRequest(key, value, res) {
-  console.log('  server request: write')
+  // console.log('  server request: write')
   db.put(key, value, handlingError(key, res, 201))
 }
 
 function handleReadRequest (key, res) {
-  console.log('  server request: read')
+  // console.log('  server request: read')
   db.get(key, handlingError(key, res))
 }
 
@@ -76,11 +75,10 @@ async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], er
   } else {
     console.log(`server ${address} started`)
 
-    node.on('new state', state => {
-      console.log('new state: %s', state)
-      isLeader = (state === 'leader')
-    })
-
+    // node.on('new state', state => {
+    //   console.log('new state: %s', state)
+    //   isLeader = (state === 'leader')
+    // })
   }
 })
 
@@ -89,7 +87,6 @@ function encodeError (err) {
 }
 function handlingError (key, res, code) {
   return function (err, value) {
-    console.log('  server reply %j', err && err.message)
     if (err) {
       if (err.message.match(/not found/)) {
         res.statusCode = code || 200

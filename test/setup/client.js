@@ -74,8 +74,6 @@ function Client (nodes, _options) {
   }
 
   function makeOneRequest (done) {
-    //if (Math.random() > 0.8) {
-    process.stderr.write('    -> MAKING REQUEST...\n')
     if (Math.random() > 0.5) {
       makeOnePutRequest(done)
     } else {
@@ -95,7 +93,6 @@ function Client (nodes, _options) {
       const endpoint = pickEndpoint()
       const options = { payload: value.toString() }
       wreck.put(`${endpoint}/${key}`, options, parsingWreckReply(endpoint, 201, tryPut, err => {
-        process.stderr.write(`    -> DONE. err: ${err && err.messabe}`)
         if (err) {
           done(err)
         } else {
@@ -162,7 +159,6 @@ function Client (nodes, _options) {
             error = {}
           }
           if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY')) {
-            process.stderr.write(`    -> ERROR: ${JSON.stringify(error)}\n`)
             if (error.leader && leader !== address) {
               leader = multiAddrToUrl(error.leader)
             } else {

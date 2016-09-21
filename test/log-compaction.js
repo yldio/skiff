@@ -95,7 +95,6 @@ describe('log compaction', () => {
       let nextEntry = 0
       newNode._db.state.createReadStream()
         .on('data', (entry) => {
-          process.stdout.write(newNode.id + ' HAZ ENTRY ' + JSON.stringify(entry) + '\n')
           const expectedKey = leftPad(nextEntry, 3, '0')
           expect(entry.key).to.equal(expectedKey)
           nextEntry ++

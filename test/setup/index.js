@@ -82,14 +82,14 @@ function Setup(_options) {
 
   function killOne (cb) {
     const node = popRandomLiveNode()
-    console.log('killing %s...', node._address)
+    // console.log('killing %s...', node._address)
     deadNodes.push(node._address)
     node.stop(cb)
   }
 
   function reviveOne (cb) {
     const address = randomDeadNode()
-    console.log('reviving %s...', address)
+    // console.log('reviving %s...', address)
     const node = new Node(address, {
       peers: allAddresses.filter(addr => addr !== address)
     })

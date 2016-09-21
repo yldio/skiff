@@ -4,7 +4,9 @@
   "description": "Raft for Node.js",
   "main": "src/node.js",
   "scripts": {
-    "test": "lab -vl test/*.js",
+    "test": "npm run quick-tests && npm run resilience-tests",
+    "quick-tests": "lab -vl test/*.js",
+    "resilience-tests": "lab test/resilience/resilience-caos-memory.js && lab test/resilience/resilience-order-memory.js",
     "test-some": "lab -vl test/active-network.js test/election.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
     "style": "eslint src"

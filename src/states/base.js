@@ -167,13 +167,15 @@ class Base extends EventEmitter {
         reason = `prev log term or index does not match: ${
           entry
             ? `prevLogIndex was ${entry.i} and prevLogTerm was ${entry.t}`
-            : 'prev log term or index does not match: no existing last entry'
+            : 'no existing last entry'
           }`
 
         debug(
-          'prev log term or index does not match. had %d and message contained %d',
+          '%s: prev log term or index does not match. had %d and message contained %d',
+          this._node.state.id,
           entry && entry.t,
           message.params.prevLogIndex)
+        debug('%s: last log index: %j, last log term: %j', this._node.state.id, log._lastLogIndex, log._lastLogTerm)
       } else {
         success = true
         const newEntries = message.params.entries
@@ -237,12 +239,12 @@ class Base extends EventEmitter {
     }
 
     if (message.params.done) {
-      this._node.state.setTerm(message.params.lastIncludedTerm)
       const log = this._node.state.log
       log._lastLogIndex = message.params.lastIncludedIndex
-      log._lastLogTerm = message.params.lastIncludedTerm
       log._commitIndex = message.params.lastIncludedIndex
       log._lastApplied = message.params.lastIncludedIndex
+      log._lastLogTerm = message.params.lastIncludedTerm
+      log._lastAppliedTerm = message.params.lastIncludedTerm
     }
 
     tasks.push(insertData)
