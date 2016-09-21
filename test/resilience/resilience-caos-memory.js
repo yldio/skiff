@@ -17,9 +17,9 @@ describe('resilience', () => {
   before(setup.before)
   after(setup.after)
 
-  it ('works', {timeout: 121000}, done => {
+  it ('works', {timeout: 81000}, done => {
     let timeout
-    const client = Client(setup.addresses, {duration  : 120000})
+    const client = Client(setup.addresses, {duration  : 80000})
     const emitter = client((err) => {
       timers.clearTimeout(timeout)
       console.log('stats: %j', emitter.stats)
