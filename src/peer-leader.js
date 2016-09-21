@@ -61,9 +61,7 @@ class PeerLeader extends EventEmitter {
     const log = this._node.log
     const currentTerm = this._node.state.term()
 
-    const entriesReply = this._entries()
-    const entries = entriesReply.entries
-    const capped = entriesReply.capped
+    const entries = this._entries()
     if (entries) {
       debug('%s: entries for %s are: %j', this._node.state.id, this._address, entries)
 
@@ -155,13 +153,11 @@ class PeerLeader extends EventEmitter {
 
   _entries () {
     debug('follower %s next index is %d', this._address, this._nextIndex)
-    const start = this._nextIndex
-    let entries = this._node.log.entriesFrom(start)
-    const cap = entries && (entries.length > this._options.batchEntriesLimit)
-    if (cap) {
+    let entries = this._node.log.entriesFrom(this._nextIndex)
+    if (entries) {
       entries = entries.slice(0, this._options.batchEntriesLimit)
     }
-    return { capped: cap, entries }
+    return entries
   }
 
   _previousEntry () {
