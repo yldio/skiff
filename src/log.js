@@ -62,10 +62,6 @@ class Log {
   appendAfter (index, entries) {
     debug('%s: append after %d: %j', this._node.id, index, entries)
 
-    if (entries.length) {
-      console.log('%s: appending %j after %d', this._node.id, entries, index)
-    }
-
     // truncate
     let head
     while ((head = this.head()) && head.i > index) {
@@ -92,8 +88,6 @@ class Log {
       throw new Error('done needs to be a function')
     }
     debug('%s: commit %d', this._node.id, index)
-    console.log('%s: commit %d', this._node.id, index)
-    // console.log('commit until %d', index)
 
     const entriesToApply = this.entriesFromTo(this._lastApplied + 1, index)
 
@@ -109,7 +103,6 @@ class Log {
         done(err)
       } else {
         debug('%s: done commiting index %d', this._node.id, lastEntry.i)
-        console.log('%s: done commiting last entry %j', this._node.id, lastEntry)
         this._lastApplied = lastEntry.i
         this._lastAppliedTerm = lastEntry.t
         this._compact()
