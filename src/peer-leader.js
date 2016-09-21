@@ -37,7 +37,7 @@ class PeerLeader extends EventEmitter {
     if (index > this._needsIndex) {
       this._needsIndex = index
     }
-    if (this._needsMore) {
+    if (this._needsMore()) {
       timers.setImmediate(this._appendEntries.bind(this))
     }
   }
@@ -99,9 +99,6 @@ class PeerLeader extends EventEmitter {
               this._matchIndex = leaderCommit
               if (lastEntry) {
                 this._nextIndex = lastEntry.i + 1
-              }
-              if (capped) {
-                this._needsMore = true
               }
               const commitedEntry = lastEntry || previousEntry
               const commitedIndex = commitedEntry && commitedEntry.i || 0
