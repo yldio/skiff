@@ -102,8 +102,8 @@ class PeerLeader extends EventEmitter {
               const commitedIndex = commitedEntry && commitedEntry.i || 0
               this.emit('committed', this, commitedIndex)
             } else {
-              if (reply.params.lastIndexForTerm !== undefined) {
-                this._nextIndex = reply.params.lastIndexForTerm + 1
+              if (reply.params.nextLogIndex !== undefined) {
+                this._nextIndex = reply.params.nextLogIndex
               } else {
                 this._nextIndex --
               }
@@ -225,7 +225,8 @@ class PeerLeader extends EventEmitter {
             if (data.finished) {
               debug('%s: data finished, setting next index of %j to %d',
                 self._node.state.id, self._address, lastIncludedIndex)
-              self._nextIndex = self._matchIndex = lastIncludedIndex
+              self._matchIndex = lastIncludedIndex
+              self._nextIndex = lastIncludedIndex + 1
               cleanup()
               this.emit('committed', self, lastIncludedIndex)
             } else {

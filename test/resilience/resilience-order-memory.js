@@ -17,12 +17,11 @@ describe('resilience', () => {
   before(setup.before)
   after(setup.after)
 
-  it ('works', {timeout: 61000}, done => {
+  it ('works', {timeout: 121000}, done => {
     let timeout
-    const client = Client(setup.addresses, {duration  : 60000})
+    const client = Client(setup.addresses, {duration  : 120000})
     const emitter = client(done)
     resetOperationTimeout()
-    // emitter.on('operation started', () => console.log('operation started'))
     emitter.on('operation', resetOperationTimeout)
 
     function onOperationTimeout () {

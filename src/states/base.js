@@ -142,6 +142,7 @@ class Base extends EventEmitter {
     const params = message.params || {}
 
     let success = false
+    let entry
     let reason
     let prevLogMatches = false
     let commitIndex = this._node.log._commitIndex
@@ -155,7 +156,7 @@ class Base extends EventEmitter {
     if (termIsAcceptable) {
       this._resetElectionTimeout()
       debug('%s: term is acceptable', this._node.state.id)
-      const entry = log.atLogIndex(params.prevLogIndex)
+      entry = log.atLogIndex(params.prevLogIndex)
       debug('%s: entry at previous log index: %j', this._node.state.id, entry)
       prevLogMatches =
         (!params.prevLogIndex) ||
@@ -167,7 +168,7 @@ class Base extends EventEmitter {
         reason = `prev log term or index does not match: ${
           entry
             ? `prevLogIndex was ${entry.i} and prevLogTerm was ${entry.t}`
-            : 'no existing last entry'
+            : `no existing last entry. last log index is ${log._lastLogIndex} and last log term is ${log._lastLogTerm}`
           }`
 
         debug(
@@ -179,7 +180,7 @@ class Base extends EventEmitter {
       } else {
         success = true
         const newEntries = message.params.entries
-        this._node.log.appendAfter(message.params.prevLogIndex || 0, newEntries)
+        log.appendAfter(message.params.prevLogIndex || 0, newEntries)
         const leaderCommit = message.params.leaderCommit
         if (leaderCommit > commitIndex) {
           commitIndex = leaderCommit
@@ -202,13 +203,17 @@ class Base extends EventEmitter {
     }
 
     function reply () {
+      let nextLogIndex = 0
+      if (!success && entry) {
+        nextLogIndex = log.lastIndexForTerm(entry.t)
+      }
       self._node.network.reply(
         message.from,
         message.id,
         {
           replyTo: 'AppendEntries',
           term: currentTerm,
-          lastIndexForTerm: self._node.log.lastIndexForTerm(currentTerm) || 0,
+          nextLogIndex,
           success,
           reason
         }, done)

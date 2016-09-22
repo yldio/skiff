@@ -143,7 +143,6 @@ class State extends EventEmitter {
   _incrementTerm () {
     this._votedFor = null
     const term = ++this._term
-    this._log.setTerm(term)
     return term
   }
 
@@ -157,7 +156,6 @@ class State extends EventEmitter {
     }
     this._votedFor = null
     this._term = term
-    this._log.setTerm(term)
     return this._term
   }
 

@@ -111,10 +111,6 @@ class Log {
     })
   }
 
-  setTerm (t) {
-    this._lastLogTerm = t
-  }
-
   lastIndexForTerm (term) {
     let entry
     if (this._lastLogTerm === term) {
