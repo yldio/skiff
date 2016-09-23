@@ -144,6 +144,7 @@ class Peer extends Duplex {
           from: message.to,
           id: message.id,
           error: 'not connected',
+          fake: true,
           params: {
             success: false,
             reason: 'not connected'

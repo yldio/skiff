@@ -26,7 +26,8 @@ const importantStateEvents = [
   'warning',
   'new state',
   'election timeout',
-  'leader'
+  'leader',
+  'rpc latency'
 ]
 
 class Node extends EventEmitter {

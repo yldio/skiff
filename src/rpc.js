@@ -17,6 +17,8 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
 
     const timeoutMS = options.timeout || defaults.rpcTimeoutMS
     const timeout = timers.setTimeout(onTimeout, timeoutMS)
+    const started = Date.now()
+
     network.write({
       from: this.id,
       id,
@@ -37,6 +39,10 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
 
     function onReplyData (message) {
       debug('%s: reply data: %j', node.id, message)
+      if (!message.fake) {
+        timers.setImmediate(() => emitter.emit('rpc latency', Date.now() - started))
+      }
+
       const accept = (
         message.type === 'reply' &&
         message.from === options.to &&
@@ -55,17 +61,13 @@ module.exports = function createRPC (node, network, replies, emitter, defaults) 
     function onTimeout () {
       debug('RPC timeout')
       cancel()
-      const err = new Error('timeout RPC to ' + options.to)
-      err.code = 'ETIMEOUT'
-      done(err)
+      done(Object.assign(new Error(`timeout RPC to ${options.to}`), { code: 'ETIMEOUT' }))
     }
 
     function onOutdatedTerm () {
       debug('Outdated term')
       cancel()
-      const err = new Error('outdated term')
-      err.code = 'ETIMEOUT'
-      done(err)
+      done(Object.assign(new Error('outdated term'), { code: 'ETIMEOUT' }))
     }
 
     function cancel () {
