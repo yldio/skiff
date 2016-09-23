@@ -5,6 +5,7 @@ const merge = require('deepmerge')
 const Multiaddr = require('multiaddr')
 const EventEmitter = require('events')
 const async = require('async')
+const join = require('path').join
 
 const PassiveNetwork = require('./network/passive')
 const ActiveNetwork = require('./network/active')
@@ -19,7 +20,9 @@ const Iterator = require('./iterator')
 const defaultOptions = {
   server: {},
   rpcTimeoutMS: 2000,
-  peers: []
+  peers: [],
+  levelup: {},
+  location: join(__dirname, '..', 'data')
 }
 
 const importantStateEvents = [
@@ -38,7 +41,7 @@ class Node extends EventEmitter {
     this.id = id
     this._options = merge(defaultOptions, _options || {})
 
-    this._db = new DB(this.id, this._options.db)
+    this._db = new DB(this._options.location, this.id, this._options.db, this._options.levelup)
 
     this._dispatcher = new IncomingDispatcher({id})
 

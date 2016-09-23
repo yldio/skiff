@@ -4,42 +4,23 @@ const http = require('http')
 const timers = require('timers')
 const async = require('async')
 const Memdown = require('memdown')
+const Leveldown = require('leveldown')
 const Multiaddr = require('multiaddr')
+const join = require('path').join
 const Node = require('../../')
 
 const port = Number(process.argv[2])
 const address = `/ip4/127.0.0.1/tcp/${port}`
 const options = Object.assign({}, JSON.parse(process.argv[3]), {
-  db: Memdown
+  location: join(__dirname, '..', 'resilience', 'data')
 })
+
+if (!options.persist) {
+  options.db = Memdown
+}
 
 const node = new Node(address, options)
 const db = node.leveldown()
-let isLeader = false
-
-// setInterval(() => {
-//   const peers = node.peers()
-//   if (peers) {
-//     console.log('peers: %s', JSON.stringify(peers, null, '\t'))
-//   }
-// }, 1000)
-// node.on('connect', peer => {
-//   if (isLeader) {
-//     console.log('+ %j', peer)
-//     console.log('connected to %j', node.connections())
-//   }
-// })
-// node.on('disconnect', peer => {
-//   if (isLeader) {
-//     console.log('- %s', peer)
-//     console.log('connected to %j', node.connections())
-//   }
-// })
-// node.on('election timeout', () => console.log('election timeout'))
-
-// setInterval(function() {
-//   console.log('%d: stats: %j', Date.now(), node.stats())
-// }, 1000)
 
 const server = http.createServer(function(req, res) {
   // console.log('request to node connected to %j', node.connections())
@@ -75,11 +56,6 @@ async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], er
     throw err
   } else {
     console.log(`server ${address} started`)
-
-    // node.on('new state', state => {
-    //   console.log('new state: %s', state)
-    //   isLeader = (state === 'leader')
-    // })
   }
 })
 

@@ -3,10 +3,14 @@
 const async = require('async')
 const timers = require('timers')
 const fork = require('child_process').fork
+const path = require('path')
+const rimraf = require('rimraf')
+const mkdirp = require('mkdirp')
 
 const Node = require('./node')
 
 const defaultOptions = {
+  persist: false,
   caos: true,
   nodeCount: 5,
   killerIntervalMS: 10000
@@ -18,16 +22,24 @@ function Setup(_options) {
   const allAddresses = []
   const options = Object.assign({}, defaultOptions, _options)
   const maxDeadNodes = Math.ceil(options.nodeCount / 2) - 1
+  const dataPath = path.join(__dirname, '..', 'resilience', 'data')
+
   let killing = true
 
   return { before, after, addresses: allAddresses}
 
   function before (done) {
-    async.series([createNodes, startNodes, startKiller], done)
+    async.series([setupDirs, createNodes, startNodes, startKiller], done)
   }
 
   function after (done) {
     async.series([stopKiller, stopNodes], done)
+  }
+
+  function setupDirs (done) {
+    rimraf.sync(dataPath)
+    mkdirp.sync(dataPath)
+    done()
   }
 
   function createNodes (done) {
@@ -39,7 +51,8 @@ function Setup(_options) {
     ports.map(portToAddress).forEach(address => allAddresses.push(address))
 
     liveNodes = ports.map(port => new Node(port, {
-      peers: ports.filter(p => p !== port).map(portToAddress)
+      peers: ports.filter(p => p !== port).map(portToAddress),
+      persist: options.persist
     }))
 
     done()

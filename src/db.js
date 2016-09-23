@@ -9,22 +9,23 @@ const ConcatStream = require('concat-stream')
 const Leveldown = require('leveldown')
 const Levelup = require('levelup')
 const clearDB = require('./lib/clear-db')
+const join = require('path').join
 
 const ALLOWED_TYPES = ['put', 'del']
 
-const defaultDBOptions = {
+const defaultOptions = {
   keyEncoding: 'ascii',
   valueEncoding: 'json'
 }
 
 class DB {
 
-  constructor (id, db, _dbOptions) {
+  constructor (location, id, db, _options) {
     this.id = id
-    const dbOptions = Object.assign({}, defaultDBOptions, _dbOptions)
+    const options = Object.assign({}, defaultOptions, _options)
     const dbName = id.replace(/\//g, '-')
     const leveldown = db || Leveldown
-    this._levelup = new Levelup(dbName, Object.assign({}, dbOptions, {db: leveldown}))
+    this._levelup = new Levelup(join(location, dbName), Object.assign({}, options, {db: leveldown}))
     this._leveldown = this._levelup.db
     this.db = Sublevel(this._levelup)
 
