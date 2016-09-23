@@ -20,12 +20,14 @@ const defaultOptions = {
 
 class DB {
 
-  constructor (location, id, db, _options) {
+  constructor (_location, id, db, _options) {
     this.id = id
     const options = Object.assign({}, defaultOptions, _options)
-    const dbName = id.replace(/\//g, '-')
+    const dbName = id.replace(/\//g, '_').replace(/\./g, '_')
     const leveldown = db || Leveldown
-    this._levelup = new Levelup(join(location, dbName), Object.assign({}, options, {db: leveldown}))
+    const location = join(_location, dbName)
+    // console.log('location:', location)
+    this._levelup = new Levelup(location, Object.assign({}, options, {db: leveldown}))
     this._leveldown = this._levelup.db
     this.db = Sublevel(this._levelup)
 
