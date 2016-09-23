@@ -12,7 +12,7 @@ const Node = require('./node')
 const defaultOptions = {
   persist: false,
   chaos: true,
-  nodeCount: 5,
+  nodeCount: 3,
   killerIntervalMS: 10000
 }
 
