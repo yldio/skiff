@@ -8,8 +8,8 @@ const async = require('async')
 const defaultOptions = {
   electionTimeout: true,
   appendEntriesIntervalMS: 100,
-  electionTimeoutMinMS: 200,
-  electionTimeoutMaxMS: 400,
+  electionTimeoutMinMS: 1000,
+  electionTimeoutMaxMS: 2000,
   installSnapshotChunkSize: 10,
   batchEntriesLimit: 10
 }
