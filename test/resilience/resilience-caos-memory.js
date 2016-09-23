@@ -12,7 +12,7 @@ const timers = require('timers')
 const Setup = require('../setup')
 const Client = require('../setup/client')
 
-describe('resilience', () => {
+describe('resilience, chaos, in memory', () => {
   const setup = Setup()
   before(setup.before)
   after(setup.after)

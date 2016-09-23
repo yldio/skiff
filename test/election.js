@@ -44,7 +44,7 @@ describe('election', () => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  it('waits a bit', {timeout: 3000}, done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: 2100}, done => setTimeout(done, A_BIT))
 
   it('one of the nodes gets elected', done => {
     leader = nodes.find(node => node.is('leader'))
@@ -55,7 +55,7 @@ describe('election', () => {
     done()
   })
 
-  it('waits a bit', {timeout: 3000}, done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: 2100}, done => setTimeout(done, A_BIT))
 
   it('still the same', done => {
     const followers2 = nodes.filter(node => node.is('follower'))

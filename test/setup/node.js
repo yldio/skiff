@@ -14,6 +14,7 @@ class Node {
   }
 
   start (done) {
+    console.log('Forking', this._address)
     const args = [this._address, JSON.stringify(this._options)]
     this._child = fork(path.join(__dirname, 'server.js'), args, {
       silent: true
@@ -33,7 +34,7 @@ class Node {
       if (line.match(/started/)) {
         done()
       } else if (!this._exiting) {
-        done(new Error('Could not start child, first line of output was %j', line))
+        done(new Error(`Could not start child, first line of output was ${line}`))
       } else {
         done()
       }

@@ -1,6 +1,7 @@
 'use strict'
 
 const http = require('http')
+const timers = require('timers')
 const async = require('async')
 const Memdown = require('memdown')
 const Multiaddr = require('multiaddr')

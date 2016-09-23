@@ -12,7 +12,7 @@ const memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 2000
+const A_BIT = 4000
 
 describe('log replication', () => {
   let follower, leader
@@ -41,7 +41,7 @@ describe('log replication', () => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  before({timeout: 3000}, done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     leader = nodes.find(node => node.is('leader'))
@@ -76,5 +76,5 @@ describe('log replication', () => {
     })
   })
 
-  before({timeout: 3000}, done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 })

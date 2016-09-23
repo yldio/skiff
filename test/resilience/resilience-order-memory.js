@@ -12,10 +12,10 @@ const timers = require('timers')
 const Setup = require('../setup')
 const Client = require('../setup/client')
 
-describe('resilience', () => {
+describe('resilience, no chaos, in memory', () => {
   const setup = Setup({caos: false})
-  before(setup.before)
-  after(setup.after)
+  before({timeout: 10000}, setup.before)
+  after({timeout: 10000}, setup.after)
 
   it ('works', {timeout: 121000}, done => {
     let timeout
