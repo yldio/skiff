@@ -14,7 +14,7 @@ const leftPad = require('left-pad')
 
 const Node = require('../')
 
-const A_BIT = 1900
+const A_BIT = 4000
 
 describe('log compaction', () => {
   let nodes, follower, leader, leveldown
@@ -44,7 +44,7 @@ describe('log compaction', () => {
     async.each(nodes, (node, cb) => node.start(cb), done)
   })
 
-  before(done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     leader = nodes.find(node => node.is('leader'))
@@ -72,7 +72,7 @@ describe('log compaction', () => {
     done()
   })
 
-  it('waits a bit', done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: 5000}, done => setTimeout(done, A_BIT))
 
   describe ('node that is late to the party', () => {
     let newNode
@@ -90,9 +90,9 @@ describe('log compaction', () => {
       async.each(nodes.concat(newNode), (node, cb) => node.stop(cb), done)
     })
 
-    before(done => setTimeout(done, A_BIT))
+    before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
-    it('waits a bit', done => setTimeout(done, A_BIT))
+    it('waits a bit', {timeout: 5000}, done => setTimeout(done, A_BIT))
 
     it('catches up', done => {
       let nextEntry = 0
@@ -122,7 +122,7 @@ describe('log compaction', () => {
       done)
     })
 
-    it('waits a bit', done => setTimeout(done, A_BIT))
+    it('waits a bit', {timeout: 5000}, done => setTimeout(done, A_BIT))
 
     it('new node catches up', done => {
       let nextEntry = 0

@@ -32,7 +32,9 @@ describe('log replication', () => {
   })
 
   before(done => {
-    nodes.forEach(node => node.on('warning', err => { throw err }))
+    nodes.forEach(node => {
+      node.on('warning', err => { throw err })
+    })
     done()
   })
 

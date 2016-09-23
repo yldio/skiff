@@ -13,7 +13,7 @@ const Memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 1000
+const A_BIT = 4000
 
 describe('leveldown', () => {
   let nodes, follower, leader, leveldown
@@ -45,7 +45,7 @@ describe('leveldown', () => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  before(done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     leader = nodes.find(node => node.is('leader'))

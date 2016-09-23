@@ -12,7 +12,7 @@ const memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 2000
+const A_BIT = 4000
 
 describe('log replication catchup', () => {
   let nodes, follower, leader, newNode
@@ -47,7 +47,7 @@ describe('log replication catchup', () => {
     async.each(nodes.concat(newNode), (node, cb) => node.stop(cb), done)
   })
 
-  before({timeout: 3000}, done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     leader = nodes.find(node => node.is('leader'))
@@ -62,7 +62,7 @@ describe('log replication catchup', () => {
 
   before(done => leader.command({type: 'put', key: 'b', value: '2'}, done))
 
-  before({timeout: 3000}, done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   before(done => {
     newNode = new Node(newAddress, {
@@ -76,10 +76,11 @@ describe('log replication catchup', () => {
   })
 
   before(done => {
+    leader = nodes.find(node => node.is('leader'))
     leader.join(newAddress, done)
   })
 
-  before({timeout: 3000}, done => setTimeout(done, A_BIT))
+  before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   it('new node gets updated', done => {
     const db = newNode._db.db

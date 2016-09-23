@@ -13,7 +13,7 @@ const memdown = require('memdown')
 
 const Node = require('../')
 
-const A_BIT = 2000
+const A_BIT = 4000
 
 describe('election', () => {
   let nodes, followers, leader
@@ -47,7 +47,7 @@ describe('election', () => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })
 
-  it('waits a bit', {timeout: 2100}, done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: 5000}, done => setTimeout(done, A_BIT))
 
   it('one of the nodes gets elected', done => {
     leader = nodes.find(node => node.is('leader'))
@@ -55,17 +55,6 @@ describe('election', () => {
     expect(followers.length).to.equal(2)
     expect(leader).to.not.be.undefined()
     expect(followers.indexOf(leader)).to.equal(-1)
-    done()
-  })
-
-  it('waits a bit', {timeout: 2100}, done => setTimeout(done, A_BIT))
-
-  it('still the same', done => {
-    const followers2 = nodes.filter(node => node.is('follower'))
-    const leader2 = nodes.find(node => node.is('leader'))
-    expect(followers2.length).to.equal(2)
-    expect(leader2 === leader).to.equal(true)
-    expect(followers2.indexOf(leader2)).to.equal(-1)
     done()
   })
 
