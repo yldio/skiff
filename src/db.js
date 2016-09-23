@@ -45,7 +45,7 @@ class DB {
         const s = this.log.createReadStream()
         s.once('error', cb)
         s.pipe(ConcatStream(entries => {
-          cb(null, entries.sort(sortEntries))
+          cb(null, entries.sort(sortEntries).map(fixLoadedEntry))
         }))
       },
       meta: cb => {
@@ -74,11 +74,11 @@ class DB {
     }
 
     function notFoundIsOk (cb) {
-      return function (err) {
+      return function (err, result) {
         if (err && err.message.match(/not found/i)) {
           cb()
         } else {
-          cb(err)
+          cb(err, result)
         }
       }
     }
@@ -235,6 +235,17 @@ class DB {
     return Object.assign({}, command, { prefix: this.state })
   }
 
+}
+
+function fixLoadedEntry (entry) {
+  const keyParts = entry.key.split(':')
+  const term = Number(keyParts[0])
+  const index = Number(keyParts[1])
+  return {
+    i: index,
+    t: term,
+    c: entry.value
+  }
 }
 
 module.exports = DB

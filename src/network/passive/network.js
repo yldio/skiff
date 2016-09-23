@@ -37,7 +37,9 @@ class Network extends Duplex {
         this.push(message)
       })
       .on('warning', warn => this.emit('warning', warn))
-      .once('close', () => this.emit('closed'))
+      .once('closed', () => {
+        this.emit('closed')
+      })
   }
 
   _read (size) {

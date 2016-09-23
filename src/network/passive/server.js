@@ -18,7 +18,9 @@ class Server extends Duplex {
     super(options)
     this._options = options
     this._server = net.createServer(this._onConnection.bind(this))
-    this._server.once('close', () => this.emit('close'))
+    this._server.once('close', () => {
+      this.emit('closed')
+    })
     this._peers = {}
     this._listen()
   }

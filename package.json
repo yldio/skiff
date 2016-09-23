@@ -5,7 +5,7 @@
   "main": "src/node.js",
   "scripts": {
     "test": "npm run quick-tests",
-    "quick-tests": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js && lab -vl test/log-replication-catchup.js && lab -vl test/log-compaction.js && lab -vl test/leveldown.js",
+    "quick-tests": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js && lab -vl test/log-replication-catchup.js && lab -vl test/log-compaction.js && lab -vl test/leveldown.js && lab -vl test/persistence.js",
     "resilience-tests": "lab test/resilience/resilience-caos-memory.js && lab test/resilience/resilience-order-memory.js",
     "test-some": "lab -vl test/active-network.js test/election.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",

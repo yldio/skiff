@@ -29,7 +29,7 @@ class Log {
   push (command) {
     const newLogIndex = ++this._lastLogIndex
     const newEntry = {
-      t: this._lastLogTerm, // term
+      t: this._node.term(), // term
       i: newLogIndex, // index
       c: command // command
     }

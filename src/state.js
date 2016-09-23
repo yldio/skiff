@@ -33,7 +33,8 @@ class State extends EventEmitter {
     this._log = new Log(
       {
         id: this.id,
-        applyEntries: this._applyEntries.bind(this)
+        applyEntries: this._applyEntries.bind(this),
+        term: this._getTerm.bind(this)
       },
       options)
     this._peers = options.peers.filter(address => address !== this.id)
@@ -61,7 +62,7 @@ class State extends EventEmitter {
     }
 
     this._dbServices = {
-      snapshot: this._getPersistedState.bind(this),
+      snapshot: this._getPersistableState.bind(this),
       logEntries: this._getLogEntries.bind(this),
       applyTopologyCommand: this._applyTopologyCommand.bind(this)
     }
@@ -323,9 +324,9 @@ class State extends EventEmitter {
   // -------
   // Persistence
 
-  _getPersistedState () {
+  _getPersistableState () {
     return {
-      currentTerm: this._term,
+      currentTerm: this._getTerm(),
       votedFor: this._votedFor,
       peers: this._peers
     }

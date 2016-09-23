@@ -58,23 +58,11 @@ describe('log replication catchup', () => {
     done()
   })
 
-  before(done => {
-    done()
-  })
-
   before(done => leader.command({type: 'put', key: 'a', value: '1'}, done))
 
   before(done => leader.command({type: 'put', key: 'b', value: '2'}, done))
 
-  before(done => {
-    done()
-  })
-
   before({timeout: 3000}, done => setTimeout(done, A_BIT))
-
-  before(done => {
-    done()
-  })
 
   before(done => {
     newNode = new Node(newAddress, {
@@ -88,18 +76,8 @@ describe('log replication catchup', () => {
   })
 
   before(done => {
-    done()
-  })
-
-  before(done => {
     leader.join(newAddress, done)
   })
-
-  before(done => {
-    done()
-  })
-
-
 
   before({timeout: 3000}, done => setTimeout(done, A_BIT))
 

@@ -273,6 +273,10 @@ class Node extends EventEmitter {
     }
     return peers
   }
+
+  term () {
+    return this._state._getTerm()
+  }
 }
 
 module.exports = Node
