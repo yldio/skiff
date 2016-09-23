@@ -11,7 +11,7 @@ const Node = require('./node')
 
 const defaultOptions = {
   persist: false,
-  caos: true,
+  chaos: true,
   nodeCount: 5,
   killerIntervalMS: 10000
 }
@@ -63,7 +63,7 @@ function Setup(_options) {
   }
 
   function startKiller (done) {
-    if (options.caos) {
+    if (options.chaos) {
       killer = timers.setTimeout(() => {
         killAndRevive(err => {
           if (err) {

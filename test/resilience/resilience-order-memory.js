@@ -13,7 +13,7 @@ const Setup = require('../setup')
 const Client = require('../setup/client')
 
 describe('resilience, no chaos, in memory', () => {
-  const setup = Setup({caos: false})
+  const setup = Setup({chaos: false})
   before({timeout: 10000}, setup.before)
   after({timeout: 10000}, setup.after)
 
