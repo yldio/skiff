@@ -15,8 +15,7 @@ const Node = require('../')
 const A_BIT = 2000
 
 describe('log replication catchup', () => {
-  let follower, leader
-  let newNode
+  let nodes, follower, leader, newNode
 
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9290',
@@ -24,13 +23,16 @@ describe('log replication catchup', () => {
     '/ip4/127.0.0.1/tcp/9292'
   ]
 
-  const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, {
-      db: memdown,
-      peers: nodeAddresses.filter(addr => addr !== address)
-    }))
-
   const newAddress = '/ip4/127.0.0.1/tcp/9293'
+
+  before(done => {
+    nodes = nodeAddresses.map((address, index) =>
+      new Node(address, {
+        db: memdown,
+        peers: nodeAddresses.filter(addr => addr !== address)
+      }))
+    done()
+  })
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))

@@ -16,7 +16,7 @@ const Node = require('../')
 const A_BIT = 2000
 
 describe('election', () => {
-  let followers, leader
+  let nodes, followers, leader
 
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9090',
@@ -24,10 +24,13 @@ describe('election', () => {
     '/ip4/127.0.0.1/tcp/9092'
   ]
 
-  const nodes = nodeAddresses.map(address => new Node(address, {
-    db: memdown,
-    peers: nodeAddresses.filter(addr => addr !== address)
-  }))
+  before(done => {
+    nodes = nodeAddresses.map(address => new Node(address, {
+      db: memdown,
+      peers: nodeAddresses.filter(addr => addr !== address)
+    }))
+    done()
+  })
 
   before(done => {
     async.each(nodes, (node, cb) => node.start(cb), done)

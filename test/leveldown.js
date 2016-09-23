@@ -16,18 +16,21 @@ const Node = require('../')
 const A_BIT = 1000
 
 describe('leveldown', () => {
-  let follower, leader, leveldown
+  let nodes, follower, leader, leveldown
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9390',
     '/ip4/127.0.0.1/tcp/9391',
     '/ip4/127.0.0.1/tcp/9392'
   ]
 
-  const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, {
-      db: Memdown,
-      peers: nodeAddresses.filter(addr => addr !== address)
-    }))
+  before(done => {
+    nodes = nodeAddresses.map((address, index) =>
+      new Node(address, {
+        db: Memdown,
+        peers: nodeAddresses.filter(addr => addr !== address)
+      }))
+    done()
+  })
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))

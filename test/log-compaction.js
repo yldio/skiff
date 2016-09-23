@@ -17,7 +17,7 @@ const Node = require('../')
 const A_BIT = 1900
 
 describe('log compaction', () => {
-  let follower, leader, leveldown
+  let nodes, follower, leader, leveldown
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9490',
     '/ip4/127.0.0.1/tcp/9491',
@@ -25,12 +25,15 @@ describe('log compaction', () => {
   ]
   const newNodeAddress = '/ip4/127.0.0.1/tcp/9493'
 
-  const nodes = nodeAddresses.map((address, index) =>
-    new Node(address, {
-      db: Memdown,
-      minLogRetention: 10,
-      peers: nodeAddresses.filter(addr => addr !== address).concat(newNodeAddress)
-    }))
+  before(done => {
+    nodes = nodeAddresses.map((address, index) =>
+      new Node(address, {
+        db: Memdown,
+        minLogRetention: 10,
+        peers: nodeAddresses.filter(addr => addr !== address).concat(newNodeAddress)
+      }))
+    done()
+  })
 
   before(done => {
     nodes.forEach(node => node.on('warning', err => { throw err }))
