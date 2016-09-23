@@ -8,8 +8,8 @@ const async = require('async')
 const defaultOptions = {
   electionTimeout: true,
   appendEntriesIntervalMS: 100,
-  electionTimeoutMinMS: 150,
-  electionTimeoutMaxMS: 300,
+  electionTimeoutMinMS: 200,
+  electionTimeoutMaxMS: 400,
   installSnapshotChunkSize: 10,
   batchEntriesLimit: 10
 }
@@ -61,10 +61,9 @@ class Base extends EventEmitter {
   }
 
   _randomElectionTimeout () {
-    const diff = this._options.electionTimeoutMaxMS - this._options.electionTimeoutMinMS
-    const rnd = Math.floor(Math.random() * diff)
-    const timeout = this._options.electionTimeoutMinMS + rnd
-    return timeout
+    const min = this._options.electionTimeoutMinMS
+    const max = this._options.electionTimeoutMaxMS
+    return min + Math.floor(Math.random() * (max - min))
   }
 
   handleRequest (message, done) {
@@ -206,6 +205,8 @@ class Base extends EventEmitter {
       let nextLogIndex = 0
       if (!success && entry) {
         nextLogIndex = log.lastIndexForTerm(entry.t)
+      } else if (success) {
+        nextLogIndex = log._lastLogIndex + 1
       }
       self._node.network.reply(
         message.from,
