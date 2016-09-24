@@ -23,7 +23,7 @@
     "leveldb"
   ],
   "author": "pgte",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/pgte/skiff/issues"
   },
