@@ -61,7 +61,13 @@ class Leader extends Base {
     const index = this._node.log.push(command)
 
     process.nextTick(() => {
-      async.eachSeries(consensuses, this._waitForConsensus.bind(this, index), done)
+      async.each(consensuses, this._waitForConsensus.bind(this, index), (err) => {
+        if (err) {
+          done(err)
+        } else {
+          this._node.state.log.commit(index, done)
+        }
+      })
     })
   }
 
@@ -100,7 +106,7 @@ class Leader extends Base {
       if (isMajority(consensus, votes)) {
         debug('have consensus for index %d', waitingForIndex)
         cleanup()
-        this._node.state.log.commit(waitingForIndex, done)
+        done()
       }
     }
 
