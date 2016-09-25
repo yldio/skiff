@@ -22,8 +22,17 @@ const defaultOptions = {
   server: {},
   rpcTimeoutMS: 2000,
   peers: [],
-  levelup: {},
-  location: join(__dirname, '..', 'data')
+  levelup: {
+    keyEncoding: 'utf8',
+    valueEncoding: 'json'
+  },
+  location: join(__dirname, '..', 'data'),
+  electionTimeout: true,
+  appendEntriesIntervalMS: 100,
+  electionTimeoutMinMS: 1000,
+  electionTimeoutMaxMS: 2000,
+  installSnapshotChunkSize: 10,
+  batchEntriesLimit: 10
 }
 
 const importantStateEvents = [
