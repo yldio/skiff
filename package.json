@@ -1,6 +1,6 @@
 {
   "name": "skiff",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Raft for Node.js",
   "main": "skiff.js",
   "scripts": {
