@@ -14,8 +14,8 @@ const Node = require('../')
 
 const A_BIT = 4000
 
-describe('leveldown', () => {
-  let nodes, follower, leader, leveldown
+describe('levelup', () => {
+  let nodes, follower, leader, levelup
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9390',
     '/ip4/127.0.0.1/tcp/9391',
@@ -56,7 +56,7 @@ describe('leveldown', () => {
   })
 
   it ('can be created', done => {
-    leveldown = leader.leveldown()
+    levelup = leader.levelup()
     done()
   })
 
@@ -64,14 +64,14 @@ describe('leveldown', () => {
     async.each(
       ['a', 'b', 'c'],
       (key, cb) => {
-        leveldown.put(`key ${key}`, `value ${key}`, cb)
+        levelup.put(`key ${key}`, `value ${key}`, cb)
       },
       done)
   })
 
   it ('can get a key', done => {
     async.each(['a', 'b', 'c'], (key, cb) => {
-      leveldown.get(`key ${key}`, (err, values) => {
+      levelup.get(`key ${key}`, (err, values) => {
         expect(err).to.be.null()
         expect(values).to.equal(`value ${key}`)
         cb()
@@ -80,16 +80,16 @@ describe('leveldown', () => {
   })
 
   it('key is there', done => {
-    leveldown.get('key c', done)
+    levelup.get('key c', done)
   })
 
   it('can del a key', done => {
-    leveldown.del('key c', done)
+    levelup.del('key c', done)
   })
 
   it('deleted key is no longer found', done => {
-    leveldown.get('key c', err => {
-      expect(err.message).to.equal('Key not found in database')
+    levelup.get('key c', err => {
+      expect(err.message).to.equal('Key not found in database [key c]')
       done()
     })
   })
@@ -100,11 +100,11 @@ describe('leveldown', () => {
       {type: 'put', key: 'key e', value: 'value e'},
       {type: 'del', key: 'key b'},
     ]
-    leveldown.batch(batch, done)
+    levelup.batch(batch, done)
   })
 
   it('batch puts were effective', done => {
-    async.map(['key d', 'key e'], leveldown.get.bind(leveldown),
+    async.map(['key d', 'key e'], levelup.get.bind(levelup),
       (err, results) => {
         expect(err).to.be.null()
         expect(results).to.equal(['value d', 'value e'])
@@ -113,20 +113,17 @@ describe('leveldown', () => {
   })
 
   it('batch dels were effective', done => {
-    leveldown.get('key b', err => {
-      expect(err.message).to.equal('Key not found in database')
+    levelup.get('key b', err => {
+      expect(err.message).to.equal('Key not found in database [key b]')
       done()
     })
   })
 
-  describe('iterator', () => {
-    let iterator
+  describe('read stream', () => {
+    let rs
 
     it('can be created', done => {
-      iterator = leveldown.iterator({
-        keyAsBuffer: false,
-        valueAsBuffer: false
-      })
+      rs = levelup.createReadStream()
       done()
     })
 
@@ -137,25 +134,13 @@ describe('leveldown', () => {
         {key: 'key d', value: 'value d'},
         {key: 'key e', value: 'value e'}
       ]
-      async.whilst(
-        () => !stopped,
-        (cb) => {
-          iterator.next((err, key, value) => {
-            if (!err && !key) {
-              stopped = true
-              return cb()
-            }
-            expect(err).to.be.null()
-            expect({key, value}).to.equal(expecteds.shift())
-            cb(err)
-          })
-        },
-        (err) => {
-          expect(err).to.be.null()
-          expect(expecteds.length).to.equal(0)
+
+      rs.on('data', (data) => {
+        expect(data).to.equal(expecteds.shift())
+        if (expecteds.length === 0) {
           done()
         }
-      )
+      })
     })
   })
 })

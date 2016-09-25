@@ -5,7 +5,7 @@
   "main": "skiff.js",
   "scripts": {
     "test": "npm run quick-tests",
-    "quick-tests": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js && lab -vl test/log-replication-catchup.js && lab -vl test/log-compaction.js && lab -vl test/leveldown.js && lab -vl test/persistence.js",
+    "quick-tests": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js && lab -vl test/log-replication-catchup.js && lab -vl test/log-compaction.js && lab -vl test/leveldown.js && lab -vl test/levelup.js && lab -vl test/persistence.js",
     "resilience-tests": "npm run resilience-tests-memory && npm run resilience-tests-disk",
     "resilience-tests-memory": "lab test/resilience/resilience-chaos-memory.js && lab test/resilience/resilience-order-memory.js",
     "resilience-tests-disk": "lab test/resilience/resilience-order-disk.js && lab test/resilience/resilience-chaos-disk.js",

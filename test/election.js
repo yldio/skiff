@@ -8,7 +8,6 @@ const it = lab.it
 const expect = require('code').expect
 
 const async = require('async')
-const levelup = require('levelup')
 const memdown = require('memdown')
 
 const Node = require('../')

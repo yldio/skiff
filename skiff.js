@@ -6,6 +6,7 @@ const Multiaddr = require('multiaddr')
 const EventEmitter = require('events')
 const async = require('async')
 const join = require('path').join
+const Levelup = require('levelup')
 
 const PassiveNetwork = require('./lib/network/passive')
 const ActiveNetwork = require('./lib/network/active')
@@ -246,6 +247,13 @@ class Shell extends EventEmitter {
 
   leveldown () {
     return new Leveldown(this)
+  }
+
+  levelup (options) {
+    return Levelup(this.id, Object.assign({}, {
+      db: this.leveldown.bind(this),
+      valueEncoding: 'json'
+    }, options))
   }
 
   iterator (options) {
