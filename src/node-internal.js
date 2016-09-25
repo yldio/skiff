@@ -121,6 +121,7 @@ class State extends EventEmitter {
 
       const State = States(state)
       this._state = new State({
+        id: this.id,
         state: this._stateServices,
         network: this._networkingServices,
         log: this._log

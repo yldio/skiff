@@ -16,7 +16,7 @@ class Leader extends Base {
   }
 
   start () {
-    debug('%s is leader', this._node.state.id)
+    debug('%s is leader', this.id)
     this._followers = this._node.network.peers.reduce((followers, address) => {
       followers[address] = new PeerLeader(address, this._node, this._options)
       return followers

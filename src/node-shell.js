@@ -10,7 +10,7 @@ const join = require('path').join
 const PassiveNetwork = require('./network/passive')
 const ActiveNetwork = require('./network/active')
 const IncomingDispatcher = require('./incoming-dispatcher')
-const State = require('./state')
+const Node = require('./node-internal')
 const CommandQueue = require('./command-queue')
 const Commands = require('./commands')
 const DB = require('./db')
@@ -33,7 +33,7 @@ const importantStateEvents = [
   'rpc latency'
 ]
 
-class Node extends EventEmitter {
+class Shell extends EventEmitter {
 
   constructor (id, _options) {
     debug('creating node %s with options %j', id, _options)
@@ -61,7 +61,7 @@ class Node extends EventEmitter {
       this._connections = this._connections.filter(c => c !== peer)
     })
 
-    this._state = new State(this.id, connections, this._dispatcher, this._db, this._options)
+    this._state = new Node(this.id, connections, this._dispatcher, this._db, this._options)
 
     // propagate important events
     importantStateEvents.forEach(event => {
@@ -282,8 +282,8 @@ class Node extends EventEmitter {
   }
 }
 
-module.exports = createNode
+module.exports = createNodeShell
 
-function createNode(id, options) {
-  return new Node(id, options)
+function createNodeShell(id, options) {
+  return new Shell(id, options)
 }

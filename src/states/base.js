@@ -18,6 +18,7 @@ class Base extends EventEmitter {
 
   constructor (node, options) {
     super()
+    this.id = node.id
     this._node = node
     this._options = Object.assign({}, defaultOptions, options)
   }
@@ -46,13 +47,13 @@ class Base extends EventEmitter {
   }
 
   _resetElectionTimeout () {
-    debug('%s: resetting election timeout', this._node.state.id)
+    debug('%s: resetting election timeout', this.id)
     this._clearElectionTimeout()
     this._setElectionTimeout()
   }
 
   _onElectionTimeout () {
-    debug('%s: election timeout', this._node.state.id)
+    debug('%s: election timeout', this.id)
     this.emit('election timeout')
     this._electionTimeout = undefined
     if (this._node.network.peers.length) {
@@ -67,7 +68,7 @@ class Base extends EventEmitter {
   }
 
   handleRequest (message, done) {
-    debug('%s: handling request %j', this._node.state.id, message)
+    debug('%s: handling request %j', this.id, message)
 
     switch (message.action) {
 
@@ -88,14 +89,14 @@ class Base extends EventEmitter {
         if (this._handleRequest) {
           this._handleRequest(message, done)
         } else {
-          debug('%s: not handling message %j', this._node.state.id, message)
+          debug('%s: not handling message %j', this.id, message)
           done()
         }
     }
   }
 
   _requestVoteReceived (message, done) {
-    debug('%s: request vote received: %j', this._node.state.id, message)
+    debug('%s: request vote received: %j', this.id, message)
 
     const voteGranted = this._perhapsGrantVote(message)
 
@@ -116,9 +117,9 @@ class Base extends EventEmitter {
   }
 
   _perhapsGrantVote (message) {
-    debug('%s: perhaps grant vote to %j', this._node.state.id, message)
+    debug('%s: perhaps grant vote to %j', this.id, message)
     const currentTerm = this._node.state.term()
-    debug('%s: current term is: %d', this._node.state.id, currentTerm)
+    debug('%s: current term is: %d', this.id, currentTerm)
     const votedFor = this._node.state.getVotedFor()
     const termIsAcceptable = (message.params.term >= currentTerm)
     const votedForIsAcceptable = (currentTerm < message.params.term) || !votedFor || (votedFor === message.from)
@@ -127,7 +128,7 @@ class Base extends EventEmitter {
     const voteGranted = termIsAcceptable && votedForIsAcceptable && logIndexIsAcceptable
 
     if (!voteGranted) {
-      debug('%s: vote was not granted because: %j', this._node.state.id, {
+      debug('%s: vote was not granted because: %j', this.id, {
         termIsAcceptable, votedForIsAcceptable, logIndexIsAcceptable
       })
     }
@@ -154,15 +155,15 @@ class Base extends EventEmitter {
 
     if (termIsAcceptable) {
       this._resetElectionTimeout()
-      debug('%s: term is acceptable', this._node.state.id)
+      debug('%s: term is acceptable', this.id)
       entry = log.atLogIndex(params.prevLogIndex)
-      debug('%s: entry at previous log index: %j', this._node.state.id, entry)
+      debug('%s: entry at previous log index: %j', this.id, entry)
       prevLogMatches =
         (!params.prevLogIndex) ||
         (!entry && (log._lastLogIndex === params.prevLogIndex && log._lastLogTerm === params.prevLogTerm)) ||
         (entry && entry.t === params.prevLogTerm && entry.i === params.prevLogIndex)
 
-      debug('%s: previous log matches: %j', this._node.state.id, prevLogMatches)
+      debug('%s: previous log matches: %j', this.id, prevLogMatches)
       if (!prevLogMatches) {
         reason = `prev log term or index does not match: ${
           entry
@@ -172,10 +173,10 @@ class Base extends EventEmitter {
 
         debug(
           '%s: prev log term or index does not match. had %d and message contained %d',
-          this._node.state.id,
+          this.id,
           entry && entry.t,
           message.params.prevLogIndex)
-        debug('%s: last log index: %j, last log term: %j', this._node.state.id, log._lastLogIndex, log._lastLogTerm)
+        debug('%s: last log index: %j, last log term: %j', this.id, log._lastLogIndex, log._lastLogTerm)
       } else {
         success = true
         const newEntries = message.params.entries
@@ -187,7 +188,7 @@ class Base extends EventEmitter {
       }
     }
 
-    debug('%s: AppendEntries success? %j', this._node.state.id, success)
+    debug('%s: AppendEntries success? %j', this.id, success)
 
     if (success && commitIndex > 0) {
       this._node.log.commit(commitIndex, (err) => {
@@ -232,7 +233,7 @@ class Base extends EventEmitter {
   }
 
   _installSnapshotReceived (message, done) {
-    debug('%s: _installSnapshotReceived %j', this._node.state.id, message)
+    debug('%s: _installSnapshotReceived %j', this.id, message)
 
     this._resetElectionTimeout()
 

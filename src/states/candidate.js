@@ -6,12 +6,12 @@ const Base = require('./base')
 class Candidate extends Base {
 
   start () {
-    debug('%s is candidate', this._node.state.id)
+    debug('%s is candidate', this.id)
     this.name = 'candidate'
     super.start()
     this._node.state.incrementTerm()
     // vote for self
-    this._node.state.setVotedFor(this._node.state.id)
+    this._node.state.setVotedFor(this.id)
     process.nextTick(this._gatherVotes.bind(this))
   }
 
@@ -24,7 +24,7 @@ class Candidate extends Base {
       debug('candidate requesting vote from %s', peer)
       const requestVoteArgs = {
         term: this._node.state.term(),
-        candidateId: this._node.state.id,
+        candidateId: this.id,
         lastLogIndex: this._node.log._lastLogIndex,
         lastLogTerm: this._node.log._lastLogTerm
       }
@@ -44,13 +44,13 @@ class Candidate extends Base {
               if (this._node.network.isMajority(votedForMe)) {
                 // won
                 majorityReached = true
-                debug('%s: election won', this._node.state.id)
+                debug('%s: election won', this.id)
                 this._node.state.transition('leader')
               }
             }
             if (this._node.network.isMajority(voteCount - votedForMe)) {
               // lost
-              debug('%s: election lost', this._node.state.id)
+              debug('%s: election lost', this.id)
               majorityReached = true
               this._resetElectionTimeout()
             }
