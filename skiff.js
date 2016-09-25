@@ -280,6 +280,10 @@ class Shell extends EventEmitter {
   term () {
     return this._node._getTerm()
   }
+
+  logEntries () {
+    return this._node.getLogEntries()
+  }
 }
 
 module.exports = createNodeShell

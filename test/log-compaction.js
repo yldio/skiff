@@ -68,7 +68,7 @@ describe('log compaction', () => {
   })
 
   it ('log length was capped', done => {
-    expect(leader._node._log.all().length).to.equal(10)
+    expect(leader.logEntries().length).to.equal(10)
     done()
   })
 
