@@ -122,6 +122,7 @@ Returns the current term (integer).
 A skiff instance emits the following events:
 
 * `started`: once the node is started (network server is up and persisted state is loaded)
+* `warning (err)`: if a non-fatal error was encountered
 * `connect (peer)`: once a leader node is connected to a peer
 * `disconnect (peer)`: once a leader node is disconnected from a peer
 * `new state (state)`: once a node changes state (possible states are `follower`, `candidate` and `leader`)
