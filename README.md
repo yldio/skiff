@@ -4,6 +4,9 @@
 
 [Raft](https://raft.github.io/) Consensus Algorithm implementation for Node.js.
 
+[![npm version][npm-badge]][npm-url]
+[![Build Status][travis-badge]][travis-url]
+
 * Persists to LevelDB (or any database exposing a [LevelDown](https://github.com/level/leveldown) interface).
 * Exposes the cluster as a [Levelup-compatible](https://github.com/level/levelup#readme) interface, with which you can extend using [the Levelup plugins](https://github.com/Level/levelup/wiki/Modules#plugins).
 * Encodes messages using Msgpack
