@@ -16,25 +16,115 @@ $ npm install skiff --save
 ## Usage
 
 ```javascript
-const Levelup = require('levelup')
 const Skiff = require('skiff')
 
+const options = {
+  db: require('memdown') // in memory database
+}
 const skiff = Skiff('/ip4/127.0.0.1/tcp/9490', options)
-const db = Levelup()
+const db = skiff.levelup()
 
 skiff.start(err => {
   if (err) {
     console.error('Error starting skiff node: ', err.message)
   } else {
-  console.log('Skiff node started')
-}
-})
+    console.log('Skiff node started')
 
+    db.put('key', 'value', (err) => {
+      // ...
+    })
+  }
+})
 ```
 
+# API
 
+## Skiff (address, options)
 
-## Node Options
+Returns a new skiff node.
 
-* rpcTimeoutMs (number): maximum number of miliseconds to wait for until an RPC completes. Default = 5000
-* db: database (LevelUp database): Optional
+Arguments:
+
+* `address` (string, mandatory): an address in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format (example: `"/ip/127.0.0.1/tcp/5398"`).
+* `options` (object):
+  * `server` (object):
+    * `port` (integer): TCP port. Defaults to the port in `address`
+    * `host` (string): host name to bind the server to. Defaults to the host name in the `address`
+  * rpcTimeoutMS (integer, defaults to `2000`): Timeout for RPC calls.
+  * peers (array of strings, defaults to `[]`): The addresses of the peers (also in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format)
+  * `levelup` (object): options to the internal Levelup database. Defaults to:
+  
+  ```javascript
+  {
+    keyEncoding: 'utf8',
+    valueEncoding: 'json'
+  }
+  ```
+
+  * `location` (string): Location of the base directory for the leveldb files. Defaults to the `data` directory on the root of this package (not recommended)
+  * `db` (function, defaults to [Leveldown](https://github.com/Level/leveldown#readme) implementation): Database constructor, should return a [Leveldown](https://github.com/Level/leveldown#readme) implementation.
+ 
+ > (You can use this to create a in-memory database using [Memdown](https://github.com/Level/memdown#readme))
+ 
+  * `appendEntriesIntervalMS` (integer, defaults to `100`): The interval (ms) with which a leader sends `AppendEntries` messages to the followers (ping).
+  * `electionTimeoutMinMS` (integer, defaults to `1000`): The minimum election timeout (ms) for a node. It's the minimum time a node has to wait until no `AppendEntries` message triggers an election.
+  * `electionTimeoutMaxMS` (integer, defaults to `2000`): The maximum election timeout (ms) for a node. It's the maximum time a node has to wait until no `AppendEntries` message triggers an election.
+  * `installSnapshotChunkSize` (integer, defaults to `10`): The maximum number of database records on each `InstallSnapshot` message.
+  * `batchEntriesLimit` (integer, defaults to `10`): The maximum number of log entries in a `AppendEntries` message.
+
+## skiff.start (callback)
+
+Starts the node, initializing. Calls back with no argument when started, or with error in the first argument.
+
+## skiff.stop (callback)
+
+Stops the node, shutting down server, disconnects from all peers and stops activity. Calls back once all this is done, or when an error is encountered, with an error in the first argument.
+
+## skiff.levelup ()
+
+Returns a new [Levelup-compatible](https://github.com/level/levelup) object for you to interact with the cluster.
+
+Node must be a leader in order to accept commands.
+
+## skiff.leveldown ()
+
+Returns a new [Leveldown-compatible](https://github.com/level/leveldown) object for you to interact with the cluster.
+
+Node must be a leader in order to accept commands.
+
+## skiff.join (peerAddress, callback)
+
+Adds a peer to the cluster. Calls back once the cluster reaches consensus, or with an error if no consensus can be reached.
+
+Node must be leader for this to succeed.
+
+## skiff.leave (peerAddress, callback)
+
+Removes a peer from the cluster. Calls back once the cluster reaches consensus, or with an error if no consensus can be reached.
+
+Node must be leader for this to succeed.
+
+## skiff.stats ()
+
+Returns some interesting stats for this node.
+
+## skiff.peers ()
+
+Returns the cluster peers and some interesting stats fro each.
+
+## skiff.term ()
+
+Returns the current term (integer).
+
+## Events
+
+A skiff instance emits the following events:
+
+  'new state',
+
+* `started`: once the node is started (network server is up and persisted state is loaded)
+* `connect (peer)`: once a leader node is connected to a peer
+* `disconnect (peer)`: once a leader node is disconnected from a peer
+* `new state (state)`: once a node changes state (possible states are `follower`, `candidate` and `leader`)
+* `leader`: once the node becomes the cluster leader
+* `rpc latency (ms)`: the latency for an RPC call, in milisenconds
