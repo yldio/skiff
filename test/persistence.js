@@ -104,7 +104,7 @@ describe('persistence', () => {
     expect(snapshot.votedFor).to.equal(leader.id)
 
     nodes.forEach(node => {
-      const entries = node._node._log.all().map(entry => {
+      const entries = node.logEntries().map(entry => {
         return {i: entry.i, t: entry.t, c: {
           type: entry.c.type,
           key: entry.c.key,
