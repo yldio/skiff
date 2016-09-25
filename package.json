@@ -11,7 +11,7 @@
     "resilience-tests-disk": "lab test/resilience/resilience-order-disk.js && lab test/resilience/resilience-chaos-disk.js",
     "test-some": "lab -vl test/active-network.js test/election.js",
     "test-coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -- lab -vl && istanbul check-coverage",
-    "style": "eslint src"
+    "style": "eslint skiff.js lib"
   },
   "repository": {
     "type": "git",

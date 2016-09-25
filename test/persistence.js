@@ -98,13 +98,13 @@ describe('persistence', () => {
         }}
     })
 
-    const snapshot = leader._state._getPersistableState()
+    const snapshot = leader._node._getPersistableState()
     expect(typeof snapshot.currentTerm).to.equal('number')
     expect(snapshot.currentTerm >= 1).to.be.true()
     expect(snapshot.votedFor).to.equal(leader.id)
 
     nodes.forEach(node => {
-      const entries = node._state._log.all().map(entry => {
+      const entries = node._node._log.all().map(entry => {
         return {i: entry.i, t: entry.t, c: {
           type: entry.c.type,
           key: entry.c.key,
@@ -113,7 +113,7 @@ describe('persistence', () => {
       })
       expect(entries).to.equal(expected)
 
-      const nodeSnapshot = node._state._getPersistableState()
+      const nodeSnapshot = node._node._getPersistableState()
       expect(nodeSnapshot.currentTerm).to.equal(snapshot.currentTerm)
       expect(nodeSnapshot.votedFor).to.equal(leader.id)
     })

@@ -10,7 +10,7 @@ const join = require('path').join
 const PassiveNetwork = require('./lib/network/passive')
 const ActiveNetwork = require('./lib/network/active')
 const IncomingDispatcher = require('./lib/incoming-dispatcher')
-const Node = require('./lib/node-internal')
+const Node = require('./lib/node')
 const CommandQueue = require('./lib/command-queue')
 const Commands = require('./lib/commands')
 const DB = require('./lib/db')
@@ -61,15 +61,15 @@ class Shell extends EventEmitter {
       this._connections = this._connections.filter(c => c !== peer)
     })
 
-    this._state = new Node(this.id, connections, this._dispatcher, this._db, this._options)
+    this._node = new Node(this.id, connections, this._dispatcher, this._db, this._options)
 
     // propagate important events
     importantStateEvents.forEach(event => {
-      this._state.on(event, arg => this.emit(event, arg))
+      this._node.on(event, arg => this.emit(event, arg))
     })
 
     this._commandQueue = new CommandQueue()
-    this._commands = new Commands(this.id, this._commandQueue, this._state)
+    this._commands = new Commands(this.id, this._commandQueue, this._node)
 
     this._startState = 'stopped'
 
@@ -90,17 +90,17 @@ class Shell extends EventEmitter {
         'InstallSnapshot': 0
       }
     }
-    this._state.on('message received', () => {
+    this._node.on('message received', () => {
       this._stats.messagesReceived ++
     })
-    this._state.on('message sent', () => {
+    this._node.on('message sent', () => {
       this._stats.messagesSent ++
     })
-    this._state.on('rpc sent', (type) => {
+    this._node.on('rpc sent', (type) => {
       this._stats.rpcSent ++
       this._stats.rpcSentByType[type] ++
     })
-    this._state.on('rpc received', (type) => {
+    this._node.on('rpc received', (type) => {
       this._stats.rpcReceived ++
       this._stats.rpcReceivedByType[type] ++
     })
@@ -124,7 +124,7 @@ class Shell extends EventEmitter {
             this._startState = 'started'
             this.emit('started')
           }
-          this._state._transition('follower')
+          this._node._transition('follower')
           cb(err)
         })
     } else if (this._startState === 'started') {
@@ -161,8 +161,8 @@ class Shell extends EventEmitter {
     this._network.passive.pipe(this._dispatcher, { end: false })
     this._network.active.pipe(this._dispatcher, { end: false })
 
-    this._state.passive.pipe(this._network.passive, { end: false })
-    this._state.active.pipe(this._network.active, { end: false })
+    this._node.passive.pipe(this._network.passive, { end: false })
+    this._node.active.pipe(this._network.active, { end: false })
 
     this._network.active.on('connect', peer => {
       this.emit('connect', peer)
@@ -177,15 +177,15 @@ class Shell extends EventEmitter {
       if (err) {
         cb(err)
       } else {
-        this._state._log.setEntries(results.log)
+        this._node._log.setEntries(results.log)
         if (results.meta.currentTerm) {
-          this._state._setTerm(results.meta.currentTerm)
+          this._node._setTerm(results.meta.currentTerm)
         }
         if (results.meta.votedFor) {
-          this._state._setVotedFor(results.meta.votedFor)
+          this._node._setVotedFor(results.meta.votedFor)
         }
         if (results.meta.peers) {
-          this._state._peers = results.meta.peers
+          this._node._peers = results.meta.peers
         }
         cb()
       }
@@ -203,7 +203,7 @@ class Shell extends EventEmitter {
       process.nextTick(cb)
     }
 
-    this._state.stop()
+    this._node.stop()
 
     delete this._network
   }
@@ -214,7 +214,7 @@ class Shell extends EventEmitter {
       if (err) {
         done(err)
       } else {
-        this._state.join(address, done)
+        this._node.join(address, done)
       }
     })
   }
@@ -225,7 +225,7 @@ class Shell extends EventEmitter {
       if (err) {
         done(err)
       } else {
-        this._state.leave(address, done)
+        this._node.leave(address, done)
       }
     })
   }
@@ -239,9 +239,9 @@ class Shell extends EventEmitter {
   }
 
   is (state) {
-    const currentState = this._state._stateName
+    const currentState = this._node._stateName
     debug('%s: current state is %s', this.id, currentState)
-    return this._state._stateName === state
+    return this._node._stateName === state
   }
 
   leveldown () {
@@ -261,7 +261,7 @@ class Shell extends EventEmitter {
   }
 
   peers () {
-    const peers = this._state.peers()
+    const peers = this._node.peers()
     if (peers && this._network && this._network.active) {
       peers.forEach(peer => {
         peer.stats = this._network.active.peerStats(peer.address)
@@ -278,7 +278,7 @@ class Shell extends EventEmitter {
   }
 
   term () {
-    return this._state._getTerm()
+    return this._node._getTerm()
   }
 }
 
