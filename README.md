@@ -1,3 +1,5 @@
+![Skiff](skiff.png)
+
 # Skiff
 
 ## Node Options
