@@ -114,7 +114,7 @@ describe('persistence', () => {
 
       const nodeSnapshot = node._node._getPersistableState()
       expect(nodeSnapshot.currentTerm).to.equal(snapshot.currentTerm)
-      expect(nodeSnapshot.votedFor).to.equal(leader.id)
+      expect(typeof nodeSnapshot.votedFor).to.equal('string')
     })
     done()
   })
