@@ -9,7 +9,7 @@ const net = require('net')
 const Msgpack = require('msgpack5')
 const async = require('async')
 
-const Network = require('../src/network/passive')
+const Network = require('../lib/network/passive')
 
 describe('passive network', () => {
   let network, clientOptions

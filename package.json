@@ -2,7 +2,7 @@
   "name": "skiff",
   "version": "1.0.0",
   "description": "Raft for Node.js",
-  "main": "src/node-shell.js",
+  "main": "skiff.js",
   "scripts": {
     "test": "npm run quick-tests",
     "quick-tests": "lab -vl test/active-network.js && lab -vl test/passive-network.js && lab -vl test/incoming-dispatcher.js && lab -vl test/election.js && lab -vl test/log-replication.js && lab -vl test/log-replication-catchup.js && lab -vl test/log-compaction.js && lab -vl test/leveldown.js && lab -vl test/persistence.js",

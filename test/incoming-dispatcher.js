@@ -5,7 +5,7 @@ const describe = lab.experiment
 const it = lab.it
 const expect = require('code').expect
 
-const Dispatcher = require('../src/incoming-dispatcher')
+const Dispatcher = require('../lib/incoming-dispatcher')
 
 describe('incoming dispatcher', () => {
   let dispatcher

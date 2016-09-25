@@ -12,7 +12,7 @@ const net = require('net')
 const timers = require('timers')
 const Msgpack = require('msgpack5')
 
-const Network = require('../src/network/active')
+const Network = require('../lib/network/active')
 
 const serverAddresses = [
   '/ip4/127.0.0.1/tcp/8080',

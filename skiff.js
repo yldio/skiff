@@ -7,15 +7,15 @@ const EventEmitter = require('events')
 const async = require('async')
 const join = require('path').join
 
-const PassiveNetwork = require('./network/passive')
-const ActiveNetwork = require('./network/active')
-const IncomingDispatcher = require('./incoming-dispatcher')
-const Node = require('./node-internal')
-const CommandQueue = require('./command-queue')
-const Commands = require('./commands')
-const DB = require('./db')
-const Leveldown = require('./leveldown')
-const Iterator = require('./iterator')
+const PassiveNetwork = require('./lib/network/passive')
+const ActiveNetwork = require('./lib/network/active')
+const IncomingDispatcher = require('./lib/incoming-dispatcher')
+const Node = require('./lib/node-internal')
+const CommandQueue = require('./lib/command-queue')
+const Commands = require('./lib/commands')
+const DB = require('./lib/db')
+const Leveldown = require('./lib/leveldown')
+const Iterator = require('./lib/iterator')
 
 const defaultOptions = {
   server: {},
