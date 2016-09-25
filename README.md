@@ -120,11 +120,21 @@ Returns the current term (integer).
 
 A skiff instance emits the following events:
 
-  'new state',
-
 * `started`: once the node is started (network server is up and persisted state is loaded)
 * `connect (peer)`: once a leader node is connected to a peer
 * `disconnect (peer)`: once a leader node is disconnected from a peer
 * `new state (state)`: once a node changes state (possible states are `follower`, `candidate` and `leader`)
 * `leader`: once the node becomes the cluster leader
 * `rpc latency (ms)`: the latency for an RPC call, in milisenconds
+
+# Sponsors
+
+Development of Skiff is sponsored by [YLD](https://yld.io).
+
+# License
+
+[MIT](LICENSE)
+
+# Copyright
+
+Copyright (c) 2016 Pedro Teixeira
