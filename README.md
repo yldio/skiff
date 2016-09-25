@@ -22,7 +22,11 @@ $ npm install skiff --save
 const Skiff = require('skiff')
 
 const options = {
-  db: require('memdown') // in memory database
+  db: require('memdown'), // in memory database
+  peers: [ // peer addresses
+    '/ip4/127.0.0.1/tcp/9491',
+    '/ip4/127.0.0.1/tcp/9492'
+  ]
 }
 const skiff = Skiff('/ip4/127.0.0.1/tcp/9490', options)
 const db = skiff.levelup()
