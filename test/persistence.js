@@ -27,7 +27,7 @@ describe('persistence', () => {
 
   before(done => {
     nodes = nodeAddresses.map((address) =>
-      new Node(address, {
+      Node(address, {
         db: Memdown,
         peers: nodeAddresses.filter(addr => addr !== address)
       }))
@@ -71,7 +71,7 @@ describe('persistence', () => {
   before(done => {
     // restart nodes
     nodes = nodeAddresses.map((address) =>
-      new Node(address, {
+      Node(address, {
         db: Memdown,
         peers: nodeAddresses.filter(addr => addr !== address)
       }))

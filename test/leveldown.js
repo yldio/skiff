@@ -25,7 +25,7 @@ describe('leveldown', () => {
 
   before(done => {
     nodes = nodeAddresses.map((address, index) =>
-      new Node(address, {
+      Node(address, {
         db: Memdown,
         peers: nodeAddresses.filter(addr => addr !== address)
       }))

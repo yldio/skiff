@@ -25,7 +25,7 @@ describe('election', () => {
   ]
 
   before(done => {
-    nodes = nodeAddresses.map(address => new Node(address, {
+    nodes = nodeAddresses.map(address => Node(address, {
       db: memdown,
       peers: nodeAddresses.filter(addr => addr !== address)
     }))

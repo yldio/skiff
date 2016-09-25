@@ -27,7 +27,7 @@ describe('log replication catchup', () => {
 
   before(done => {
     nodes = nodeAddresses.map((address, index) =>
-      new Node(address, {
+      Node(address, {
         db: memdown,
         peers: nodeAddresses.filter(addr => addr !== address)
       }))
@@ -65,7 +65,7 @@ describe('log replication catchup', () => {
   before({timeout: 5000}, done => setTimeout(done, A_BIT))
 
   before(done => {
-    newNode = new Node(newAddress, {
+    newNode = Node(newAddress, {
       db: memdown,
       peers: nodeAddresses
     })

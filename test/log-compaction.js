@@ -27,7 +27,7 @@ describe('log compaction', () => {
 
   before(done => {
     nodes = nodeAddresses.map((address, index) =>
-      new Node(address, {
+      Node(address, {
         db: Memdown,
         minLogRetention: 10,
         peers: nodeAddresses.filter(addr => addr !== address).concat(newNodeAddress)
@@ -78,7 +78,7 @@ describe('log compaction', () => {
     let newNode
 
     before(done => {
-      newNode = new Node(newNodeAddress, {
+      newNode = Node(newNodeAddress, {
         db: Memdown,
         minLogRetention: 10,
         peers: nodeAddresses

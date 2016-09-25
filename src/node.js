@@ -282,4 +282,8 @@ class Node extends EventEmitter {
   }
 }
 
-module.exports = Node
+module.exports = createNode
+
+function createNode(id, options) {
+  return new Node(id, options)
+}

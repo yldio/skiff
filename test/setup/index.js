@@ -50,7 +50,7 @@ function Setup(_options) {
 
     ports.map(portToAddress).forEach(address => allAddresses.push(address))
 
-    liveNodes = ports.map(port => new Node(port, {
+    liveNodes = ports.map(port => Node(port, {
       peers: ports.filter(p => p !== port).map(portToAddress),
       persist: options.persist
     }))
@@ -103,7 +103,7 @@ function Setup(_options) {
   function reviveOne (cb) {
     const address = randomDeadNode()
     // console.log('reviving %s...', address)
-    const node = new Node(address, {
+    const node = Node(address, {
       peers: allAddresses.filter(addr => addr !== address)
     })
     liveNodes.push(node)
