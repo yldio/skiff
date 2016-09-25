@@ -1,123 +1,141 @@
+![Skiff](skiff.png)
+
 # Skiff
 
-[![Build Status](https://travis-ci.org/pgte/skiff.svg?branch=master)](https://travis-ci.org/pgte/skiff)
-[![Dependency Status](https://david-dm.org/pgte/skiff.svg)](https://david-dm.org/pgte/skiff)
+[Raft](https://raft.github.io/) Consensus Algorithm implementation for Node.js.
 
-Node.js implementation of the Raft consensus algorithm.
+* Persists to LevelDB (or any database exposing a [LevelDown](https://github.com/level/leveldown) interface).
+* Exposes the cluster as a [Levelup-compatible](https://github.com/level/levelup#readme) interface, with which you can extend using [the Levelup plugins](https://github.com/Level/levelup/wiki/Modules#plugins).
+* Encodes messages using Msgpack
 
-* Persistence: LevelDB
-* Protocol: Msgpack over TCP
-
-> (for the abstract implementation check [skiff-algorithm](https://github.com/pgte/skiff-algorithm)).
-
-(If you're looking for a solution that forwards write requests done in the followers to the leader, look at [sombrero-node](https://github.com/sombrerohq/sombrero-node).)
-
-
-# Install
+## Installation
 
 ```bash
-$ npm install skiff
+$ npm install skiff --save
 ```
 
-# Create
+## Usage
 
 ```javascript
-var Skiff = require('skiff');
+const Skiff = require('skiff')
 
-var options = {
-  dbPath: '/path/to/my/leveldb/database/dir'
-};
+const options = {
+  db: require('memdown') // in memory database
+}
+const skiff = Skiff('/ip4/127.0.0.1/tcp/9490', options)
+const db = skiff.levelup()
 
-var node = Skiff('tcp+msgpack://localhost:8081', options);
+skiff.start(err => {
+  if (err) {
+    console.error('Error starting skiff node: ', err.message)
+  } else {
+    console.log('Skiff node started')
+
+    db.put('key', 'value', (err) => {
+      // ...
+    })
+  }
+})
 ```
 
-## The URL
+# API
 
-The URL contains:
+## Skiff (address, options)
 
-* The protocol: for now we only support `tcp+msgpack`.
-* The host name to bind to
-* The port to listen to for other peers
+Returns a new skiff node.
 
-If `options.autoListen` is true (the default), the node will listen for peer connections on this URL.
+Arguments:
 
+* `address` (string, mandatory): an address in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format (example: `"/ip/127.0.0.1/tcp/5398"`).
+* `options` (object):
+  * `server` (object):
+    * `port` (integer): TCP port. Defaults to the port in `address`
+    * `host` (string): host name to bind the server to. Defaults to the host name in the `address`
+  * rpcTimeoutMS (integer, defaults to `2000`): Timeout for RPC calls.
+  * peers (array of strings, defaults to `[]`): The addresses of the peers (also in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format)
+  * `levelup` (object): options to the internal Levelup database. Defaults to:
+  
+  ```javascript
+  {
+    keyEncoding: 'utf8',
+    valueEncoding: 'json'
+  }
+  ```
 
-## Options
+  * `location` (string): Location of the base directory for the leveldb files. Defaults to the `data` directory on the root of this package (not recommended)
+  * `db` (function, defaults to [Leveldown](https://github.com/Level/leveldown#readme) implementation): Database constructor, should return a [Leveldown](https://github.com/Level/leveldown#readme) implementation.
+ 
+ > (You can use this to create a in-memory database using [Memdown](https://github.com/Level/memdown#readme))
+ 
+  * `appendEntriesIntervalMS` (integer, defaults to `100`): The interval (ms) with which a leader sends `AppendEntries` messages to the followers (ping).
+  * `electionTimeoutMinMS` (integer, defaults to `1000`): The minimum election timeout (ms) for a node. It's the minimum time a node has to wait until no `AppendEntries` message triggers an election.
+  * `electionTimeoutMaxMS` (integer, defaults to `2000`): The maximum election timeout (ms) for a node. It's the maximum time a node has to wait until no `AppendEntries` message triggers an election.
+  * `installSnapshotChunkSize` (integer, defaults to `10`): The maximum number of database records on each `InstallSnapshot` message.
+  * `batchEntriesLimit` (integer, defaults to `10`): The maximum number of log entries in a `AppendEntries` message.
 
-* `autoListen`: start listening on bootup. defaults to `true`.
-* `transport`: transport type. Supported values:
-  * `tcp-msgpack`: Msgpack over TCP (default)
-  * any module respecting the [transport interface](https://github.com/pgte/abstract-skiff-transport).
-* `dbPath`: database path
-* `waitLeaderTimeout`: the time to wait to become a leader. defaults to 3000 (ms).
-* `standby`: if true, will start at the `standby` state instead of the `follower` state. In the `standby` state the node only waits for a leader to send commands. Defaults to `false`.
-* `cluster`: the id of the cluster this node will be a part of
-* `uuid`: function that generates a UUID. Defaults to using the [`cuid`](https://github.com/ericelliott/cuid) package.
-* `heartbeatInterval`: the interval between heartbeats sent from leader. defaults to 50 ms.
-* `minElectionTimeout`: the minimum election timeout. defaults to 150 ms.
-* `maxElectionTimeout`: the maximum election timeout. defaults to 300 ms.
-* `commandTimeout`: the maximum amount of time you're willing to wait for a command to propagate. Defaults to 3 seconds. You can override this in each command call.
-* `retainedLogEntries`: the maximum number of log entries that are committed to the state machine that should remain in memory. Defaults to 50.
-* `metadata`: to be used by plugins if necessary
+## skiff.start (callback)
 
-# Use
+Starts the node, initializing. Calls back with no argument when started, or with error in the first argument.
 
-A skiff client object implements [the level-up API](https://github.com/rvagg/node-levelup#api).
+## skiff.stop (callback)
 
-You can also extend the client with level-* plugins, including [sublevel](https://github.com/dominictarr/level-sublevel).
+Stops the node, shutting down server, disconnects from all peers and stops activity. Calls back once all this is done, or when an error is encountered, with an error in the first argument.
 
-Other than that, you can:
+## skiff.levelup ()
 
-## .listen(cb)
+Returns a new [Levelup-compatible](https://github.com/level/levelup) object for you to interact with the cluster.
 
-Listen for nodes connecting to us. (if `options.autoListen` is true, your node is already listening).
+Node must be a leader in order to accept commands.
 
-## .join(url, cb)
+## skiff.leveldown ()
 
-Joins a node given its URL.
+Returns a new [Leveldown-compatible](https://github.com/level/leveldown) object for you to interact with the cluster.
 
-## .leave(url, cb)
+Node must be a leader in order to accept commands.
 
-Leaves a node given its URL.
+## skiff.join (peerAddress, callback)
 
-## .peerMeta(url)
+Adds a peer to the cluster. Calls back once the cluster reaches consensus, or with an error if no consensus can be reached.
 
-Return the peer metadata (if the node knows about such peer).
+Node must be leader for this to succeed.
 
-# Setting up a cluster
+## skiff.leave (peerAddress, callback)
 
-To boot a cluster, start a node and wait for it to become a leader. Then, create each additional node in the `standby` mode (`options.standby: true`) and do `leader.join(nodeURL)`.
+Removes a peer from the cluster. Calls back once the cluster reaches consensus, or with an error if no consensus can be reached.
 
-See [this test](https://github.com/pgte/skiff/blob/master/tests/networking.js#L27) for an actual implementation.
+Node must be leader for this to succeed.
 
-# Events
+## skiff.stats ()
 
-A Skiff node emits a bunch of events that may or not interest you. In no particular order:
+Returns some interesting stats for this node.
 
-* `error (error)` - if something goes terribly bad.
-* `warning (warning)` - if something goes mildly bad.
-* `loaded` - once the node persisted state is loaded on bootup
-* `applied log (logIndex)` - after a certain log index is applied to the state machine.
-* `election timeout` - when a node detects a timeout and will become a candidate because of that.
-* `joined (peer)` - when a node joins a given peer.
-* `connected(peer)` - when a node is connected to a given peer.
-* `disconnected(peer)` - when a node is disconnected from a peer.
-* `connecting(peer)` - when a node is trying to connect to a peer.
-* `reconnected(peer)` - when a node is reconnected to a peer.
-* `outgoing call (peer, type, args)` - when a node sends an RPC call to a peer.
-* `response (peer, err, args)` - when a node receives a response from a peer.
-* `left (peer)` - when a node leaves a peer
-* `state (state)` - after a node has transitioned to a given state
-* `leader (node)` - after a node has transitioned to the leader state
-* `candidate (node)` - after a node has transitioned to the candidate state
-* `follower (node)` - after a node has transitioned to the follower state
-* `stopped (node)` - after a node has transitioned to the stopped state
-* `standby (node)` - after a node has transitioned to the standby state
-* `RequestVote (args)` - when a node receives a RequestVote RPC call
-* `AppendEntries (args)` - when a node receives an AppendEntries RPC call
-* `InstallSnapshot (args)` - when a node receives an InstallSnapshot RPC call
-* `reply (args)` - once a node has replied to an RPC call
+## skiff.peers ()
+
+Returns the cluster peers and some interesting stats fro each.
+
+## skiff.term ()
+
+Returns the current term (integer).
+
+## Events
+
+A skiff instance emits the following events:
+
+* `started`: once the node is started (network server is up and persisted state is loaded)
+* `connect (peer)`: once a leader node is connected to a peer
+* `disconnect (peer)`: once a leader node is disconnected from a peer
+* `new state (state)`: once a node changes state (possible states are `follower`, `candidate` and `leader`)
+* `leader`: once the node becomes the cluster leader
+* `rpc latency (ms)`: the latency for an RPC call, in milisenconds
+
+# Sponsors
+
+Development of Skiff is sponsored by [YLD](https://yld.io).
 
 # License
 
-ISC
+[MIT](LICENSE)
+
+# Copyright
+
+Copyright (c) 2016 Pedro Teixeira
