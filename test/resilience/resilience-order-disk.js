@@ -9,8 +9,8 @@ const expect = require('code').expect
 
 const timers = require('timers')
 
-const Setup = require('../setup')
-const Client = require('../setup/client')
+const Setup = require('./setup')
+const Client = require('./setup/client')
 
 describe('resilience, no chaos, in memory', () => {
   const setup = Setup({chaos: false, persist: true})

@@ -7,7 +7,7 @@ const Memdown = require('memdown')
 const Leveldown = require('leveldown')
 const Multiaddr = require('multiaddr')
 const join = require('path').join
-const Node = require('../../')
+const Node = require('../../../')
 
 const port = Number(process.argv[2])
 const address = `/ip4/127.0.0.1/tcp/${port}`
