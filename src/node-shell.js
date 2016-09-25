@@ -284,6 +284,6 @@ class Shell extends EventEmitter {
 
 module.exports = createNodeShell
 
-function createNodeShell(id, options) {
+function createNodeShell (id, options) {
   return new Shell(id, options)
 }

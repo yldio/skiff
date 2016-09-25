@@ -135,11 +135,9 @@ class Peer extends Duplex {
       this._stats.sentMessageCount ++
       try {
         this._out.write(message, callback)
-      } catch(err) {
-        console.log('Error trying to write this message: %j', message)
+      } catch (err) {
         this.emit('warning', err)
       }
-
     } else {
       debug('have message, but not connected to peer %s', this._address)
       // if we're not connected we discard the message
