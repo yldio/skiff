@@ -4,6 +4,7 @@
 
 [Raft](https://raft.github.io/) Consensus Algorithm implementation for Node.js.
 
+[![npm version](https://badge.fury.io/js/skiff.svg)](https://badge.fury.io/js/skiff)
 [![Build Status](https://travis-ci.org/pgte/skiff.svg?branch=master)](https://travis-ci.org/pgte/skiff)
 
 * Persists to LevelDB (or any database exposing a [LevelDown](https://github.com/level/leveldown) interface).
