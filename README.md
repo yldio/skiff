@@ -30,7 +30,7 @@ const options = {
 }
 const skiff = Skiff('/ip4/127.0.0.1/tcp/9490', options)
 
-// expose the cluster as a LevelDB database
+// expose the cluster as a Levelup-compatible database
 const db = skiff.levelup()
 
 skiff.start(err => {
