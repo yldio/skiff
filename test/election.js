@@ -35,13 +35,6 @@ describe('election', () => {
     async.each(nodes, (node, cb) => node.start(cb), done)
   })
 
-  before(done => {
-    nodes.forEach(node => node.on('warning', (err) => {
-      throw err
-    }))
-    done()
-  })
-
   after(done => {
     async.each(nodes, (node, cb) => node.stop(cb), done)
   })

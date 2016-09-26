@@ -35,11 +35,6 @@ describe('log compaction', () => {
   })
 
   before(done => {
-    nodes.forEach(node => node.on('warning', err => { throw err }))
-    done()
-  })
-
-  before(done => {
     async.each(nodes, (node, cb) => node.start(cb), done)
   })
 
