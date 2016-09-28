@@ -14,6 +14,8 @@ const Network = require('../lib/network/passive')
 describe('passive network', () => {
   let network, clientOptions
 
+  const to = '/ip4/127.0.0.1/tcp/9163'
+
   const clientAddresses = [
     '/ip4/127.0.0.1/tcp/8080',
     '/ip4/127.0.0.1/tcp/8081',
@@ -38,23 +40,25 @@ describe('passive network', () => {
 
   it('accepts a msgpack message from a client', done => {
     const expected = clients.reduce((messages, client) => {
-      messages[client.address] = { from: client.address, what: 'hey' }
+      messages[client.address] = { from: client.address, to, what: 'hey' }
       return messages
     }, {})
 
-    network.on('data', (message) => {
+    const node = network.node(to)
+
+    node.on('data', (message) => {
       const from = message.from
       const expectedMessage = expected[from]
-      expect(expectedMessage).to.equal({ from: from, what: 'hey' })
+      expect(expectedMessage).to.equal({ from: from, to, what: 'hey' })
       delete expected[from]
       if (!Object.keys(expected).length) {
-        network.removeAllListeners('data')
+        node.removeAllListeners('data')
         done()
       }
     })
 
     clients.forEach(client => {
-      client.encoder.write({ from: client.address, what: 'hey' })
+      client.encoder.write({ from: client.address, to, what: 'hey' })
     })
   })
 
@@ -89,16 +93,18 @@ describe('passive network', () => {
     const oldConn = client.conn
     setupClient(client, () => {
       oldConn.end()
-      client.encoder.write({ from: client.address, the: 'new me' })
-      client.encoder.write({ from: client.address, the: 'new me again' })
+      client.encoder.write({ from: client.address, to, the: 'new me' })
+      client.encoder.write({ from: client.address, to, the: 'new me again' })
 
-      network.once('data', (message) => {
-        expect(message).to.equal({ from: client.address, the: 'new me' })
+      const node = network.node(to)
+
+      node.once('data', (message) => {
+        expect(message).to.equal({ from: client.address, to, the: 'new me' })
         client.decoder.once('data', message => {
           expect(message).to.equal({ to: client.address, hope: 'this reaches you' })
           done()
         })
-        network.write({ to: client.address, hope: 'this reaches you' })
+        node.write({ to: client.address, hope: 'this reaches you' })
       })
     })
   })
