@@ -1,4 +1,4 @@
-![Skiff](skiff.png)
+![Skiff](skiff-logo.png)
 
 # Skiff
 
