@@ -29,14 +29,14 @@ describe('resilience, chaos, in memory', () => {
     emitter.on('operation', resetOperationTimeout)
 
     function onOperationTimeout () {
-      done(new Error('no operation for more than 9 seconds'))
+      done(new Error('no operation for more than 11 seconds'))
     }
 
     function resetOperationTimeout () {
       if (timeout) {
         timers.clearTimeout(timeout)
       }
-      timeout = timers.setTimeout(onOperationTimeout, 9000)
+      timeout = timers.setTimeout(onOperationTimeout, 11000)
     }
   })
 })

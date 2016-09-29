@@ -177,7 +177,7 @@ function Client (nodes, _options) {
 }
 
 function multiAddrToUrl (maddr) {
-  const addr = Multiaddr(maddr)
+  const addr = Multiaddr(maddr.toString())
   const url = `http://127.0.0.1:${Number(addr.nodeAddress().port) + 1}`
   return url
 }
