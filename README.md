@@ -57,6 +57,7 @@ Arguments:
 
 * `address` (string, mandatory): an address in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format (example: `"/ip/127.0.0.1/tcp/5398"`).
 * `options` (object):
+  * `network` (object): if you want to share the network with other skiff nodes on the same process, create a network using `Skiff.createNetwork(options)` (see below)
   * `server` (object):
     * `port` (integer): TCP port. Defaults to the port in `address`
     * `host` (string): host name to bind the server to. Defaults to the host name in the `address`
@@ -137,6 +138,20 @@ A skiff instance emits the following events:
 * `new state (state)`: once a node changes state (possible states are `follower`, `candidate` and `leader`)
 * `leader`: once the node becomes the cluster leader
 * `rpc latency (ms)`: the latency for an RPC call, in milisenconds
+
+## Skiff.createNetwork (options)
+
+Creates a network you can share amongst several Skiff nodes in the same process.
+
+Options:
+
+* `active` (object):
+  * `innactivityTimeout` (integer, miliseconds, defaults to `5000`): The amount of time to wait before a client connection is closed because of innactivity.
+* `passive` (object):
+  * `server` (object):
+    * `port` (integer, defaults to `9163`): the port the server should listen on
+    * `host` (string, defaults to `"0.0.0.0"`): the interface address the server should listen to
+    * `exclusive` (boolean, defaults to `true`): if true, the server is not shareable with other processes (see [`Server#listen()` on Node.js docs](https://nodejs.org/api/net.html#net_server_listen_options_callback)).
 
 # Sponsors
 

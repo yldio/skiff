@@ -18,6 +18,7 @@ const Leveldown = require('./lib/leveldown')
 const Iterator = require('./lib/iterator')
 
 const defaultOptions = {
+  network: undefined,
   server: {},
   rpcTimeoutMS: 2000,
   peers: [],
@@ -321,6 +322,10 @@ class Shell extends EventEmitter {
   logEntries () {
     return this._node.getLogEntries()
   }
+}
+
+Shell.createNetwork = function createNetwork (options) {
+  return Network(options)
 }
 
 module.exports = createNodeShell
