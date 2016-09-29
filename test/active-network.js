@@ -7,7 +7,7 @@ const it = lab.it
 const expect = require('code').expect
 
 const async = require('async')
-const Multiaddr = require('multiaddr')
+const Address = require('../lib/address')
 const net = require('net')
 const timers = require('timers')
 const Msgpack = require('msgpack5')
@@ -15,9 +15,9 @@ const Msgpack = require('msgpack5')
 const Network = require('../lib/network/active')
 
 const serverAddresses = [
-  '/ip4/127.0.0.1/tcp/8080',
-  '/ip4/127.0.0.1/tcp/8081',
-  '/ip4/127.0.0.1/tcp/8082'
+  '/ip4/127.0.0.1/tcp/8080/what/ever',
+  '/ip4/127.0.0.1/tcp/8081/what/ever',
+  '/ip4/127.0.0.1/tcp/8082/what/ever'
 ]
 
 const A_BIT = 500
@@ -48,7 +48,7 @@ describe('active network', () => {
 
     async.mapSeries(serverAddresses, (addr, cb) => {
       const index = ++lindex
-      const maddr = Multiaddr(addr)
+      const maddr = Address(addr)
       const server = net.createServer(onServerConnection)
       const listenAddr = maddr.nodeAddress()
       server.listen({port: listenAddr.port, host: listenAddr.address}, () => {
@@ -77,11 +77,12 @@ describe('active network', () => {
   })
 
   it('can be used to send a message to a peer', done => {
-    network.once('data', message => {
+    const node = network.node(serverAddresses[0])
+    node.once('data', message => {
       expect(message).to.equal({to: serverAddresses[0], what: 'hey', isReply: true})
       done()
     })
-    network.write({to: serverAddresses[0], what: 'hey'})
+    node.write({to: serverAddresses[0], what: 'hey'})
   })
 
   it('peer gets the message', done => {
@@ -108,7 +109,8 @@ describe('active network', () => {
   })
 
   it('can still send data to another peer', done => {
-    network.once('data', message => {
+    const node = network.node(serverAddresses[1])
+    node.once('data', message => {
       expect(message).to.equal({to: serverAddresses[1], what: 'hey you', isReply: true})
       done()
     })
@@ -120,11 +122,12 @@ describe('active network', () => {
   })
 
   it('can still send data to another peer 2', done => {
-    network.once('data', message => {
+    const node = network.node(serverAddresses[2])
+    node.once('data', message => {
       expect(message).to.equal({to: serverAddresses[2], what: 'hey you dude', isReply: true})
       done()
     })
-    network.write({to: serverAddresses[2], what: 'hey you dude'})
+    node.write({to: serverAddresses[2], what: 'hey you dude'})
   })
 
   it('peer gets the message', done => {
@@ -133,11 +136,12 @@ describe('active network', () => {
   })
 
   it('can send data to reconnected peer', done => {
-    network.once('data', message => {
+    const node = network.node(serverAddresses[0])
+    node.once('data', message => {
       expect(message).to.equal({to: serverAddresses[0], what: 'hey you\'re back!', isReply: true})
       done()
     })
-    network.write({to: serverAddresses[0], what: 'hey you\'re back!'})
+    node.write({to: serverAddresses[0], what: 'hey you\'re back!'})
   })
 
   it('reconnected peer gets the message', done => {

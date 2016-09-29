@@ -2,14 +2,13 @@
 
 const debug = require('debug')('skiff.node')
 const merge = require('deepmerge')
-const Multiaddr = require('multiaddr')
 const EventEmitter = require('events')
 const async = require('async')
 const join = require('path').join
 const Levelup = require('levelup')
 
-const PassiveNetwork = require('./lib/network/passive')
-const ActiveNetwork = require('./lib/network/active')
+const Address = require('./lib/address')
+const Network = require('./lib/network')
 const IncomingDispatcher = require('./lib/incoming-dispatcher')
 const Node = require('./lib/node')
 const CommandQueue = require('./lib/command-queue')
@@ -48,8 +47,9 @@ class Shell extends EventEmitter {
   constructor (id, _options) {
     debug('creating node %s with options %j', id, _options)
     super()
-    this.id = id
+    this.id = Address(id)
     this._options = merge(defaultOptions, _options || {})
+    this._ownsNetwork = false
 
     this._db = new DB(this._options.location, this.id, this._options.db, this._options.levelup)
 
@@ -145,27 +145,11 @@ class Shell extends EventEmitter {
   }
 
   _startNetwork (cb) {
-    const address = Multiaddr(this.id).nodeAddress()
-    const passiveNetworkOptions = {
-      server: merge(
-        {
-          port: address.port,
-          host: address.address
-        },
-        this._options.server)
-    }
-    debug('about to configure passive network for %s with options %j', this.id, passiveNetworkOptions)
-    const passiveNetwork = new PassiveNetwork(passiveNetworkOptions)
-
-    if (cb) {
-      passiveNetwork.once('listening', () => {
-        cb()
-      }) // do not carry event args into callback
-    }
+    const network = this._getNetworkConstructors()
 
     this._network = {
-      passive: passiveNetwork,
-      active: new ActiveNetwork()
+      passive: network.passive.node(this.id),
+      active: network.active.node(this.id)
     }
 
     this._network.passive.pipe(this._dispatcher, { end: false })
@@ -180,6 +164,36 @@ class Shell extends EventEmitter {
     this._network.active.on('disconnect', peer => {
       this.emit('disconnect', peer)
     })
+
+    if (cb) {
+      if (network.passive.listening) {
+        process.nextTick(cb)
+      } else {
+        network.passive.once('listening', () => {
+          cb() // do not carry event args into callback
+        })
+      }
+    }
+  }
+
+  _getNetworkConstructors () {
+    const address = this.id.nodeAddress()
+    let constructors = this._options.network
+    if (!constructors) {
+      this._ownsNetwork = constructors = Network({
+        passive: {
+          server: merge(
+            {
+              port: address.port,
+              host: address.address
+            },
+            this._options.server
+          )
+        }
+      })
+    }
+
+    return constructors
   }
 
   _loadPersistedState (cb) {
@@ -205,7 +219,13 @@ class Shell extends EventEmitter {
   stop (cb) {
     if (this._network) {
       if (cb) {
-        this._network.passive.once('closed', cb)
+        if (this._ownsNetwork) {
+          this._ownsNetwork.passive.once('closed', cb)
+          this._ownsNetwork.passive.end()
+          this._ownsNetwork.active.end()
+        } else {
+          process.nextTick(cb)
+        }
       }
       this._network.passive.end()
       this._network.active.end()
