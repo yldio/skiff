@@ -174,7 +174,6 @@ class Shell extends EventEmitter {
         })
       }
     }
-
   }
 
   _getNetworkConstructors () {
