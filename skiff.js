@@ -324,7 +324,7 @@ class Shell extends EventEmitter {
   }
 }
 
-Shell.createNetwork = function createNetwork (options) {
+createNodeShell.createNetwork = function createNetwork (options) {
   return Network(options)
 }
 
