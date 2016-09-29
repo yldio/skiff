@@ -2,12 +2,12 @@
 
 const debug = require('debug')('skiff.node')
 const merge = require('deepmerge')
-const Multiaddr = require('multiaddr')
 const EventEmitter = require('events')
 const async = require('async')
 const join = require('path').join
 const Levelup = require('levelup')
 
+const Address = require('./lib/address')
 const Network = require('./lib/network')
 const IncomingDispatcher = require('./lib/incoming-dispatcher')
 const Node = require('./lib/node')
@@ -47,7 +47,7 @@ class Shell extends EventEmitter {
   constructor (id, _options) {
     debug('creating node %s with options %j', id, _options)
     super()
-    this.id = id
+    this.id = Address(id)
     this._options = merge(defaultOptions, _options || {})
     this._ownsNetwork = false
 
@@ -178,7 +178,7 @@ class Shell extends EventEmitter {
   }
 
   _getNetworkConstructors () {
-    const address = Multiaddr(this.id).nodeAddress()
+    const address = this.id.nodeAddress()
     let constructors = this._options.network
     if (!constructors) {
       this._ownsNetwork = constructors = Network({
