@@ -29,10 +29,12 @@ const defaultOptions = {
   location: join(__dirname, '..', 'data'),
   electionTimeout: true,
   appendEntriesIntervalMS: 100,
-  electionTimeoutMinMS: 1000,
-  electionTimeoutMaxMS: 2000,
+  electionTimeoutMinMS: 500,
+  electionTimeoutMaxMS: 1000,
   installSnapshotChunkSize: 10,
-  batchEntriesLimit: 10
+  batchEntriesLimit: 10,
+  clientRetryRPCTimeout: 200,
+  clientMaxRetries: 10,
 }
 
 const importantStateEvents = [

@@ -50,15 +50,6 @@ describe('log replication', () => {
     done()
   })
 
-  it('follower does not accept command', done => {
-    follower.command('SHOULD NOT GET IN', err => {
-      expect(err).to.not.be.null()
-      expect(err.message).to.equal('not the leader')
-      expect(err.code).to.equal('ENOTLEADER')
-      done()
-    })
-  })
-
   it('leader accepts command', done => {
     leader.command({type: 'put', key: 'a', value: '1'}, err => {
       expect(err).to.be.undefined()
