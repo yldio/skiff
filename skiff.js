@@ -34,7 +34,7 @@ const defaultOptions = {
   installSnapshotChunkSize: 10,
   batchEntriesLimit: 10,
   clientRetryRPCTimeout: 200,
-  clientMaxRetries: 10,
+  clientMaxRetries: 10
 }
 
 const importantStateEvents = [
@@ -268,7 +268,12 @@ class Shell extends EventEmitter {
       callback = options
       options = {}
     }
-    this._commandQueue.write({command, options, callback})
+    if (this.is('leader')) {
+      this._commandQueue.write({command, options, callback})
+    } else {
+      // bypass the queue if we're not the leader
+      this._node.command(command, options, callback)
+    }
   }
 
   is (state) {

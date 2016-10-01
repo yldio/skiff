@@ -20,10 +20,10 @@ if (!options.persist) {
 }
 
 const node = new Node(address, options)
+node.on('warning', err => { throw err })
 const db = node.leveldown()
 
 const server = http.createServer(function(req, res) {
-  // console.log('request to node connected to %j', node.connections())
   const key = req.url.substring(1)
   if (req.method === 'PUT') {
     let body = ''
@@ -42,12 +42,10 @@ const server = http.createServer(function(req, res) {
 })
 
 function handleWriteRequest(key, value, res) {
-  // console.log('  server request: write')
   db.put(key, value, handlingError(key, res, 201))
 }
 
 function handleReadRequest (key, res) {
-  // console.log('  server request: read')
   db.get(key, handlingError(key, res))
 }
 

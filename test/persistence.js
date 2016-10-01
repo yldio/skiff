@@ -95,7 +95,7 @@ describe('persistence', () => {
     const snapshot = leader._node._getPersistableState()
     expect(typeof snapshot.currentTerm).to.equal('number')
     expect(snapshot.currentTerm >= 1).to.be.true()
-    expect(snapshot.votedFor).to.equal(leader.id)
+    expect(snapshot.votedFor).to.equal(leader.id.toString())
 
     nodes.forEach(node => {
       const entries = node.logEntries().map(entry => {

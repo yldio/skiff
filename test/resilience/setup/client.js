@@ -14,7 +14,7 @@ const defaultOptions = {
 }
 
 const wreck = Wreck.defaults({
-  timeout: 5000
+  timeout: 8000
 })
 
 function Client (nodes, _options) {
@@ -158,7 +158,7 @@ function Client (nodes, _options) {
           } catch (er) {
             error = {}
           }
-          if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY')) {
+          if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY' || error.code === 'EOUTDATEDTERM')) {
             if (error.leader && leader !== address) {
               leader = multiAddrToUrl(error.leader)
             } else {
