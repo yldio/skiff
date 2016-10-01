@@ -29,10 +29,12 @@ const defaultOptions = {
   location: join(__dirname, '..', 'data'),
   electionTimeout: true,
   appendEntriesIntervalMS: 100,
-  electionTimeoutMinMS: 1000,
-  electionTimeoutMaxMS: 2000,
+  electionTimeoutMinMS: 500,
+  electionTimeoutMaxMS: 1000,
   installSnapshotChunkSize: 10,
-  batchEntriesLimit: 10
+  batchEntriesLimit: 10,
+  clientRetryRPCTimeout: 200,
+  clientMaxRetries: 10
 }
 
 const importantStateEvents = [
@@ -266,7 +268,16 @@ class Shell extends EventEmitter {
       callback = options
       options = {}
     }
-    this._commandQueue.write({command, options, callback})
+    if (this.is('leader')) {
+      this._commandQueue.write({command, options, callback})
+    } else {
+      // bypass the queue if we're not the leader
+      this._node.command(command, options, callback)
+    }
+  }
+
+  readConsensus (callback) {
+    this._node.readConsensus(callback)
   }
 
   is (state) {
@@ -287,7 +298,7 @@ class Shell extends EventEmitter {
   }
 
   iterator (options) {
-    return new Iterator(this._db.state, options)
+    return new Iterator(this, this._db.state, options)
   }
 
   stats () {
