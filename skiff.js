@@ -276,6 +276,10 @@ class Shell extends EventEmitter {
     }
   }
 
+  readConsensus (callback) {
+    this._node.readConsensus(callback)
+  }
+
   is (state) {
     const currentState = this._node._stateName
     debug('%s: current state is %s', this.id, currentState)
@@ -294,7 +298,7 @@ class Shell extends EventEmitter {
   }
 
   iterator (options) {
-    return new Iterator(this._db.state, options)
+    return new Iterator(this, this._db.state, options)
   }
 
   stats () {
