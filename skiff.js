@@ -290,6 +290,10 @@ class Shell extends EventEmitter {
     return this._node._stateName === state
   }
 
+  weaken (duration) {
+    this._node.weaken(duration)
+  }
+
   leveldown () {
     return new Leveldown(this)
   }
