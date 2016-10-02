@@ -224,14 +224,18 @@ class Shell extends EventEmitter {
       if (cb) {
         if (this._ownsNetwork) {
           this._ownsNetwork.passive.once('closed', cb)
-          this._ownsNetwork.passive.end()
-          this._ownsNetwork.active.end()
         } else {
           process.nextTick(cb)
         }
       }
+      if (this._ownsNetwork) {
+        this._ownsNetwork.passive.end()
+        this._ownsNetwork.active.end()
+        this._ownsNetwork = undefined
+      }
       this._network.passive.end()
       this._network.active.end()
+      this._network = undefined
     } else if (cb) {
       process.nextTick(cb)
     }
