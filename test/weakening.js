@@ -50,7 +50,6 @@ describe('log replication', () => {
   })
 
   it('can weaken all the nodes except the preferred', done => {
-    console.error('-> WEAKENING........\n')
     preferred = followers[0]
     weakened = followers.filter(f => f !== preferred).concat(leader)
     weakened.forEach(w => w.weaken(1100))
