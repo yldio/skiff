@@ -131,6 +131,10 @@ Returns the cluster peers and some interesting stats fro each.
 
 Returns the current term (integer).
 
+## skiff.weaken (durationMS)
+
+Weakens the node for the duration. During this period, the node transitions to a special `weakened` state, in which the node does not react to election timeouts. This period ends once it learns a new leader or the period runs out.
+
 ## Events
 
 A skiff instance emits the following events:
