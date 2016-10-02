@@ -62,7 +62,7 @@ Arguments:
     * `port` (integer): TCP port. Defaults to the port in `address`
     * `host` (string): host name to bind the server to. Defaults to the host name in the `address`
   * rpcTimeoutMS (integer, defaults to `2000`): Timeout for RPC calls.
-  * peers (array of strings, defaults to `[]`): The addresses of the peers (also in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format)
+  * peers (array of strings, defaults to `[]`): The addresses of the peers (also in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format). __If the database you're using is persisted to disk (which is the default), these peers will be overrridden by whatever is loaded from the latest snapshot once the node starts.__
   * `levelup` (object): options to the internal Levelup database. Defaults to:
   
   ```javascript
