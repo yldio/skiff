@@ -17,13 +17,14 @@ describe('passive network', () => {
   const to = '/ip4/127.0.0.1/tcp/9163'
 
   const clientAddresses = [
-    '/ip4/127.0.0.1/tcp/8080',
-    '/ip4/127.0.0.1/tcp/8081',
-    '/ip4/127.0.0.1/tcp/8082'
+    '/ip4/127.0.0.1/tcp/8080/p/abc',
+    '/ip4/127.0.0.1/tcp/8081/p/abc',
+    '/ip4/127.0.0.1/tcp/8082/p/abc'
   ]
 
   const clients = clientAddresses.map(address => {
-    return { address: address }
+    const addr = address.split('/').slice(0, 5).join('/')
+    return { address: addr }
   })
 
   it('can be created', done => {
