@@ -48,10 +48,10 @@ const importantStateEvents = [
 class Shell extends EventEmitter {
 
   constructor (id, _options) {
-    debug('creating node %s with options %j', id, _options)
     super()
     this.id = Address(id)
     this._options = merge(defaultOptions, _options || {})
+    debug('creating node %s with peers %j', id, this._options.peers)
     this._ownsNetwork = false
 
     this._db = new DB(this._options.location, this.id, this._options.db, this._options.levelup)
