@@ -144,7 +144,7 @@ function Client (nodes, _options) {
   function parsingWreckReply (address, expectedCode, retry, done) {
     return function (err, res, payload) {
       if (err) {
-        if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') {
+        if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEOUT') {
           leader = null
           timers.setTimeout(retry, 100)
         } else {
@@ -159,11 +159,13 @@ function Client (nodes, _options) {
             error = {}
           }
           if (error && (error.code === 'ENOTLEADER' || error.code === 'ENOMAJORITY' || error.code === 'EOUTDATEDTERM')) {
-            if (error.leader && leader !== address) {
+            if (error.leader) {
               leader = multiAddrToUrl(error.leader)
             } else {
               leader = undefined
             }
+            timers.setImmediate(retry)
+          } else if (error.code === 'ETIMEOUT') {
             timers.setImmediate(retry)
           } else {
             done (new Error(`response status code was ${res.statusCode}, response: ${payload}`))
