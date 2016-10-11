@@ -54,6 +54,7 @@ async.parallel([server.listen.bind(server, port + 1), node.start.bind(node)], er
     throw err
   } else {
     console.log(`server ${address} started`)
+    node.on('new state', state => console.log('new state: %j', state))
   }
 })
 
