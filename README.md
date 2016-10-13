@@ -123,9 +123,9 @@ Node must be leader for this to succeed.
 
 Returns some interesting stats for this node.
 
-## skiff.peers ()
+## skiff.peers (callback)
 
-Returns the cluster peers and some interesting stats fro each.
+Invokes the error-first callback function with the cluster peers and some interesting stats from each.
 
 ## skiff.term ()
 

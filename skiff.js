@@ -74,7 +74,13 @@ class Shell extends EventEmitter {
       this._connections = this._connections.filter(c => c !== peer)
     })
 
-    this._node = new Node(this.id, connections, this._dispatcher, this._db, this._options)
+    this._node = new Node(
+      this.id,
+      connections,
+      this._dispatcher,
+      this._db,
+      this.peers.bind(this),
+      this._options)
 
     // propagate important events
     importantStateEvents.forEach(event => {
@@ -169,7 +175,7 @@ class Shell extends EventEmitter {
     })
 
     if (cb) {
-      if (network.passive.listening) {
+      if (network.passive.listening()) {
         process.nextTick(cb)
       } else {
         network.passive.once('listening', () => {
@@ -317,21 +323,8 @@ class Shell extends EventEmitter {
     return this._connections
   }
 
-  peers () {
-    const peers = this._node.peers()
-    if (peers && this._network && this._network.active) {
-      peers.forEach(peer => {
-        peer.stats = this._network.active.peerStats(peer.address)
-        if (peer.stats) {
-          peer.stats.lastReceivedAgo = Date.now() - peer.stats.lastReceived
-          peer.stats.lastSentAgo = Date.now() - peer.stats.lastSent
-          delete peer.stats.lastReceived
-          delete peer.stats.lastSent
-        }
-        peer.connected = this._connections.indexOf(peer.address) >= 0
-      })
-    }
-    return peers
+  peers (done) {
+    this._node.peers(this._network, done)
   }
 
   term () {
