@@ -135,6 +135,10 @@ Returns the current term (integer).
 
 Weakens the node for the duration. During this period, the node transitions to a special `weakened` state, in which the node does not react to election timeouts. This period ends once it learns a new leader or the period runs out.
 
+## skiff.readConsensus(callback)
+
+Asks for read consensus from the cluster. Calls back when there is an error (with the error as the first argument) or succeeded.
+
 ## Events
 
 A skiff instance emits the following events:
