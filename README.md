@@ -149,6 +149,8 @@ A skiff instance emits the following events:
 * `disconnect (peer)`: once a leader node is disconnected from a peer
 * `new state (state)`: once a node changes state (possible states are `follower`, `candidate` and `leader`)
 * `leader`: once the node becomes the cluster leader
+* `joined (peerAddress)`: when a peer joined the cluster
+* `left (peerAddress)`: whan a peer left the cluster
 * `rpc latency (ms)`: the latency for an RPC call, in milisenconds
 
 ## Skiff.createNetwork (options)

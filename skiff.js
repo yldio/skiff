@@ -42,7 +42,9 @@ const importantStateEvents = [
   'new state',
   'election timeout',
   'leader',
-  'rpc latency'
+  'rpc latency',
+  'joined',
+  'left'
 ]
 
 class Shell extends EventEmitter {
