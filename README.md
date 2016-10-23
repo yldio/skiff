@@ -8,7 +8,7 @@
 [![Build Status](https://travis-ci.org/pgte/skiff.svg?branch=master)](https://travis-ci.org/pgte/skiff)
 
 * Persists to LevelDB (or any database exposing a [LevelDown](https://github.com/level/leveldown) interface).
-* Exposes the cluster as a [Levelup-compatible](https://github.com/level/levelup#readme) interface, with which you can extend using [the Levelup plugins](https://github.com/Level/levelup/wiki/Modules#plugins).
+* Exposes the cluster as a [Levelup](https://github.com/level/levelup#readme) or [Leveldown](https://github.com/level/leveldown#readme)-compatible interface, with which you can extend using [the Levelup plugins](https://github.com/Level/levelup/wiki/Modules#plugins).
 * Encodes messages using Msgpack
 
 ## Installation
