@@ -293,9 +293,7 @@ class Shell extends EventEmitter {
   }
 
   is (state) {
-    const currentState = this._node._stateName
-    debug('%s: current state is %s', this.id, currentState)
-    return this._node._stateName === state
+    return this._node.is(state)
   }
 
   weaken (duration) {
