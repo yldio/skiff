@@ -105,7 +105,7 @@ class Shell extends EventEmitter {
     })
   }
 
-  /// ------ Start and stop
+  // ------ Start and stop
 
   start (cb) {
     debug('%s: start state is %s', this.id, this._startState)
@@ -229,7 +229,7 @@ class Shell extends EventEmitter {
     this._node.stop()
   }
 
-  /// ------ Topology
+  // ------ Topology
 
   join (address, done) {
     debug('%s: joining %s', this.id, address)
@@ -253,7 +253,7 @@ class Shell extends EventEmitter {
     })
   }
 
-  /// ------ Commands
+  // ------ Commands
 
   command (command, options, callback) {
     if (typeof options === 'function') {
@@ -272,7 +272,7 @@ class Shell extends EventEmitter {
     this._node.readConsensus(callback)
   }
 
-  /// ------- State
+  // ------- State
 
   is (state) {
     return this._node.is(state)
@@ -282,7 +282,7 @@ class Shell extends EventEmitter {
     this._node.weaken(duration)
   }
 
-  /// -------- Level*
+  // -------- Level*
 
   leveldown () {
     return new Leveldown(this)
@@ -299,7 +299,7 @@ class Shell extends EventEmitter {
     return new Iterator(this, this._db.state, options)
   }
 
-  /// -------- Stats
+  // -------- Stats
 
   stats () {
     return this._stats
