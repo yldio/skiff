@@ -4,7 +4,6 @@ const debug = require('debug')('skiff.node')
 const merge = require('deepmerge')
 const EventEmitter = require('events')
 const async = require('async')
-const join = require('path').join
 const Levelup = require('levelup')
 
 const Address = require('./lib/address')
@@ -16,26 +15,7 @@ const Commands = require('./lib/commands')
 const DB = require('./lib/db')
 const Leveldown = require('./lib/leveldown')
 const Iterator = require('./lib/iterator')
-
-const defaultOptions = {
-  network: undefined,
-  server: {},
-  rpcTimeoutMS: 2000,
-  peers: [],
-  levelup: {
-    keyEncoding: 'utf8',
-    valueEncoding: 'json'
-  },
-  location: join(__dirname, '..', 'data'),
-  electionTimeout: true,
-  appendEntriesIntervalMS: 100,
-  electionTimeoutMinMS: 300,
-  electionTimeoutMaxMS: 600,
-  installSnapshotChunkSize: 10,
-  batchEntriesLimit: 10,
-  clientRetryRPCTimeout: 200,
-  clientMaxRetries: 10
-}
+const defaultOptions = require('./lib/default-options')
 
 const importantStateEvents = [
   'warning',
@@ -85,9 +65,7 @@ class Shell extends EventEmitter {
       this._options)
 
     // propagate important events
-    importantStateEvents.forEach(event => {
-      this._node.on(event, arg => this.emit(event, arg))
-    })
+    importantStateEvents.forEach(event => this._node.on(event, this.emit.bind(this, event)))
 
     this._commandQueue = new CommandQueue()
     this._commands = new Commands(this.id, this._commandQueue, this._node)
@@ -126,6 +104,8 @@ class Shell extends EventEmitter {
       this._stats.rpcReceivedByType[type] ++
     })
   }
+
+  /// ------ Start and stop
 
   start (cb) {
     debug('%s: start state is %s', this.id, this._startState)
@@ -241,17 +221,15 @@ class Shell extends EventEmitter {
         this._ownsNetwork.active.end()
         this._ownsNetwork = undefined
       }
-      this._network.passive.end()
-      this._network.active.end()
       this._network = undefined
     } else if (cb) {
       process.nextTick(cb)
     }
 
     this._node.stop()
-
-    delete this._network
   }
+
+  /// ------ Topology
 
   join (address, done) {
     debug('%s: joining %s', this.id, address)
@@ -275,6 +253,8 @@ class Shell extends EventEmitter {
     })
   }
 
+  /// ------ Commands
+
   command (command, options, callback) {
     if (typeof options === 'function') {
       callback = options
@@ -292,6 +272,8 @@ class Shell extends EventEmitter {
     this._node.readConsensus(callback)
   }
 
+  /// ------- State
+
   is (state) {
     return this._node.is(state)
   }
@@ -299,6 +281,8 @@ class Shell extends EventEmitter {
   weaken (duration) {
     this._node.weaken(duration)
   }
+
+  /// -------- Level*
 
   leveldown () {
     return new Leveldown(this)
@@ -314,6 +298,8 @@ class Shell extends EventEmitter {
   iterator (options) {
     return new Iterator(this, this._db.state, options)
   }
+
+  /// -------- Stats
 
   stats () {
     return this._stats
