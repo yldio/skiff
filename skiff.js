@@ -183,7 +183,8 @@ class Shell extends EventEmitter {
               this._options.server
             )
           }
-      })
+        }
+      )
     }
 
     return constructors
