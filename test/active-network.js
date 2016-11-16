@@ -35,9 +35,11 @@ describe('active network', () => {
       reply.pipe(conn)
 
       function onServerData (data) {
-        serverData[index].push(data)
-        const message = Object.assign({}, data, { isReply: true })
-        reply.write(message)
+        if (data.action !== 'Ping') {
+          serverData[index].push(data)
+          const message = Object.assign({}, data, { isReply: true })
+          reply.write(message)
+        }
       }
     }
   })
@@ -170,10 +172,12 @@ describe('active network', () => {
       conn.pipe(msgpack.decoder()).on('data', onServerData)
 
       function onServerData (data) {
-        expect(data).to.equal({to: serverAddresses[2], what: 'yo'})
-        // reply garbage
-        conn.end(new Buffer([0xc1]))
-        done()
+        if (data.action !== 'Ping') {
+          expect(data).to.equal({to: serverAddresses[2], what: 'yo'})
+          // reply garbage
+          conn.end(new Buffer([0xc1]))
+          done()
+        }
       }
     }
 

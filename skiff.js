@@ -171,16 +171,18 @@ class Shell extends EventEmitter {
     const address = this.id.nodeAddress()
     let constructors = this._options.network
     if (!constructors) {
-      this._ownsNetwork = constructors = Network({
-        passive: {
-          server: merge(
-            {
-              port: address.port,
-              host: address.address
-            },
-            this._options.server
-          )
-        }
+      this._ownsNetwork = constructors = Network(
+        this.id,
+        {
+          passive: {
+            server: merge(
+              {
+                port: address.port,
+                host: address.address
+              },
+              this._options.server
+            )
+          }
       })
     }
 

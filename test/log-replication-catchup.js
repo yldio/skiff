@@ -13,6 +13,7 @@ const memdown = require('memdown')
 const Node = require('../')
 
 const A_BIT = 4000
+const SOME = 1000
 
 describe('log replication catchup', () => {
   let nodes, follower, leader, newNode
@@ -75,7 +76,7 @@ describe('log replication catchup', () => {
     leader.join(newAddress, done)
   })
 
-  before({timeout: 5000}, done => setTimeout(done, A_BIT))
+  before({timeout: A_BIT + SOME}, done => setTimeout(done, A_BIT))
 
   it('new node gets updated', done => {
     const db = newNode._db.db

@@ -13,8 +13,9 @@ const memdown = require('memdown')
 const Node = require('../')
 
 const A_BIT = 4000
+const SOME = 1000
 
-describe('log replication', () => {
+describe('weakening', () => {
   let nodes, followers, leader, preferred, weakened
   const nodeAddresses = [
     '/ip4/127.0.0.1/tcp/9710',
@@ -56,7 +57,7 @@ describe('log replication', () => {
     done()
   })
 
-  it('waits a bit', {timeout: 5000}, done => setTimeout(done, A_BIT))
+  it('waits a bit', {timeout: A_BIT + SOME}, done => setTimeout(done, A_BIT))
 
   it('resulted in ellecting the preferred', done => {
     expect(preferred.is('leader')).to.be.true()
