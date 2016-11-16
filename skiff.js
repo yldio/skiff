@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('skiff.node')
-const merge = require('deepmerge')
+const extend = require('deep-extend')
 const EventEmitter = require('events')
 const async = require('async')
 const Levelup = require('levelup')
@@ -32,7 +32,7 @@ class Shell extends EventEmitter {
   constructor (id, _options) {
     super()
     this.id = Address(id)
-    this._options = merge(defaultOptions, _options || {})
+    this._options = extend({}, defaultOptions, _options || {})
     debug('creating node %s with peers %j', id, this._options.peers)
     this._ownsNetwork = false
 
@@ -175,7 +175,7 @@ class Shell extends EventEmitter {
         this.id,
         {
           passive: {
-            server: merge(
+            server: extend(
               {
                 port: address.port,
                 host: address.address
