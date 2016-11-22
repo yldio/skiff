@@ -1,5 +1,7 @@
 'use strict'
 
+require('colors')
+
 const lab = exports.lab = require('lab').script()
 const describe = lab.experiment
 const before = lab.before

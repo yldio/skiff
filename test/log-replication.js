@@ -52,6 +52,7 @@ describe('log replication', () => {
 
   it('leader accepts command', done => {
     leader.command({type: 'put', key: 'a', value: '1'}, err => {
+      console.error(err && err.stack)
       expect(!err).to.be.true()
       done()
     })

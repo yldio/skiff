@@ -10,8 +10,10 @@ const async = require('async')
 const Address = require('../lib/address')
 const net = require('net')
 const timers = require('timers')
-const Msgpack = require('msgpack5')
 
+const Encoder = require('../lib/network/decoder')
+const Decoder = require('../lib/network/decoder')
+const schema = require('../lib/network/schema')
 const Network = require('../lib/network/active')
 
 const serverAddresses = [
@@ -28,10 +30,9 @@ describe('active network', () => {
   const serverConns = serverAddresses.map(() => undefined)
   const serverHandlers = serverAddresses.map((server, index) => {
     return function (conn) {
-      const msgpack = Msgpack()
-      conn.pipe(msgpack.decoder()).on('data', onServerData)
+      conn.pipe(new Decoder(schema)).on('data', onServerData)
 
-      const reply = msgpack.encoder()
+      const reply = new Encoder(schema)
       reply.pipe(conn)
 
       function onServerData (data) {
