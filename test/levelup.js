@@ -59,7 +59,7 @@ describe('levelup', () => {
     async.each(
       ['a', 'b', 'c'],
       (key, cb) => {
-        levelup.put(`key ${key}`, `value ${key}`, cb)
+        levelup.put(`key ${key}`, {value: key}, cb)
       },
       done)
   })
@@ -68,7 +68,7 @@ describe('levelup', () => {
     async.each(['a', 'b', 'c'], (key, cb) => {
       levelup.get(`key ${key}`, (err, values) => {
         expect(err).to.be.null()
-        expect(values).to.equal(`value ${key}`)
+        expect(values).to.equal({value: key})
         cb()
       })
     }, done)
@@ -91,8 +91,8 @@ describe('levelup', () => {
 
   it('accepts batch commands', done => {
     const batch = [
-      {type: 'put', key: 'key d', value: 'value d'},
-      {type: 'put', key: 'key e', value: 'value e'},
+      {type: 'put', key: 'key d', value: {value: 'value d'}},
+      {type: 'put', key: 'key e', value: {value: 'value e'}},
       {type: 'del', key: 'key b'},
     ]
     levelup.batch(batch, done)
@@ -102,7 +102,7 @@ describe('levelup', () => {
     async.map(['key d', 'key e'], levelup.get.bind(levelup),
       (err, results) => {
         expect(err).to.be.null()
-        expect(results).to.equal(['value d', 'value e'])
+        expect(results).to.equal([{value: 'value d'}, {value: 'value e'}])
         done()
       })
   })
@@ -125,9 +125,9 @@ describe('levelup', () => {
     it('can iterate through all the keys', done => {
       let stopped = false
       const expecteds = [
-        {key: 'key a', value: 'value a'},
-        {key: 'key d', value: 'value d'},
-        {key: 'key e', value: 'value e'}
+        {key: 'key a', value: { value: 'a' }},
+        {key: 'key d', value: { value: 'value d' }},
+        {key: 'key e', value: { value: 'value e' }}
       ]
 
       rs.on('data', (data) => {
