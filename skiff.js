@@ -32,7 +32,26 @@ class Shell extends EventEmitter {
   constructor (id, _options) {
     super()
     this.id = Address(id)
+
+    let savedOptions
+
+    if (_options) {
+      // saved complex uncloneable options
+      savedOptions = _options && {
+        db: _options.db,
+        network: _options.network,
+        peers: _options.peers
+      }
+      delete _options.db
+      delete _options.network
+      delete _options.peers
+    }
+
     this._options = extend({}, defaultOptions, _options || {})
+    if (savedOptions) {
+      Object.assign(this._options, savedOptions)
+    }
+
     debug('creating node %s with peers %j', id, this._options.peers)
     this._ownsNetwork = false
 
@@ -172,7 +191,7 @@ class Shell extends EventEmitter {
     let constructors = this._options.network
     if (!constructors) {
       this._ownsNetwork = constructors = Network(
-        this.id,
+        this.id.networkAddress(),
         {
           passive: {
             server: extend(
@@ -325,8 +344,8 @@ class Shell extends EventEmitter {
   }
 }
 
-createNodeShell.createNetwork = function createNetwork (options) {
-  return Network(options)
+createNodeShell.createNetwork = function createNetwork (address, options) {
+  return Network(address, options)
 }
 
 module.exports = createNodeShell
