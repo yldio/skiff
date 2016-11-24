@@ -22,6 +22,9 @@ const importantStateEvents = [
   'new state',
   'election timeout',
   'leader',
+  'follower',
+  'candidate',
+  'weakened',
   'rpc latency',
   'joined',
   'left'
@@ -37,19 +40,34 @@ class Shell extends EventEmitter {
 
     if (_options) {
       // saved complex uncloneable options
-      savedOptions = _options && {
-        db: _options.db,
-        network: _options.network,
-        peers: _options.peers
+      savedOptions = {}
+      if (_options.db) {
+        savedOptions.db = _options.db
+        delete _options.db
       }
-      delete _options.db
-      delete _options.network
-      delete _options.peers
+      if (_options.network) {
+        savedOptions.network = _options.network
+        delete _options.network
+      }
+      if (_options.peers) {
+        savedOptions.peers = _options.peers
+        delete _options.peers
+      }
     }
 
     this._options = extend({}, defaultOptions, _options || {})
     if (savedOptions) {
       Object.assign(this._options, savedOptions)
+    }
+
+    // validade if the passive network is compatible with assigned id
+    if (this._options.network && this._options.network.passive) {
+      const serverAddress = this._options.network.passive.address().nodeAddress()
+      const addr = this.id.nodeAddress()
+      if (addr.address !== serverAddress.address || addr.port !== serverAddress.port) {
+        throw new Error(
+          `invalid address: ${id.toString()}. it's not compatible with network server address ${JSON.stringify(serverAddress)}`)
+      }
     }
 
     debug('creating node %s with peers %j', id, this._options.peers)
@@ -191,7 +209,6 @@ class Shell extends EventEmitter {
     let constructors = this._options.network
     if (!constructors) {
       this._ownsNetwork = constructors = Network(
-        this.id.networkAddress(),
         {
           passive: {
             server: extend(
@@ -344,8 +361,8 @@ class Shell extends EventEmitter {
   }
 }
 
-createNodeShell.createNetwork = function createNetwork (address, options) {
-  return Network(address, options)
+createNodeShell.createNetwork = function createNetwork (options) {
+  return Network(options)
 }
 
 module.exports = createNodeShell
