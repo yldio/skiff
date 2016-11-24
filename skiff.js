@@ -64,7 +64,7 @@ class Shell extends EventEmitter {
     if (this._options.network && this._options.network.passive) {
       const serverAddress = this._options.network.passive.address().nodeAddress()
       const addr = this.id.nodeAddress()
-      if (addr.address !== serverAddress.address || addr.port !== serverAddress.port) {
+      if (serverAddress.address !== '0.0.0.0' && addr.address !== serverAddress.address || addr.port !== serverAddress.port) {
         throw new Error(
           `invalid address: ${id.toString()}. it's not compatible with network server address ${JSON.stringify(serverAddress)}`)
       }
