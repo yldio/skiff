@@ -41,7 +41,8 @@ describe('shared network', () => {
       nodeAddresses[0],
       {
         db: memdown,
-        network
+        network,
+        maxLogRetention: 2
       })
     nodes.push(baseNode)
     baseNode.start(err => {
@@ -65,6 +66,7 @@ describe('shared network', () => {
       {
         db: memdown,
         network,
+        maxLogRetention: 2,
         peers: [nodeAddresses[0]]
       })
     nodes.push(node)
@@ -84,11 +86,13 @@ describe('shared network', () => {
   })
 
   it ('can rail in a third node', {timeout: 10000}, done => {
+    console.log('\n\n\nHERE\n\n\n')
     const node = Node(
       nodeAddresses[2],
       {
         db: memdown,
         network,
+        maxLogRetention: 2,
         peers: [nodeAddresses[0], nodeAddresses[1]]
       })
     nodes.push(node)

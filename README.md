@@ -64,7 +64,7 @@ Arguments:
   * rpcTimeoutMS (integer, defaults to `2000`): Timeout for RPC calls.
   * peers (array of strings, defaults to `[]`): The addresses of the peers (also in the [multiaddr](https://github.com/multiformats/js-multiaddr#readme) format). __If the database you're using is persisted to disk (which is the default), these peers will be overrridden by whatever is loaded from the latest snapshot once the node starts.__
   * `levelup` (object): options to the internal Levelup database. Defaults to:
-  
+
   ```javascript
   {
     keyEncoding: 'utf8',
@@ -74,11 +74,11 @@ Arguments:
 
   * `location` (string): Location of the base directory for the leveldb files. Defaults to the `data` directory on the root of this package (not recommended)
   * `db` (function, defaults to [Leveldown](https://github.com/Level/leveldown#readme) implementation): Database constructor, should return a [Leveldown](https://github.com/Level/leveldown#readme) implementation.
- 
+
  > (You can use this to create a in-memory database using [Memdown](https://github.com/Level/memdown#readme))
 
 * #### Advanced options
- 
+
   * `appendEntriesIntervalMS` (integer, defaults to `100`): The interval (ms) with which a leader sends `AppendEntries` messages to the followers (ping).
   * `electionTimeoutMinMS` (integer, defaults to `300`): The minimum election timeout (ms) for a node. It's the minimum time a node has to wait until no `AppendEntries` message triggers an election.
   * `electionTimeoutMaxMS` (integer, defaults to `600`): The maximum election timeout (ms) for a node. It's the maximum time a node has to wait until no `AppendEntries` message triggers an election.
@@ -86,6 +86,7 @@ Arguments:
   * `batchEntriesLimit` (integer, defaults to `10`): The maximum number of log entries in a `AppendEntries` message.
   * `clientRetryRPCTimeout` (integer, defaults to 200): The number of miliseconds the internal client has to wait until retrying
   * `clientMaxRetries` (integer, defaults to 10): The maximum number of times the client is allowed to retry the remote call.
+  * `maxLogRetention` (integer, defaults to 100): The maximum number of log entries kept in memory.
 
 ## skiff.start (callback)
 
