@@ -9,6 +9,7 @@ const expect = require('code').expect
 
 const memdown = require('memdown')
 const async = require('async')
+const timers = require('timers')
 const networkAddress = require('network-address')()
 
 const Node = require('../')
@@ -55,7 +56,15 @@ describe('shared network', () => {
     }, done)
   })
 
-  it ('can rail in a second node', done => {
+  it('can join a second node', done => {
+    baseNode.join(nodeAddresses[1], done)
+  })
+
+  it('can wait a bit', {timeout: 2000}, done => timers.setTimeout(done, 1000))
+
+  return;
+
+  it('can rail in a second node', done => {
     const network = Node.createNetwork({
       passive: {
         server: {
@@ -73,13 +82,7 @@ describe('shared network', () => {
         peers: [nodeAddresses[0]]
       })
     nodes.push(node)
-    node.start(err => {
-      if (err) {
-        return done(err)
-      }
-      node.weaken(1000)
-      baseNode.join(nodeAddresses[1], done)
-    })
+    node.start(done)
   })
 
   it ('can make a few more writes', done => {

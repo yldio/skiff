@@ -9,15 +9,17 @@ const expect = require('code').expect
 
 const memdown = require('memdown')
 const async = require('async')
+const networkAddress = require('network-address')()
 
 const Node = require('../')
+
 
 describe('shared network', () => {
   let baseNode
   const nodeAddresses = [
-    '/ip4/127.0.0.1/tcp/9990/p/1',
-    '/ip4/127.0.0.1/tcp/9990/p/2',
-    '/ip4/127.0.0.1/tcp/9990/p/3'
+    `/ip4/${networkAddress}/tcp/9990/p/1`,
+    `/ip4/${networkAddress}/tcp/9990/p/2`,
+    `/ip4/${networkAddress}/tcp/9990/p/3`
   ]
 
   const base = nodeAddresses[0]
@@ -28,7 +30,7 @@ describe('shared network', () => {
     network = Node.createNetwork({
       passive: {
         server: {
-          host: '127.0.0.1',
+          host: networkAddress,
           port: 9990
         }
       }
@@ -74,6 +76,7 @@ describe('shared network', () => {
       if (err) {
         return done(err)
       }
+      node.weaken(1000)
       baseNode.join(nodeAddresses[1], done)
     })
   })
@@ -100,6 +103,7 @@ describe('shared network', () => {
       if (err) {
         return done(err)
       }
+      node.weaken(1000)
       baseNode.join(nodeAddresses[2], done)
     })
   })
